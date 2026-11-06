@@ -109,7 +109,16 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 				isTargetHolder = true
 			}
 		}
-		if !isTargetHolder {
+		// `ss -p` and `lsof` hide sockets owned by other users from an
+		// unprivileged caller. A held port with no holder identity, seen before
+		// elevation, is therefore not proof of a foreign process: a root provider
+		// holding 443 reads exactly like this. Defer the verdict to the elevated
+		// re-run, which sees every socket.
+		holderHidden := !isRootFn() && ports.TCP443.Process == "" && ports.TCP443.PID == 0
+		if holderHidden {
+			fmt.Fprintf(errOut, "warn: TCP 443 is held by a process this user cannot see; re-checking after elevation\n")
+		}
+		if !isTargetHolder && !holderHidden {
 			proc := ports.TCP443.Process
 			if proc == "" && ports.TCP443.PID > 0 {
 				proc = fmt.Sprintf("PID %d", ports.TCP443.PID)
@@ -142,7 +151,14 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	desc := strings.Join(descs, "; ")
 
 	fwStatus := fwMgr.Detect()
-	fwConfigured := fwStatus.Kind != FirewallUnknown && (fwStatus.PortsOpen || (!fwStatus.Active && fwStatus.Kind == FirewallNone))
+	// No firewall service detected means there is nothing for setup to open;
+	// it is reported as an advisory below, not treated as unconfigured, so a
+	// re-run can reach the "already configured" path and the bind check.
+	fwConfigured := fwStatus.PortsOpen || (!fwStatus.Active && (fwStatus.Kind == FirewallNone || fwStatus.Kind == FirewallUnknown))
+
+	if fwStatus.Kind == FirewallUnknown && !opts.DryRun {
+		fmt.Fprintf(errOut, "warn: %s\n", fwStatus.Message)
+	}
 
 	// Check if already configured on host
 	if configured && fwConfigured {
@@ -162,8 +178,15 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		// Not root
 		exactCommand := formatSetupSudoCommand(opts)
 		_, sudoErr := lookPathFn("sudo")
-		sudoAvailable := sudoErr == nil && platform != "windows"
+		sudoAvailable := sudoErr == nil
 
+		if platform == "windows" {
+			// There is no sudo and no re-exec: the operator opens an elevated
+			// terminal and runs the same command.
+			cmd := fmt.Sprintf("%s extender setup", resolvedExecutablePath())
+			fmt.Fprintf(errOut, "extender setup requires Administrator privileges. Re-run from an elevated terminal (Run as administrator):\n  %s\n", cmd)
+			return fmt.Errorf("extender setup requires Administrator privileges; run from an elevated terminal: %s", cmd)
+		}
 		if opts.NonInteractive || !stdinIsInteractive() || !sudoAvailable {
 			fmt.Fprintf(errOut, "extender setup requires root privileges. Run:\n  %s\n", exactCommand)
 			return fmt.Errorf("extender setup requires root privileges; run: %s", exactCommand)
@@ -207,6 +230,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	}
 
 	// STEP 5: Apply firewall rules
+	firewallUnverified := false
 	if opts.DryRun {
 		fmt.Fprintf(out, "[dry-run] would configure firewall (%s)\n", fwStatus.Kind)
 	} else {
@@ -220,7 +244,11 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 			for _, r := range fwStatus.SuggestedRules {
 				fmt.Fprintf(out, "  %s\n", r)
 			}
-			return fmt.Errorf("firewall configuration unverified for %s; verify inbound rules manually", fwStatus.Kind)
+			// Not fatal: the rules cannot be checked or applied here, but the
+			// capability and bind steps below are independent of them. Stopping
+			// would make setup unfinishable on every nftables, iptables, pf or
+			// ipfw host, and would skip the bind verification.
+			firewallUnverified = true
 		}
 	}
 
@@ -233,6 +261,10 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		}
 	}
 
+	if firewallUnverified {
+		fmt.Fprintf(out, "extender: setup complete, firewall NOT verified (%s); confirm inbound TCP 443, UDP 443, UDP 4053 are allowed\n", fwStatus.Kind)
+		return nil
+	}
 	fmt.Fprintf(out, "extender: setup complete\n")
 	return nil
 }
@@ -251,7 +283,26 @@ func reportExtenderBind(out io.Writer, cfg PlatformConfigurer, p Provider, occup
 		return nil
 	}
 	fmt.Fprintln(out, "extender: verified TCP 443 listener as provider user")
+	warnUnitNoNewPrivileges(out, cfg, p)
 	return nil
+}
+
+// warnUnitNoNewPrivileges says so when the bind probe above cannot speak for
+// the service: the probe ran outside the unit, and a unit with
+// NoNewPrivileges makes the kernel ignore the file capability setup granted.
+// Only a provider running as a non-root user depends on that capability.
+func warnUnitNoNewPrivileges(out io.Writer, cfg PlatformConfigurer, p Provider) {
+	if p.Unit == "" || p.User == "" || p.User == "root" {
+		return
+	}
+	c, ok := cfg.(unitNoNewPrivileges)
+	if !ok {
+		return
+	}
+	if nnp, err := c.UnitNoNewPrivileges(p.Unit); err == nil && nnp {
+		fmt.Fprintf(out, "warn: %s sets NoNewPrivileges, so the service will not receive the file capability that was just verified outside it; "+
+			"TCP 443 may still fail to bind. Add AmbientCapabilities=CAP_NET_BIND_SERVICE to the unit (it works with NoNewPrivileges), or drop NoNewPrivileges\n", p.Unit)
+	}
 }
 
 // formatSetupSudoCommand is the exact command to run by hand. `extender setup`

@@ -501,6 +501,13 @@ func readURLStateForMerge() (*ProxyURLState, bool) {
 	return state, true
 }
 
+// logURLCycleCancelled records that a fetch cycle stopped because its context
+// was cancelled, with the cancellation cause, and nothing more: it is not a
+// source failure, so it must not touch the resolution status or warn.
+func logURLCycleCancelled(ctx context.Context, done, total int) {
+	tlog("[proxy][url] fetch cycle cancelled after %d of %d sources: %v\n", done, total, context.Cause(ctx))
+}
+
 // fetchAndMergeProxyURLs fetches every configured source, merges newly
 // discovered addresses into the persisted cache (add-only - existing entries
 // are never removed here), and triggers a hot-reload if anything new was
@@ -566,8 +573,21 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 		perSource[i].Label = labels[i]
 	}
 	for i, url := range urls {
+		// A cancelled ctx means the process is stopping (the root ctx is the
+		// signal context, so the cause reads "terminated signal received"),
+		// not that a source is unhealthy. Stop the cycle instead of failing
+		// every remaining source and warning the operator about each.
+		if ctx.Err() != nil {
+			logURLCycleCancelled(ctx, i, len(urls))
+			break
+		}
 		lines, err := fetchProxyURLLines(ctx, url)
 		if err != nil {
+			if ctx.Err() != nil {
+				// Cancelled mid-request: the same shutdown, not a source fault.
+				logURLCycleCancelled(ctx, i, len(urls))
+				break
+			}
 			perSource[i].Failed = true
 			label := labels[i]
 			tlog("[proxy][url] fetch failed for %s: %v (skipping this cycle)\n", label, err)

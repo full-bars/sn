@@ -170,6 +170,24 @@ func publishExtenderHeadStartRole(allowed bool) {
 	wakeExtenderHeadStart()
 }
 
+// resetExtenderHeadStartRole clears the verdict at the start of a direct launch.
+// The verdict belongs to one launch: a relaunched slot must not inherit the
+// previous launch's answer, and must not leave a hold reading it as final.
+func resetExtenderHeadStartRole() {
+	extenderHeadStartRole.Store(extenderHeadStartRoleUndecided)
+}
+
+// withdrawExtenderHeadStartRoleIfUndecided ends the hold for a launch that
+// returned without publishing a verdict, such as an authentication or wallet
+// failure before the budget was consulted: that launch will never complete an
+// attempt, so the hold must not wait out its cap. A verdict already published
+// is left as it is.
+func withdrawExtenderHeadStartRoleIfUndecided() {
+	if extenderHeadStartRole.CompareAndSwap(extenderHeadStartRoleUndecided, extenderHeadStartRoleWithheld) {
+		wakeExtenderHeadStart()
+	}
+}
+
 func wakeExtenderHeadStart() {
 	select {
 	case extenderHeadStartWake <- struct{}{}:

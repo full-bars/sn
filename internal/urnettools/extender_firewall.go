@@ -101,7 +101,23 @@ func (fm *FirewallManager) detectLinux() FirewallStatus {
 
 	// 2. ufw
 	if _, err := fm.LookPath("ufw"); err == nil {
-		if out, err := fm.ExecCmd("ufw", "status"); err == nil {
+		out, err := fm.ExecCmd("ufw", "status")
+		if err != nil {
+			// `ufw status` needs root. An unprivileged caller cannot tell an
+			// active ufw from an absent one, so report it as present and
+			// unverified instead of falling through to "no firewall".
+			return FirewallStatus{
+				Kind:   FirewallUFW,
+				Active: true,
+				SuggestedRules: []string{
+					"ufw allow 443/tcp",
+					"ufw allow 443/udp",
+					"ufw allow 4053/udp",
+				},
+				Message: "ufw is installed but its status is unreadable (needs root); treating it as active",
+			}
+		}
+		{
 			str := string(out)
 			if strings.Contains(str, "Status: active") {
 				// Check rules

@@ -15,6 +15,9 @@ Merged to `main` after `v2026.11.1-1087168030-sn`, not yet in a tagged release. 
 
 ### Fixed
 
+- **Extender setup handles incomplete host checks.** Unverifiable socket or firewall checks produce guidance instead of aborting setup. A systemd unit that blocks the file capability gets a warning. FreeBSD ignores commented sysctl settings, Linux refuses to set capabilities on symlinks or non-regular files, and Windows names the need for an elevated terminal. (c67ba09db, e9cc68504, 079b5b73c, 066102eb3, 720c45914, f2d6c32a1)
+- **Extender handover releases the right resources.** The baton path releases carrier ports, an old slot cannot clear its replacement's releaser, and an undecided direct launch ends its head start. (40371e4b3, 9b056cccb, d32f696a7)
+- **Windows lifecycle operations fail closed.** Restart, stop and uninstall check process and service ownership, and report failures rather than leaving an unmanaged supervisor or claiming success. (#384)
 - **A fresh state directory needs authority to create the provider identity.** Interactive start asks. A direct unattended `provide` needs the registration flag or an allowing environment setting. Docker defaults to `auto`, which permits registration without a prompt. Restore missing existing state instead of allocating a replacement. (#378)
 - **Refresh preview includes cached URL proxies.** It uses the manager's desired-set read so the preview reflects the same cached inputs as refresh. (#379)
 - **Updates restore extender bind capability.** The Go update path reapplies a previously held capability after replacing the binary. The Linux installer and container wrappers also restore it after a swap when possible. (#365, #366)
@@ -37,6 +40,11 @@ Merged to `main` after `v2026.11.1-1087168030-sn`, not yet in a tagged release. 
 - **Connect and SDK pins follow their fork mains.** The updates carry extender and networking changes. (#339, #354, #364, #371, #373)
 - **The trim cancel path is findable and previewable.** `urnet-tools proxy trim` shows how to cancel a cut and previews it before it applies. (#345)
 - **Proxy health and discovery output is clearer.** Held and parked slots are reported separately and `top` shows discovery warnings. (#343, #349, #362)
+
+### CI and documentation
+
+- **Test shards gate on uncached results and test census.** Distro feature groups use independent state and randomized ordering; smoke and soak checks have stronger assertions. Intermittent miner tests were corrected. (#381, #382, #383, #385, #386, #389)
+- **Windows installation guidance and SN25 figures were refreshed.** (#384, bcd070848)
 
 ## [v2026.11.1-1087168030-sn] — 2026-11-01
 

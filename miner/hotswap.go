@@ -350,6 +350,13 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 			return errors.Join(fmt.Errorf("candidate takeover unconfirmed: %v", res.err), abortBatonHandoff(session))
 		}
 		hotswapLog("♻️⚡ [hotswap] Candidate PID %d confirmed active takeover (ACK received)!\n", childPID)
+		// The successor now owns live traffic and the parent only drains. The
+		// carrier listeners are bound without SO_REUSEPORT, so until this
+		// parent frees tcp 443 the successor's role cannot bind it, and an
+		// exit that follows the whole drain would leave the port dark for that
+		// long. Before the ACK the parent may still abort and keep serving, so
+		// this is the earliest point it can let go.
+		releaseExtenderCarriersForSuccessor()
 	case <-time.After(HotSwapAckTimeout):
 		hotswapLog("❌ [hotswap] Candidate takeover ACK timed out (>%s). Aborting handoff; live provider retained.\n", HotSwapAckTimeout)
 		return errors.Join(fmt.Errorf("candidate takeover ACK timed out (>%s)", HotSwapAckTimeout), abortBatonHandoff(session))
@@ -991,7 +998,7 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		// The successor inherits the carrier listeners, so the port it needs
 		// is held by an image that will not exist. Release it here, after the
 		// teardown is final and before exec.
-		releaseExtenderCarriersForExec()
+		releaseExtenderCarriersForSuccessor()
 		err := execInPlaceFunc(exe, args, cleanEnv)
 		releaseRefusals()
 		if err != nil {

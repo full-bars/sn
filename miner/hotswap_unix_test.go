@@ -115,7 +115,7 @@ func TestGetHotSwapChildIPCClaimsASocketDescriptor(t *testing.T) {
 }
 
 func TestNotifySystemdProtocol(t *testing.T) {
-	sockPath := filepath.Join(t.TempDir(), "notify.sock")
+	sockPath := filepath.Join(shortStateDir(t), "notify.sock")
 	listener, err := net.ListenUnixgram("unixgram", &net.UnixAddr{Name: sockPath, Net: "unixgram"})
 	if err != nil {
 		t.Fatal(err)

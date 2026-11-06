@@ -336,3 +336,44 @@ func TestExtenderHeadStartReleasedWhenTheBindFails(t *testing.T) {
 		t.Fatalf("a failed bind held the proxies for %s", elapsed)
 	}
 }
+
+// A direct launch that returns before it publishes a verdict (an authentication
+// or wallet failure) is withdrawn, so the hold ends at once instead of running
+// out its cap for an attempt that cannot happen.
+func TestExtenderHeadStartWithdrawnWhenTheLaunchEndedUndecided(t *testing.T) {
+	resetExtenderHeadStartForTest(t)
+	shortHeadStart(t, time.Hour, time.Hour) // only the verdict can end this hold
+
+	withdrawExtenderHeadStartRoleIfUndecided()
+
+	result := extenderHeadStartWait(context.Background(), directHeadStartSources())
+	if result.end != extenderHeadStartDisabled {
+		t.Fatalf("end = %v, want disabled: the undecided launch held the proxies", result.end)
+	}
+}
+
+// A verdict the launch did publish is not overwritten by the late withdraw that
+// runs when the slot ends.
+func TestExtenderHeadStartWithdrawKeepsAPublishedVerdict(t *testing.T) {
+	resetExtenderHeadStartForTest(t)
+
+	publishExtenderHeadStartRole(true)
+	withdrawExtenderHeadStartRoleIfUndecided()
+
+	if got := extenderHeadStartRole.Load(); got != extenderHeadStartRoleAllowed {
+		t.Fatalf("verdict = %d, want allowed: the withdraw overwrote it", got)
+	}
+}
+
+// A relaunched direct slot starts undecided: the previous launch's verdict is
+// not the new launch's answer.
+func TestExtenderHeadStartVerdictResetsOnRelaunch(t *testing.T) {
+	resetExtenderHeadStartForTest(t)
+
+	publishExtenderHeadStartRole(false) // the first launch was withheld
+	resetExtenderHeadStartRole()        // the slot relaunches
+
+	if got := extenderHeadStartRole.Load(); got != extenderHeadStartRoleUndecided {
+		t.Fatalf("verdict = %d after relaunch, want undecided", got)
+	}
+}

@@ -1560,6 +1560,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}()
 		proxyCtx, proxyCancel := context.WithCancel(slotCtx)
 		defer proxyCancel()
+		if proxySettings == nil {
+			// The startup head start reads this launch's extender verdict. Start
+			// it undecided, and withdraw it if the launch returns without
+			// publishing one (an authentication or wallet failure comes before
+			// the budget is consulted), so the hold does not wait out its cap
+			// for an attempt that cannot happen (extender_head_start.go).
+			resetExtenderHeadStartRole()
+			defer withdrawExtenderHeadStartRoleIfUndecided()
+		}
 
 		// A handoff's commit point (the parent's yieldCoordinatorSession) drops
 		// this slot's platform session so the successor's connections under the
@@ -1876,6 +1885,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// it as soon as the budget allows a post (sdk HoldProvideExtenderSession).
 		extenderRoleCapable := proxySettings == nil && extenderGate != nil
 		settings.ProvideExtenderEnabled = extenderRoleCapable
+		if extenderRoleCapable {
+			// The activation loop's pacing survives a restart in the provider
+			// state store (extender_pacing_store.go), so a restarted process
+			// does not post every family at once.
+			settings.ExtenderPacingStore = extenderPacingStore{}
+		}
 		extenderRoleAllowed := !extenderRoleCapable || extenderGate.allowLaunch()
 		if proxySettings == nil {
 			// The startup head start is waiting on this verdict: a role the
@@ -1949,15 +1964,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			device.HoldProvideExtenderSession(true)
 			defer startExtenderBudgetRecheck(proxyCtx, device, extenderGate.allowLaunch)()
 		}
-		if extenderRoleCapable {
-			// The in-place hot swap inherits the carrier listeners, so the
-			// outgoing image releases them before it execs (extender_handover.go).
-			setExtenderRoleReleaser(device)
-			defer setExtenderRoleReleaser(nil)
-		}
 		defer func() {
 			returnErr = errors.Join(returnErr, device.CloseAndWait(context.Background()))
 		}()
+		if extenderRoleCapable {
+			// A hot swap releases the carrier ports for its successor, in place
+			// or by baton (extender_handover.go). Registered after the close
+			// defer so it is cleared first: a swap must not release a device
+			// that is already closing. Cleared only if still this device's, so
+			// a slot relaunched in the meantime keeps its own registration.
+			setExtenderRoleReleaser(device)
+			defer clearExtenderRoleReleaser(device)
+		}
 
 		// Step 2: a proxied slot whose proxy has proven IPv6 egress also runs
 		// an IPv6-pinned transport, so the platform records it dual-stack;

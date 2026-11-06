@@ -30,6 +30,9 @@ type SystemPlatformConfigurer struct {
 	ListenTCP    func(network, address string) (net.Listener, error)
 	LookupPath   func(file string) (string, error)
 	IsRoot       func() bool
+	// Lstat inspects the provider binary without following a symlink. Nil
+	// skips the check, for test doubles that name no real file.
+	Lstat func(name string) (os.FileInfo, error)
 }
 
 // NewSystemPlatformConfigurer returns a SystemPlatformConfigurer for the platform.
@@ -49,6 +52,7 @@ func NewSystemPlatformConfigurer(platform string) *SystemPlatformConfigurer {
 		WriteFile:  os.WriteFile,
 		ListenTCP:  net.Listen,
 		LookupPath: exec.LookPath,
+		Lstat:      os.Lstat,
 		IsRoot: func() bool {
 			return os.Geteuid() == 0
 		},
@@ -110,6 +114,31 @@ func (sp *SystemPlatformConfigurer) VerifyBind(binary, user string) (bool, error
 	return false, nil
 }
 
+// unitNoNewPrivileges is implemented by configurers that can ask systemd
+// whether a unit sets NoNewPrivileges. It is optional so test doubles of
+// PlatformConfigurer need not grow a method.
+type unitNoNewPrivileges interface {
+	UnitNoNewPrivileges(unit string) (bool, error)
+}
+
+// UnitNoNewPrivileges reports whether the systemd unit has NoNewPrivileges
+// set. With it, the kernel ignores file capabilities on exec, so the
+// cap_net_bind_service that setup grants does not reach the service.
+func (sp *SystemPlatformConfigurer) UnitNoNewPrivileges(unit string) (bool, error) {
+	if sp.PlatformName != "linux" || unit == "" || sp.ExecCmd == nil {
+		return false, nil
+	}
+	out, err := sp.ExecCmd("systemctl", "show", "-p", "NoNewPrivileges", "--value", unit)
+	if err != nil {
+		return false, err
+	}
+	switch strings.TrimSpace(string(out)) {
+	case "yes", "true", "1", "on":
+		return true, nil
+	}
+	return false, nil
+}
+
 // --- Linux implementation ---
 
 func (sp *SystemPlatformConfigurer) checkLinux(binary string) (bool, string, error) {
@@ -130,6 +159,19 @@ func (sp *SystemPlatformConfigurer) checkLinux(binary string) (bool, string, err
 func (sp *SystemPlatformConfigurer) applyLinux(binary string) (bool, string, error) {
 	if binary == "" {
 		return false, "", fmt.Errorf("cannot apply cap_net_bind_service: no provider binary path known")
+	}
+	// setcap runs as root on a path the provider user may own (an install
+	// under their home is a supported location). setcap follows a symlink, so a
+	// link swapped in for the binary would put the capability on whatever it
+	// points at. Refuse anything that is not the regular file itself.
+	if sp.Lstat != nil {
+		info, err := sp.Lstat(binary)
+		if err != nil {
+			return false, "", fmt.Errorf("cannot apply cap_net_bind_service: %w", err)
+		}
+		if !info.Mode().IsRegular() {
+			return false, "", fmt.Errorf("refusing to set cap_net_bind_service on %s: it is %s, not a regular file; point setup at the real provider binary", binary, info.Mode().Type())
+		}
 	}
 	// Apply capability
 	if out, err := sp.ExecCmd("setcap", "cap_net_bind_service=+ep", binary); err != nil {
@@ -169,11 +211,31 @@ func (sp *SystemPlatformConfigurer) checkFreeBSD(user string) (bool, string, err
 	if err != nil {
 		return false, "net.inet.ip.portrange.reservedhigh=0 live, but /etc/sysctl.conf unreadable", nil
 	}
-	if !strings.Contains(string(confBytes), "net.inet.ip.portrange.reservedhigh=0") {
+	if !sysctlConfSetsReservedHighZero(string(confBytes)) {
 		return false, "net.inet.ip.portrange.reservedhigh=0 live, but not persisted in /etc/sysctl.conf", nil
 	}
 
 	return true, "net.inet.ip.portrange.reservedhigh=0 (live and persisted in /etc/sysctl.conf)", nil
+}
+
+// sysctlConfSetsReservedHighZero reports whether /etc/sysctl.conf, as the boot
+// scripts read it, leaves net.inet.ip.portrange.reservedhigh at 0. Only live
+// assignment lines count: a commented-out line does not persist anything, and
+// when the file assigns the name more than once the last assignment wins.
+func sysctlConfSetsReservedHighZero(content string) bool {
+	const name = "net.inet.ip.portrange.reservedhigh"
+	set := false
+	for _, line := range strings.Split(content, "\n") {
+		if i := strings.Index(line, "#"); i >= 0 {
+			line = line[:i]
+		}
+		key, val, ok := strings.Cut(line, "=")
+		if !ok || strings.TrimSpace(key) != name {
+			continue
+		}
+		set = strings.TrimSpace(val) == "0"
+	}
+	return set
 }
 
 func (sp *SystemPlatformConfigurer) applyFreeBSD(user string) (bool, string, error) {
@@ -205,7 +267,7 @@ func (sp *SystemPlatformConfigurer) applyFreeBSD(user string) (bool, string, err
 
 	// Persist in /etc/sysctl.conf
 	content := string(data)
-	if !strings.Contains(content, "net.inet.ip.portrange.reservedhigh=0") {
+	if !sysctlConfSetsReservedHighZero(content) {
 		var buf bytes.Buffer
 		buf.WriteString(content)
 		if len(content) > 0 && !strings.HasSuffix(content, "\n") {

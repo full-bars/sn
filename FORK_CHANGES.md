@@ -525,13 +525,13 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 
 ---
 
-## 39. Extender Control and Capability Restore (PR #358, #365)
+## 39. Extender Control and Capability Restore (PR #358, #365, #366)
 
-**Purpose**: Let operators inspect and prepare extender hosts and retain an existing bind capability when the Go updater swaps the binary.
+**Purpose**: Let operators inspect and prepare extender hosts, restore bind capability after binary swaps, and release carrier ports safely at handover.
 
-**Files Modified**: `internal/urnettools/extender_cmd.go`, `internal/urnettools/extender_setup.go`, `internal/urnettools/extender_platform.go`, `internal/urnettools/update_extender.go`, `miner/extender_observation.go` and related tests.
+**Files Modified**: `internal/urnettools/extender_cmd.go`, `internal/urnettools/extender_setup.go`, `internal/urnettools/extender_platform.go`, `internal/urnettools/update_extender.go`, `miner/extender_observation.go`, `miner/extender_handover.go`, `miner/extender_head_start.go`, `miner/hotswap.go`, `scripts/Provider_Install_Linux.sh`, container update wrappers and related tests.
 
-**How to Identify in New Upstream**: extender control-socket observation, setup bind verification and update capability restoration.
+**How to Identify in New Upstream**: extender control-socket observation, setup bind verification, `ensure_extender_cap`, the carrier releaser and head-start handling.
 
 **Status**: shipping in this release.
 
@@ -544,5 +544,17 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 **Files Modified**: `miner/diag_bundle.go`, `internal/urnettools/diag.go`, `miner/proxy_manager_commands.go`, `miner/proxy_manager_url_source.go` and related tests.
 
 **How to Identify in New Upstream**: `cmdDiag`, the diagnostic control request and `desiredForPreview`.
+
+**Status**: shipping in this release.
+
+---
+
+## 41. Proxied Client UDP Relay (PR #387, #388)
+
+**Purpose**: Carry client UDP for a proxied identity through its verified SOCKS5 relay without falling back to the host address, and close idle proxied flows sooner.
+
+**Files Modified**: `miner/proxy_udp_egress.go`, `miner/proxy_udp_check.go`, `miner/h3_packet_conn.go` and related tests; the idle timeout also depends on the pinned SDK.
+
+**How to Identify in New Upstream**: per-flow SOCKS5 UDP associations wired through `providerSlotDialSettings`, relay verification and the proxied-flow idle timeout.
 
 **Status**: shipping in this release.

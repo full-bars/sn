@@ -68,19 +68,51 @@ func TestExtenderMacOSRefusesUnverifiedDaemon(t *testing.T) {
 	}
 }
 
-func TestExtenderSetupUnknownFirewallIncomplete(t *testing.T) {
+// An unknown firewall is advice, not a failure: setup must still reach the
+// bind verification and finish, while saying the firewall was not verified.
+func TestExtenderSetupUnknownFirewallStillVerifiesBind(t *testing.T) {
+	var output, errOut bytes.Buffer
+	cfg := &mockPlatformConfigurer{platform: "linux", configured: true}
+	err := RunExtenderSetup(ExtenderSetupOptions{
+		Platform: "linux", PlatformCfg: cfg, IsRoot: func() bool { return true }, Stdout: &output, Stderr: &errOut,
+		PortChecker: &PortChecker{Platform: "linux", ExecCmd: func(string, ...string) ([]byte, error) { return nil, nil }},
+		FirewallMgr: &FirewallManager{Platform: "linux", LookPath: func(string) (string, error) { return "", errors.New("missing") }},
+	})
+	if err != nil {
+		t.Fatalf("unknown firewall must not fail setup: %v", err)
+	}
+	if !cfg.verifyCalled {
+		t.Fatalf("bind verification skipped: %q", output.String())
+	}
+	if !strings.Contains(errOut.String(), "no active firewall service detected") {
+		t.Fatalf("expected an advisory on stderr: %q", errOut.String())
+	}
+}
+
+// An active firewall setup cannot read or change (nftables here) prints the
+// exact rules, still verifies the bind, and says the firewall is NOT verified.
+func TestExtenderSetupUnverifiableFirewallFinishesWithWarning(t *testing.T) {
 	var output bytes.Buffer
 	cfg := &mockPlatformConfigurer{platform: "linux"}
 	err := RunExtenderSetup(ExtenderSetupOptions{
 		Platform: "linux", PlatformCfg: cfg, IsRoot: func() bool { return true }, Stdout: &output,
 		PortChecker: &PortChecker{Platform: "linux", ExecCmd: func(string, ...string) ([]byte, error) { return nil, nil }},
-		FirewallMgr: &FirewallManager{Platform: "linux", LookPath: func(string) (string, error) { return "", errors.New("missing") }},
+		FirewallMgr: &FirewallManager{Platform: "linux",
+			LookPath: func(f string) (string, error) {
+				if f == "nft" || f == "systemctl" {
+					return f, nil
+				}
+				return "", errors.New("missing")
+			},
+			ExecCmd: func(name string, args ...string) ([]byte, error) { return []byte("active\n"), nil },
+		},
 	})
-	if err == nil || !strings.Contains(err.Error(), "firewall configuration unverified") || strings.Contains(output.String(), "setup complete") {
-		t.Fatalf("err=%v output=%q", err, output.String())
+	if err != nil {
+		t.Fatalf("setup must finish: %v", err)
 	}
-	if !strings.Contains(output.String(), "iptables") || cfg.verifyCalled {
-		t.Fatalf("expected manual rules and no completion: %q", output.String())
+	out := output.String()
+	if !cfg.verifyCalled || !strings.Contains(out, "nft add rule") || !strings.Contains(out, "firewall NOT verified") {
+		t.Fatalf("output=%q verify=%v", out, cfg.verifyCalled)
 	}
 }
 
