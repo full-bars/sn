@@ -1560,6 +1560,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}()
 		proxyCtx, proxyCancel := context.WithCancel(slotCtx)
 		defer proxyCancel()
+		if proxySettings == nil {
+			// The startup head start reads this launch's extender verdict. Start
+			// it undecided, and withdraw it if the launch returns without
+			// publishing one (an authentication or wallet failure comes before
+			// the budget is consulted), so the hold does not wait out its cap
+			// for an attempt that cannot happen (extender_head_start.go).
+			resetExtenderHeadStartRole()
+			defer withdrawExtenderHeadStartRoleIfUndecided()
+		}
 
 		// A handoff's commit point (the parent's yieldCoordinatorSession) drops
 		// this slot's platform session so the successor's connections under the
