@@ -28,7 +28,17 @@ TIMES = {
 
 # Packages the PR gate does not run, by module-relative path, each with the
 # reason. Every entry needs an operator decision before it is permanent.
-EXCLUSIONS = {}
+EXCLUSIONS = {
+    "mainnet": "release-gate package: about 2,800 fsync-bound tests that run "
+               "one at a time, hours of serial test time; "
+               "scripts/test-release-1.0-local.sh runs it in 8 name shards "
+               "with 510-minute deadlines",
+    "sim-testnet": "release-gate package: about 3,600 tests sized for 5 normal "
+                   "and 17 race name shards with 80 to 210-minute deadlines, "
+                   "and its gate-contract tests read the sibling server, "
+                   "connect and sdk checkouts of the release workspace; "
+                   "scripts/test-release-1.0-local.sh runs it there",
+}
 
 # Packages too slow for one 600-second test process, by module-relative path:
 # (number of name splits, reason). Split i of n runs the tests whose name's
