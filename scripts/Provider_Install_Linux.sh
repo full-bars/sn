@@ -97,7 +97,7 @@ ensure_extender_cap ()
     if ! cap_bindable; then
         if cap_present; then
             # setcap -r clears the whole xattr; never erase other capabilities.
-            if ! getcap "$cap_file" 2>/dev/null | awk '{ v=$NF; exit !(v == "cap_net_bind_service=ep" || v == "cap_net_bind_service+ep") }'; then
+            if ! getcap "$cap_file" 2>/dev/null | awk '{ v=$NF; safe=(v == "cap_net_bind_service=ep" || v == "cap_net_bind_service+ep") } END { exit !safe }'; then
                 printf "WARNING: blocked file has other capabilities or unrecognized flags; refusing to remove them\n" >&2
                 return 1
             fi
@@ -1231,7 +1231,7 @@ EOF
                 # Check the restore before restarting: starting the service with
                 # the new binary still in place would only repeat the failure.
                 if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"; then
-                    ensure_extender_cap "$install_path/bin/urnetwork"
+                    ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
                     pr_warn "Restored the previous provider binary; the update did not apply."
                     systemctl --user daemon-reload 2>/dev/null || true
                     if systemctl --user start urnetwork.service 2>/dev/null; then
@@ -1654,7 +1654,7 @@ openrc_rollback_binary_swap ()
     restore_failed=0
     if [ -f "$install_path/bin/urnetwork.old" ]; then
         if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork" 2>/dev/null; then
-            ensure_extender_cap "$install_path/bin/urnetwork"
+            ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
             pr_warn "Restored the previous provider binary; the update did not apply."
         else
             restore_failed=1
@@ -1736,7 +1736,7 @@ openrc_finalize_root_paths ()
     ${SUDO:-} chmod -R go-w,a+rX "$install_path" 2>/dev/null || pr_warn "could not relax permissions on %s" "$install_path"
     ${SUDO:-} chmod 0755 "$install_path" 2>/dev/null || pr_warn "could not set mode on %s" "$install_path"
     # Recursive chown clears file capabilities, even if ownership is unchanged.
-    [ ! -f "$install_path/bin/urnetwork" ] || ensure_extender_cap "$install_path/bin/urnetwork"
+    [ ! -f "$install_path/bin/urnetwork" ] || ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
 
     # The STATE dir is the one thing that must stay somewhere the service
     # user can write — the provider writes its JWT and live state there.
@@ -2921,7 +2921,7 @@ do_install ()
             openrc_rollback_binary_swap
             exit 1
         fi
-        ensure_extender_cap "$install_path/bin/urnetwork"
+        ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
     fi
 
     cd "$script_rundir" || exit 1
@@ -3443,7 +3443,7 @@ do_install ()
             openrc_rollback_binary_swap
             exit 1
         fi
-        ensure_extender_cap "$install_path/bin/urnetwork"
+        ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
     fi
 
     cd "$script_rundir" || exit 1
