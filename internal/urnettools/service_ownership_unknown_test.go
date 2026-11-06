@@ -43,6 +43,7 @@ func TestClassifyServiceOwnership(t *testing.T) {
 		{"supervisor pid lookup failed", running, saved(serviceLookup{SupervisorErr: errors.New("its process id is unknown")}), serviceOwnershipUnknown, true, "process id is unknown"},
 		{"supervisor pid lookup failed, stopped", stopped, saved(serviceLookup{SupervisorErr: errors.New("lock probe failed")}), serviceOwnershipUnknown, true, "lock probe failed"},
 		{"process list failed", running, saved(serviceLookup{SupervisorPid: 100, ProcessesErr: errors.New("snapshot failed")}), serviceOwnershipUnknown, true, "snapshot failed"},
+		{"process list failed, no selected pid", stopped, saved(serviceLookup{SupervisorPid: 100, ProcessesErr: errors.New("snapshot failed")}), serviceOwnershipUnknown, true, "snapshot failed"},
 		{"miner under the supervisor", running, saved(serviceLookup{SupervisorPid: 100, Processes: tree}), serviceOwned, true, ""},
 		{"running, no supervisor", running, saved(serviceLookup{}), serviceNotOwned, true, ""},
 		{"stopped, matching config", stopped, saved(serviceLookup{}), serviceOwned, true, ""},

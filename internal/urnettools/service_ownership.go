@@ -139,7 +139,7 @@ func classifyServiceOwnership(p Provider, l serviceLookup) providerServiceOwners
 		return unknown(fmt.Errorf("find the running %s service: %w", windowsProviderServiceName, l.SupervisorErr))
 	}
 	o.SupervisorPid = l.SupervisorPid
-	if p.PID > 0 && l.SupervisorPid > 0 && l.ProcessesErr != nil {
+	if l.ProcessesErr != nil {
 		return unknown(l.ProcessesErr)
 	}
 	parentOf := func(pid int) (int, bool) {
