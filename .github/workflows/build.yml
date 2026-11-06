@@ -153,7 +153,8 @@ jobs:
         run: |
           set -euo pipefail
           tmp="$RUNNER_TEMP/private-tmp"
-          mkdir -p -m 700 "$tmp"
+          mkdir -p "$tmp"
+          chmod 700 "$tmp"
           dir="$tmp"
           while [ "$dir" != / ]; do
             stat -c '%a %U %n' "$dir"
@@ -190,6 +191,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
@@ -209,6 +212,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
