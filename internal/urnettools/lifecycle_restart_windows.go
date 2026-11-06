@@ -71,7 +71,7 @@ func restartProviderWindows(p Provider) error {
 		}
 		return fail("read the provider service config: %v", err)
 	}
-	if !providerOwnedByConfig(p, config.Executable) {
+	if !providerOwnedByConfig(p, config.Executable, config.StateDir) {
 		return fail("it is not managed by the %s service; restart it manually", windowsProviderServiceName)
 	}
 	if err := stopProviderService(p); err != nil {

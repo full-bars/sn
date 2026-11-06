@@ -39,6 +39,7 @@ func TestProcessDescendsFrom(t *testing.T) {
 func TestServiceOwnsProvider(t *testing.T) {
 	tree := parents(map[int]int{200: 100, 300: 1})
 	const exe = `C:\Users\u\AppData\Local\urnetwork\urnetwork.exe`
+	const state = `C:\Users\u\.urnetwork`
 	cases := []struct {
 		name string
 		p    Provider
@@ -50,12 +51,15 @@ func TestServiceOwnsProvider(t *testing.T) {
 		// same executable, but not under the supervisor: the bare process
 		{"bare provider, same exe", Provider{PID: 300, Running: true, Binary: exe}, 100, false},
 		{"bare provider, no supervisor", Provider{PID: 300, Running: true, Binary: exe}, 0, false},
-		{"stopped, same exe", Provider{Binary: `c:/users/u/appdata/local/urnetwork/URNETWORK.exe`}, 0, true},
-		{"stopped, other exe", Provider{Binary: `D:\other\urnetwork.exe`}, 0, false},
-		{"stopped, no binary", Provider{}, 0, false},
+		{"stopped, same exe and state dir", Provider{Binary: `c:/users/u/appdata/local/urnetwork/URNETWORK.exe`, StateDir: `c:/USERS/u/.urnetwork/`}, 0, true},
+		// a second install can run the same executable with its own state
+		{"stopped, same exe, other state dir", Provider{Binary: exe, StateDir: `D:\second\.urnetwork`}, 0, false},
+		{"stopped, same exe, no state dir", Provider{Binary: exe}, 0, false},
+		{"stopped, other exe", Provider{Binary: `D:\other\urnetwork.exe`, StateDir: state}, 0, false},
+		{"stopped, no binary", Provider{StateDir: state}, 0, false},
 	}
 	for _, c := range cases {
-		if got := serviceOwnsProvider(c.p, exe, c.sup, tree); got != c.want {
+		if got := serviceOwnsProvider(c.p, exe, state, c.sup, tree); got != c.want {
 			t.Errorf("%s: got %v, want %v", c.name, got, c.want)
 		}
 	}

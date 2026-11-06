@@ -8,7 +8,9 @@ import "strings"
 // matching binary path proves nothing about a RUNNING process. A running
 // provider belongs to the service only when it is the supervisor or one of
 // its descendants (the miner). A stopped provider has no process to test, so
-// the saved service config's executable is the only evidence.
+// the saved service config is the only evidence, and it must match on both
+// the executable and the state dir: two installs can share one executable
+// while each keeps its own state.
 
 // maxProcessAncestry bounds the parent walk. Windows parent ids can be reused
 // and form cycles, so the walk must terminate on its own.
@@ -43,12 +45,12 @@ func sameWindowsPath(a, b string) bool {
 	return a != "" && b != "" && norm(a) == norm(b)
 }
 
-// serviceOwnsProvider decides whether the saved service (config executable,
-// and the pid of its running supervisor, 0 when none) owns the selected
-// provider.
-func serviceOwnsProvider(p Provider, configExecutable string, supervisorPid int, parentOf func(int) (int, bool)) bool {
+// serviceOwnsProvider decides whether the saved service (config executable
+// and state dir, and the pid of its running supervisor, 0 when none) owns the
+// selected provider.
+func serviceOwnsProvider(p Provider, configExecutable, configStateDir string, supervisorPid int, parentOf func(int) (int, bool)) bool {
 	if p.PID > 0 {
 		return processDescendsFrom(p.PID, supervisorPid, parentOf)
 	}
-	return !p.Running && sameWindowsPath(p.Binary, configExecutable)
+	return !p.Running && sameWindowsPath(p.Binary, configExecutable) && sameWindowsPath(p.StateDir, configStateDir)
 }

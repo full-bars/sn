@@ -15,7 +15,7 @@ const windowsProviderServiceName = "urnetwork-provider"
 // stop and restart go through the supervisor when it owns the selected
 // provider, and keep the direct process path for a provider it does not own.
 // providerOwnedByServiceFn decides ownership (process ancestry for a running
-// provider, the saved config's executable for a stopped one).
+// provider, the saved config's executable and state dir for a stopped one).
 
 // Seams so the routing below can be tested on any platform.
 var (

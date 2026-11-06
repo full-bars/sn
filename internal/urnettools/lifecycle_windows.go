@@ -184,7 +184,7 @@ func providerOwnedByService(p Provider) bool {
 	if err != nil {
 		return false
 	}
-	return providerOwnedByConfig(p, config.Executable)
+	return providerOwnedByConfig(p, config.Executable, config.StateDir)
 }
 
 // The saved service lookups, replaced by tests so they never read or create
@@ -194,8 +194,8 @@ var (
 	windowsServiceSupervisorPid = winservice.SupervisorPid
 )
 
-func providerOwnedByConfig(p Provider, configExecutable string) bool {
-	return serviceOwnsProvider(p, configExecutable, windowsServiceSupervisorPid(windowsProviderServiceName), processParent)
+func providerOwnedByConfig(p Provider, configExecutable, configStateDir string) bool {
+	return serviceOwnsProvider(p, configExecutable, configStateDir, windowsServiceSupervisorPid(windowsProviderServiceName), processParent)
 }
 
 // processParent looks up a process's parent id in a toolhelp snapshot.
