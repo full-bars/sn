@@ -63,6 +63,9 @@ func startWindowsProvider(p Provider, force, dryRun bool) error {
 	if err := startProviderServiceFn(p); err != nil {
 		return fmt.Errorf("could not start provider %s: %w", providerLabel(p), err)
 	}
+	if err := waitProviderServiceUp(p, owner); err != nil {
+		return fmt.Errorf("could not start provider %s: %w", providerLabel(p), err)
+	}
 	fmt.Printf("started %s through its %s service\n", providerLabel(p), windowsProviderServiceName)
 	return nil
 }
@@ -92,6 +95,9 @@ func restartOwnedProvider(p Provider, owner providerServiceOwnership, force bool
 		return fail(err)
 	}
 	if err := startProviderServiceFn(p); err != nil {
+		return fail(err)
+	}
+	if err := waitProviderServiceUp(p, owner); err != nil {
 		return fail(err)
 	}
 	fmt.Printf("restarted %s\n", providerLabel(p))

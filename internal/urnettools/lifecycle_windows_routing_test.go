@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Plain start, stop and restart on Windows must go through the per-user
@@ -35,6 +36,11 @@ func stubWindowsLifecycle(t *testing.T, state serviceOwnership, serviceErr error
 	cmdStopWindowsFn = func(Provider, bool, bool) error { c.directStop++; return nil }
 	cmdStartWindowsFn = func(Provider, bool, bool) error { c.directStart++; return nil }
 	cmdRestartWindowsFn = func(Provider, bool, bool) error { c.directRestart++; return nil }
+	// the started provider is up at once unless a test says otherwise
+	up, wait, poll := providerServiceUpFn, providerUpWait, providerUpPoll
+	t.Cleanup(func() { providerServiceUpFn, providerUpWait, providerUpPoll = up, wait, poll })
+	providerServiceUpFn = func(providerServiceOwnership) providerUpState { return providerUpState{Up: true, ServiceRunning: true} }
+	providerUpWait, providerUpPoll = 50*time.Millisecond, time.Millisecond
 	return c
 }
 

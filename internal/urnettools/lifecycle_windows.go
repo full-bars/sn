@@ -290,3 +290,32 @@ func runningProviderProcesses() []Provider {
 	}
 	return out
 }
+
+// providerServiceUp looks once at the service starting for owner: up when
+// the control socket in its state dir answers, or when a miner runs under the
+// supervisor (the one it recorded; with an older supervisor that records
+// none, any provider process under it).
+func providerServiceUp(owner providerServiceOwnership) providerUpState {
+	pid, err := windowsServiceSupervisorPid(windowsProviderServiceName)
+	if err != nil {
+		// can't tell yet; keep waiting
+		return providerUpState{ServiceRunning: true}
+	}
+	if pid <= 0 {
+		return providerUpState{}
+	}
+	if controlSocketReachable(Provider{StateDir: owner.StateDir}) {
+		return providerUpState{Up: true, ServiceRunning: true}
+	}
+	processes, err := windowsProcessSnapshot()
+	if err != nil {
+		return providerUpState{ServiceRunning: true}
+	}
+	recorded := windowsServiceMinerPid(windowsProviderServiceName)
+	found := classifyServiceOwnership(Provider{PID: pid, Running: true}, serviceLookup{
+		Executable: owner.Executable, StateDir: owner.StateDir,
+		SupervisorPid: pid, Processes: processes, RecordedMinerPid: recorded,
+	})
+	up := found.MinerPid > 0 || (recorded <= 0 && len(found.ServicePids) > 0)
+	return providerUpState{Up: up, ServiceRunning: true}
+}

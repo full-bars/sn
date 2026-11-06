@@ -46,3 +46,8 @@ func openServiceProcess(_ int) (serviceProcessHandle, error) {
 }
 
 func runningProviderProcesses() []Provider { return nil }
+
+// providerServiceUp has no service to look at off Windows.
+func providerServiceUp(_ providerServiceOwnership) providerUpState {
+	return providerUpState{Up: true, ServiceRunning: true}
+}
