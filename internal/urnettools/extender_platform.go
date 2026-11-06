@@ -30,6 +30,9 @@ type SystemPlatformConfigurer struct {
 	ListenTCP    func(network, address string) (net.Listener, error)
 	LookupPath   func(file string) (string, error)
 	IsRoot       func() bool
+	// Lstat inspects the provider binary without following a symlink. Nil
+	// skips the check, for test doubles that name no real file.
+	Lstat func(name string) (os.FileInfo, error)
 }
 
 // NewSystemPlatformConfigurer returns a SystemPlatformConfigurer for the platform.
@@ -49,6 +52,7 @@ func NewSystemPlatformConfigurer(platform string) *SystemPlatformConfigurer {
 		WriteFile:  os.WriteFile,
 		ListenTCP:  net.Listen,
 		LookupPath: exec.LookPath,
+		Lstat:      os.Lstat,
 		IsRoot: func() bool {
 			return os.Geteuid() == 0
 		},
@@ -155,6 +159,19 @@ func (sp *SystemPlatformConfigurer) checkLinux(binary string) (bool, string, err
 func (sp *SystemPlatformConfigurer) applyLinux(binary string) (bool, string, error) {
 	if binary == "" {
 		return false, "", fmt.Errorf("cannot apply cap_net_bind_service: no provider binary path known")
+	}
+	// setcap runs as root on a path the provider user may own (an install
+	// under their home is a supported location). setcap follows a symlink, so a
+	// link swapped in for the binary would put the capability on whatever it
+	// points at. Refuse anything that is not the regular file itself.
+	if sp.Lstat != nil {
+		info, err := sp.Lstat(binary)
+		if err != nil {
+			return false, "", fmt.Errorf("cannot apply cap_net_bind_service: %w", err)
+		}
+		if !info.Mode().IsRegular() {
+			return false, "", fmt.Errorf("refusing to set cap_net_bind_service on %s: it is %s, not a regular file; point setup at the real provider binary", binary, info.Mode().Type())
+		}
 	}
 	// Apply capability
 	if out, err := sp.ExecCmd("setcap", "cap_net_bind_service=+ep", binary); err != nil {
