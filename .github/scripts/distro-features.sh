@@ -134,16 +134,42 @@ PH_ORIG=""
 say()   { printf '%s\n' "$*" | tee -a "$REPORT"; }
 head1() { printf '\n== %s ==\n' "$*" | tee -a "$REPORT"; }
 
+# Skip policy. A skip only stays green when the check is explicitly optional:
+# the checks that depend on third-party public list hosts, and the exit-75
+# observation, which needs the environment to reject a sign-in. Any other
+# SKIP-NO-NETWORK means a mandatory check was not graded, so it is recorded as
+# a FAIL that keeps the original reason. MANDATORY_CAPS names capabilities whose
+# absence (SKIP-UNSUPPORTED) is a FAIL rather than an owning-port skip: the
+# CI job installs netcat, so a missing nc -U leg is a harness gap, not a head gap.
+OPTIONAL_CHECKS=" url-fetch-source1 url-fetch-source2 url-state-coherence url-cached-skip url-remove-source url-log-vocabulary exit-75-quarantine "
+MANDATORY_CAPS=" control-keys-live-raw control-key-live-runtime "
+MSKIP_N=0
+SKIP_ITEMS=""
+
 record() { # $1=verdict $2=name $3..=detail
     v="$1"; n="$2"; shift 2
+    case "$v" in
+        SKIP-NO-NETWORK)
+            case "$OPTIONAL_CHECKS" in
+                *" $n "*) : ;;
+                *) set -- "MANDATORY-SKIPPED (was SKIP-NO-NETWORK): $*"; v=FAIL; MSKIP_N=$((MSKIP_N + 1)) ;;
+            esac ;;
+        SKIP-UNSUPPORTED)
+            case "$MANDATORY_CAPS" in
+                *" $n "*) set -- "MANDATORY-SKIPPED (was SKIP-UNSUPPORTED): $*"; v=FAIL; MSKIP_N=$((MSKIP_N + 1)) ;;
+            esac ;;
+    esac
     printf '%s %s: %s\n' "$v" "$n" "$*" | tee -a "$REPORT"
     case "$v" in
         PASS) PASS_N=$((PASS_N + 1)) ;;
         FAIL) FAIL_N=$((FAIL_N + 1)); FAIL_ITEMS="$FAIL_ITEMS$n: $*
 " ;;
-        SKIP-UNSUPPORTED) SKIPU_N=$((SKIPU_N + 1)) ;;
-        SKIP-NO-NETWORK) SKIPN_N=$((SKIPN_N + 1)) ;;
-        SKIP-UNSAFE) SKIPX_N=$((SKIPX_N + 1)) ;;
+        SKIP-UNSUPPORTED) SKIPU_N=$((SKIPU_N + 1)); SKIP_ITEMS="$SKIP_ITEMS$v $n
+" ;;
+        SKIP-NO-NETWORK) SKIPN_N=$((SKIPN_N + 1)); SKIP_ITEMS="$SKIP_ITEMS$v $n
+" ;;
+        SKIP-UNSAFE) SKIPX_N=$((SKIPX_N + 1)); SKIP_ITEMS="$SKIP_ITEMS$v $n
+" ;;
     esac
 }
 
@@ -1201,6 +1227,22 @@ b1_identity_gate() {
         wait "$gp" 2>/dev/null || true
         GATE_EXITED="$exited"; GATE_SOCK="$sock_up"
     }
+    # A refusal must leave no identity behind: no key material or client JWT on
+    # disk, and no registration call in the provider's own log. The harness has
+    # no API stub, so "no call" is evidenced by the log vocabulary plus the
+    # artifacts a successful registration always writes; it cannot see the wire.
+    gate_negatives() { # $1=check name  $2=log
+        made=""
+        for gf in .provider.key .provider.jwt .client_jwts.json; do
+            [ -e "$gate_home/.urnetwork/$gf" ] && made="$made $gf"
+        done
+        regcalls="$(grep -ciE 'register-client|registering (a )?(new )?client|minted' "$2" 2>/dev/null || true)"
+        if [ -z "$made" ] && [ "$(as_num "$regcalls")" = "0" ]; then
+            record PASS "$1-no-side-effects" "refusal created no .provider.key/.provider.jwt/.client_jwts.json and logged no registration call"
+        else
+            record FAIL "$1-no-side-effects" "refused start left identity artifacts:${made:- none} registration log lines=$(as_num "$regcalls")"
+        fi
+    }
     # The control socket can precede the gate. Wait for a natural process exit,
     # and count registration requests at a local endpoint rather than inferring
     # them from files, logs or socket readiness.
@@ -1257,6 +1299,7 @@ b1_identity_gate() {
     wait "$gate_server" 2>/dev/null || true
     if miner_help | grep -q -- '--adopt-legacy-provider-key'; then
         gate_probe "--adopt-legacy-provider-key" "$WORK/gate-adopt.log"
+        gate_negatives identity-gate-adopt "$WORK/gate-adopt.log"
         if [ "$GATE_SOCK" = "no" ]; then
             record PASS identity-gate-adopt "fresh dir + --adopt-legacy-provider-key refused to allocate (no socket)"
         else
@@ -1300,6 +1343,37 @@ b1_exit75() {
 # and h3 (the limit key the integrated head wires live). The full live-apply /
 # needs-restart matrix is b1_control_key_semantics below; ramlogs' restart
 # semantics are asserted end-to-end by b1_ramlogs.
+# gogc_runtime_scrape prints the runtime's GOGC from /metrics (empty when not
+# obtainable). Metrics are switched on for the read and off again afterwards.
+gogc_runtime_scrape() {
+    g_out="$(TS metrics on -f 2>&1)"
+    case "$g_out" in *"not implement"*) return 0 ;; esac
+    detect_http_fetch || return 0
+    g_addrs="$(TS metrics status 2>&1 | sed -n 's/.*listening  http:\/\/\([^/]*\)\/metrics.*/\1/p' | sort -u | tr '\n' ' ')"
+    for g_a in $g_addrs; do
+        g_body="$(metrics_fetch_any "$g_a")" || continue
+        printf '%s' "$g_body" | sed -n 's/^urnet_gc_gogc \([0-9-][0-9]*\).*/\1/p' | head -1
+        return 0
+    done
+    return 0
+}
+
+b1_gogc_runtime() {
+    TS set gogc 250 -f >/dev/null 2>&1
+    g_rt="$(gogc_runtime_scrape)"
+    g_clear_rc=0
+    TS set gogc off -f >/dev/null 2>&1 || g_clear_rc=$?
+    g_back="$(gogc_runtime_scrape)"
+    TS metrics off -f >/dev/null 2>&1 || true
+    if [ -z "$g_rt" ]; then
+        record SKIP-UNSUPPORTED control-key-live-runtime "urnet_gc_gogc not scrapable (no exporter or no HTTP fetch tool); the gogc check above is control-plane evidence only"
+    elif [ "$g_rt" = "250" ] && [ "$g_clear_rc" = "0" ] && [ -n "$g_back" ] && [ "$g_back" != "250" ]; then
+        record PASS control-key-live-runtime "runtime GOGC read 250 after set gogc=250 and left 250 after clear (now '$g_back')"
+    else
+        record FAIL control-key-live-runtime "runtime urnet_gc_gogc after set=250 was '$g_rt', after clear '${g_back:-unreadable}' (clear rc=$g_clear_rc)"
+    fi
+}
+
 b1_control_keys() {
     if [ "$CLIENT_SAFE" != "1" ]; then
         client_skip control-key-live key-h3-limit
@@ -1318,6 +1392,13 @@ b1_control_keys() {
         record FAIL control-key-live "set gogc=250 rc=$rc readback='$(printf '%s' "$rb" | firstline)' loglines=$logged state=$st_before->$st_after"
     fi
     TS set gogc off -f >/dev/null 2>&1 || true
+
+    # The readback, the log line and the persisted file above are all the control
+    # plane talking about itself. The Go runtime's own GOGC (urnet_gc_gogc is read
+    # from runtime/metrics /gc/gogc:percent) is the behaviour: set, scrape, clear.
+    # h3 has no equivalent runtime series at this head (urnet_h3_set_size is not
+    # exposed), so key-h3-limit below stays a control-plane check.
+    b1_gogc_runtime
 
     # h3 limit key (feat/p2-h3): must apply live, read back, be logged and
     # persisted. A head without the live port answers "requires a restart" or
@@ -1764,6 +1845,7 @@ b2_url_sources() {
         return 0
     fi
     if ! ensure_live miner-url; then
+        record SKIP-NO-NETWORK url-provider-live "provider not live; URL pipeline cannot run"
         record SKIP-NO-NETWORK url-fetch-source1 "provider not live; URL pipeline cannot run"
         record SKIP-NO-NETWORK url-fetch-source2 "provider not live"
         record SKIP-NO-NETWORK url-cached-skip "provider not live"
@@ -2246,11 +2328,71 @@ b3_surface() {
 }
 
 # ---------------------------------------------------------------------------
+# per-group state isolation
+# ---------------------------------------------------------------------------
+# Each independent check group starts from a state directory created fresh at
+# the same path (SOCK, discovery and the passwd-home trust all key on it). The
+# previous contents are moved to $WORK/state-before-<group> for diagnosis and
+# are never visible to the group. Only the JWT is staged again. If any reset
+# step fails the group is recorded as a state-isolation FAIL and not run.
+group_fresh_state() { # $1=group
+    stop_miner 15 >/dev/null 2>&1
+    LIVE=0
+    gdir="$WORK/state-before-$1"
+    # JWT_FILE may live inside STATE_DIR, so copy it out before the reset.
+    jstage=""
+    if [ -n "$JWT_FILE" ] && [ -r "$JWT_FILE" ]; then
+        jstage="$WORK/jwt-stage"
+        if ! { cp "$JWT_FILE" "$jstage" && chmod 600 "$jstage"; }; then
+            record FAIL "state-isolation-$1" "could not stage the JWT outside the state dir; previous state left in place"
+            return 1
+        fi
+    fi
+    if ! rm -rf "$gdir"; then
+        record FAIL "state-isolation-$1" "could not clear the old archive $gdir; previous state left in place"
+        return 1
+    fi
+    if [ -d "$STATE_DIR" ] && ! cp -a "$STATE_DIR" "$gdir" 2>/dev/null; then
+        record FAIL "state-isolation-$1" "could not archive the previous state dir to $gdir; previous state left in place"
+        return 1
+    fi
+    if ! rm -rf "$STATE_DIR"; then
+        record FAIL "state-isolation-$1" "could not remove the previous state dir (archived at $gdir)"
+        return 1
+    fi
+    if ! { mkdir -p "$STATE_DIR" && chmod 700 "$STATE_DIR"; }; then
+        record FAIL "state-isolation-$1" "could not create a fresh state dir at $STATE_DIR"
+        return 1
+    fi
+    if [ -n "$jstage" ]; then
+        if ! { cp "$jstage" "$STATE_DIR/jwt" && chmod 600 "$STATE_DIR/jwt"; }; then
+            record FAIL "state-isolation-$1" "could not stage the JWT into the fresh state dir"
+            return 1
+        fi
+        rm -f "$jstage"
+        # A JWT_FILE inside STATE_DIR under another name was removed with the
+        # old state; point it at the restaged copy so every later group (and
+        # the JWT_FILE readability checks) still sees the token.
+        if [ ! -r "$JWT_FILE" ]; then JWT_FILE="$STATE_DIR/jwt"; fi
+    fi
+    left="$(ls -A "$STATE_DIR" 2>/dev/null | grep -v '^jwt$' | tr '\n' ' ')"
+    if [ -n "$left" ]; then
+        record FAIL "state-isolation-$1" "group state dir not fresh, leftover: $left"
+        return 1
+    fi
+    record PASS "state-isolation-$1" "group started from a freshly created state dir (previous state archived at $gdir)"
+}
+
+# ---------------------------------------------------------------------------
 # summary
 # ---------------------------------------------------------------------------
 summary() {
     head1 "SUMMARY"
-    say "PASS=$PASS_N FAIL=$FAIL_N SKIP-UNSUPPORTED=$SKIPU_N SKIP-NO-NETWORK=$SKIPN_N SKIP-UNSAFE=$SKIPX_N"
+    say "PASS=$PASS_N FAIL=$FAIL_N (of which MANDATORY-SKIPPED=$MSKIP_N) SKIP-UNSUPPORTED=$SKIPU_N SKIP-NO-NETWORK(optional)=$SKIPN_N SKIP-UNSAFE=$SKIPX_N"
+    if [ -n "$SKIP_ITEMS" ]; then
+        say "SKIPPED, not verified (green only because optional or owned by another port):"
+        printf '%s\n' "$SKIP_ITEMS" | sed '/^$/d; s/^/  /' | tee -a "$REPORT"
+    fi
     if [ "$FAIL_N" -gt 0 ]; then
         say "FAIL items:"
         printf '%s\n' "$FAIL_ITEMS" | sed '/^$/d' | tee -a "$REPORT"
@@ -2296,6 +2438,7 @@ main() {
             CHK_ORDER="url manip surface"
         fi
         for g in $CHK_ORDER; do
+            group_fresh_state "$g" || continue
             case "$g" in
                 url)     b2_url_sources ;;
                 manip)   b2_manipulations ;;

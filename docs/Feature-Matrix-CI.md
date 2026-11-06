@@ -60,6 +60,9 @@ release blocker in them is not masked by proxy churn.
 | `key-ramlogs` | `set ramlogs on` reports the restart-required semantics and, on the NEXT start, the persisted key beats an explicit `URNETWORK_RAMLOGS=0`: the banner appears and the important buffer (`important.log`) exists |
 | `identity-gate-fresh` | a bare `provide` on a fresh state dir exits nonzero without creating `.provider.key` or calling the registration endpoint; the harness waits for process exit and counts calls at a local fixture |
 | `identity-gate-adopt` | `--adopt-legacy-provider-key` against a fresh dir must not allocate (refresh only, no new client) |
+| `identity-gate-adopt-no-side-effects` | the refused adopt start leaves no `.provider.key`, `.provider.jwt` or `.client_jwts.json` and logs no registration call (the harness cannot see the wire; this is artifact and log evidence) |
+| `control-key-live-runtime` | after `set gogc 250` the runtime's own `urnet_gc_gogc` reads 250, and not 250 after the clear |
+| `state-isolation-<group>` | each independent group (url, manip, surface) starts from a freshly created state dir; the previous one is archived under the work dir |
 | `exit-75-quarantine` | a rejected sign-in with `--quarantine-rejected-sign-in` exits 75 (EX_TEMPFAIL; environmental when not reproducible) |
 | `state-paths` | provider state exists under `STATE_DIR` |
 | `state-paths-sandbox` | no `.urnetwork` grows under the pre-adaptation passwd home (the sandbox-leak canary) |
@@ -114,8 +117,19 @@ SKIP-NO-NETWORK <name>: <detail>
 ```
 
 - **PASS** — the documented behavior was observed.
-- **FAIL** — a product defect. Every FAIL is a finding: the detail carries the
-  raw tool output and the state fingerprints that back it.
+- **FAIL** — an assertion failed. Use the check name and the detail to tell
+  a product failure from an environment failure. These are environment or
+  harness failures, so fix the runner, not the product:
+  - the detail starts with `MANDATORY-SKIPPED`: a mandatory check was not
+    graded (no network, no readable JWT, a missing capability).
+  - `state-isolation-<group>`: the harness could not reset its state.
+  - `client-targeting`: client targeting resolved outside the sandbox (the
+    passwd home does not match the sandbox HOME).
+  - `binaries` with a detail of `... not executable at <path>`: a required
+    binary is missing or not executable on the runner.
+
+  Any other FAIL is a product failure. Every FAIL carries the raw tool output
+  and the state fingerprints that back it.
 - **SKIP-UNSUPPORTED** — runtime-detected absence at this head. The detail
   names the owning port when one exists (see the table below), so a skip reads
   as "another port owns this", never as a silent pass.
@@ -135,8 +149,18 @@ The summary block prints the counts and repeats every FAIL item, so a CI log
 is self-contained:
 
 ```
-PASS=34 FAIL=0 SKIP-UNSUPPORTED=8 SKIP-NO-NETWORK=0
+PASS=34 FAIL=0 (of which MANDATORY-SKIPPED=0) SKIP-UNSUPPORTED=8 SKIP-NO-NETWORK(optional)=0 SKIP-UNSAFE=0
 ```
+
+A `SKIP-NO-NETWORK` is green only for the explicitly optional checks (the
+public-list URL checks and `exit-75-quarantine`). Any other one is recorded as
+a `FAIL` prefixed `MANDATORY-SKIPPED`, with the original reason kept, because a
+mandatory check that was not graded is not a pass. `control-keys-live-raw` and
+`control-key-live-runtime` are mandatory capabilities: their `SKIP-UNSUPPORTED`
+is also a `FAIL`. The summary lists every remaining skip by name.
+`sh .github/scripts/test_distro_features_isolation.sh .github/scripts/distro-features.sh`
+checks the isolation, the reset failure paths and the skip policy without a
+miner.
 
 ## Conditional map (owning ports)
 
