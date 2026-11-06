@@ -60,5 +60,13 @@ sh "$here/stop-provider.sh" "$tmp/nope" 1; check "missing PID file" 0 "$?"
 echo 999999999 > "$tmp/stale"; sh "$here/stop-provider.sh" "$tmp/stale" 1; check "stale PID" 0 "$?"
 echo bad > "$tmp/bad"; sh "$here/stop-provider.sh" "$tmp/bad" 1 2>/dev/null; check "invalid PID" 0 "$?"
 
+# PID 0 must never be signalled: kill 0 hits the caller's whole process group.
+# setsid gives stop-provider.sh a group of its own, so a regression kills only
+# that script (exit 143) and never this test.
+for zero in 0 00; do
+  echo "$zero" > "$tmp/zero"
+  setsid -w sh "$here/stop-provider.sh" "$tmp/zero" 1 2>/dev/null; check "PID $zero is ignored" 0 "$?"
+done
+
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

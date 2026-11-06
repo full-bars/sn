@@ -15,6 +15,8 @@ case "$timeout" in ''|*[!0-9]*) echo 'invalid timeout' >&2; exit 2;; esac
 [ -s "$pidfile" ] || exit 0
 pid=$(cat "$pidfile")
 case "$pid" in ''|*[!0-9]*) echo "ignoring invalid PID in $pidfile" >&2; exit 0;; esac
+# kill 0 signals the caller's whole process group, so a zero PID is invalid.
+[ "$pid" -gt 0 ] 2>/dev/null || { echo "ignoring invalid PID in $pidfile" >&2; exit 0; }
 
 # wait_gone SECONDS: poll ten times a second; 0 once the PID is gone.
 wait_gone() {
