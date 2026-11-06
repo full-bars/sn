@@ -97,5 +97,24 @@ done
 if [ "$?" = 0 ]; then ok "JWT_FILE inside STATE_DIR is restaged after the reset"
 else fail "JWT_FILE inside STATE_DIR: $(tail -1 "$T/jin.out")"; fi
 
+# ---- 5. a JWT_FILE inside STATE_DIR under another name survives every reset
+(
+  BIN_DIR=/nonexistent STATE_HOME="$T/jname/home" FEATURE_WORK="$T/jname/work" FEATURE_REPORT="$T/jname/report"
+  export BIN_DIR STATE_HOME FEATURE_WORK FEATURE_REPORT
+  mkdir -p "$STATE_HOME"
+  . "$T/h.sh" >/dev/null 2>&1
+  mkdir -p "$STATE_DIR" "$WORK"
+  stop_miner() { :; }
+  printf 'tok\n' >"$STATE_DIR/token"; JWT_FILE="$STATE_DIR/token"
+  for g in url manip surface; do
+    group_fresh_state "$g" >/dev/null 2>&1 || { echo "group_fresh_state $g rc=$?"; exit 1; }
+    [ "$(cat "$STATE_DIR/jwt" 2>/dev/null)" = tok ] || { echo "jwt missing after reset $g"; exit 1; }
+    [ -r "$JWT_FILE" ] || { echo "JWT_FILE unreadable after reset $g ($JWT_FILE)"; exit 1; }
+  done
+  exit 0
+) >"$T/jname.out" 2>&1
+if [ "$?" = 0 ]; then ok "JWT_FILE inside STATE_DIR under another name survives three resets"
+else fail "JWT_FILE inside STATE_DIR (other name): $(tail -1 "$T/jname.out")"; fi
+
 printf 'self-test: %s failure(s)\n' "$FAILS"
 [ "$FAILS" = 0 ]

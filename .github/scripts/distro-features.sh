@@ -2370,6 +2370,10 @@ group_fresh_state() { # $1=group
             return 1
         fi
         rm -f "$jstage"
+        # A JWT_FILE inside STATE_DIR under another name was removed with the
+        # old state; point it at the restaged copy so every later group (and
+        # the JWT_FILE readability checks) still sees the token.
+        if [ ! -r "$JWT_FILE" ]; then JWT_FILE="$STATE_DIR/jwt"; fi
     fi
     left="$(ls -A "$STATE_DIR" 2>/dev/null | grep -v '^jwt$' | tr '\n' ' ')"
     if [ -n "$left" ]; then
