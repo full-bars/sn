@@ -109,7 +109,16 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 				isTargetHolder = true
 			}
 		}
-		if !isTargetHolder {
+		// `ss -p` and `lsof` hide sockets owned by other users from an
+		// unprivileged caller. A held port with no holder identity, seen before
+		// elevation, is therefore not proof of a foreign process: a root provider
+		// holding 443 reads exactly like this. Defer the verdict to the elevated
+		// re-run, which sees every socket.
+		holderHidden := !isRootFn() && ports.TCP443.Process == "" && ports.TCP443.PID == 0
+		if holderHidden {
+			fmt.Fprintf(errOut, "warn: TCP 443 is held by a process this user cannot see; re-checking after elevation\n")
+		}
+		if !isTargetHolder && !holderHidden {
 			proc := ports.TCP443.Process
 			if proc == "" && ports.TCP443.PID > 0 {
 				proc = fmt.Sprintf("PID %d", ports.TCP443.PID)
