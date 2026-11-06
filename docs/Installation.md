@@ -217,6 +217,8 @@ Zero-downtime `urnet-tools hotswap` is not available on Windows in this release.
 
 `urnet-tools` runs natively on Windows. It needs no `tail`, no `sudo` and no WSL: the log views use a built-in follower that survives log rotation, `urnet-tools start` creates `%USERPROFILE%\.urnetwork` before it launches the provider, and the commands that would need `sudo` on Linux are skipped. Rotating, clearing or updating a log no longer fails with "being used by another process", because the follower opens it with delete sharing.
 
+When the provider runs under its per-user service (`urnetwork-provider`, set up by `provider service install`), `urnet-tools start`, `stop` and `restart` act on that service, not on the provider process alone. This matters because the service starts the provider again whenever it exits: stopping only the process would last about 15 seconds. `urnet-tools stop` stops the service and the provider together, and `urnet-tools start` starts the service again. A provider that the service does not run is still started and stopped directly.
+
 ### 📦 Tarball Install (Alternative)
 
 The Windows release tarball includes `urnet-tools` alongside the provider binary. If you prefer a manual or offline install:
