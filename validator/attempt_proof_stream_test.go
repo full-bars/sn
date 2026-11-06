@@ -15,7 +15,49 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 )
+
+// waitForFixtureChangeTick probes the same filesystem without changing the
+// file whose retained identity the test is about to challenge.
+func waitForFixtureChangeTick(t *testing.T, path string, before os.FileInfo) {
+	t.Helper()
+	original, ok := attemptSettlementClosureFileMetadata(before)
+	if !ok {
+		t.Fatal("native file metadata unavailable")
+	}
+	probe, err := os.CreateTemp(filepath.Dir(path), ".tick-probe-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	probePath := probe.Name()
+	if err := probe.Close(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Remove(probePath) })
+	deadline := time.Now().Add(100 * time.Millisecond)
+	for {
+		if err := os.WriteFile(probePath, []byte("tick"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		info, err := os.Stat(probePath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		current, ok := attemptSettlementClosureFileMetadata(info)
+		if !ok {
+			t.Fatal("native probe metadata unavailable")
+		}
+		if current.changeSeconds > original.changeSeconds ||
+			(current.changeSeconds == original.changeSeconds && current.changeNanoseconds > original.changeNanoseconds) {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("filesystem change time did not advance within 100ms")
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
 
 // Proof bytes are independent fixture expectations, never read back from the
 // projection whose completeness the tests are establishing.
@@ -354,6 +396,7 @@ func TestDiskAttemptProofProjectionWarmCursorRejectsSameLengthRewrite(t *testing
 		}
 		corrupt := attemptProofStreamTestExpected(t, fixture.recordTs[:8])
 		corrupt[len(corrupt)/2] ^= 1
+		waitForFixtureChangeTick(t, store.path, before)
 		if err := os.WriteFile(store.path, corrupt, 0o600); err != nil {
 			t.Fatal(err)
 		}
