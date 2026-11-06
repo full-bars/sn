@@ -29,13 +29,26 @@ import (
 )
 
 // Only the frozen source resource contract is shared with the real adapter.
+// That contract is the server source go.mod pins, read from the module cache,
+// so a fresh checkout needs no sibling and a stray sibling cannot stand in.
 func suiteFixtureServerSource(t *testing.T) string {
 	t.Helper()
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
-	server, err := filepath.EvalSymlinks(filepath.Join(cwd, "..", "..", "..", "server"))
+	command := exec.CommandContext(t.Context(), "go", "list", "-mod=readonly", "-m", "-f", "{{.Dir}}", "github.com/urnetwork/server")
+	command.Dir = filepath.Join(cwd, "..", "..")
+	command.Env = append(os.Environ(), "GOWORK=off", "GOFLAGS=-mod=readonly", "GOPROXY=off")
+	output, err := command.CombinedOutput()
+	if err != nil {
+		t.Fatalf("resolve the pinned server source: %v\n%s", err, output)
+	}
+	directory := strings.TrimSpace(string(output))
+	if directory == "" {
+		t.Fatal("the pinned server source is not in the module cache")
+	}
+	server, err := filepath.EvalSymlinks(directory)
 	if err != nil {
 		t.Fatal(err)
 	}

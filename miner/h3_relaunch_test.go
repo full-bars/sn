@@ -381,8 +381,8 @@ func TestInstallProvideH3RelauncherPublishesAndClearsTheSeam(t *testing.T) {
 	if relauncher == nil {
 		t.Fatal("the provide run must publish its relauncher")
 	}
-	if relauncher.runContext() != ctx {
-		t.Fatal("the relauncher must run with the provide run's context")
+	if relauncher.runContext().Err() != nil {
+		t.Fatal("the relauncher's context must be live while the run is")
 	}
 	if relauncher.detachForRelaunch("not-a-running-identity") {
 		t.Fatal("detaching an identity this run does not serve must report false")
@@ -391,6 +391,21 @@ func TestInstallProvideH3RelauncherPublishesAndClearsTheSeam(t *testing.T) {
 	if currentH3IdentityRelauncher() != nil {
 		t.Fatal("the run must clear its relauncher on the way out")
 	}
+	if relauncher.runContext().Err() == nil {
+		t.Fatal("clearing the run must end the relauncher's context")
+	}
+
+	// The relauncher's context also ends with the provide run's.
+	runCtx, runCancel := context.WithCancel(context.Background())
+	clear = installProvideH3Relauncher(runCtx, reloader)
+	relauncher = currentH3IdentityRelauncher()
+	runCancel()
+	select {
+	case <-relauncher.runContext().Done():
+	case <-time.After(5 * time.Second):
+		t.Fatal("the relauncher must run with the provide run's context")
+	}
+	clear()
 }
 
 // hasClients is what keeps a relaunch from cutting a live session: it reads the

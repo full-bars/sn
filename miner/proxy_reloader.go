@@ -673,11 +673,22 @@ func installProvideH3Relauncher(ctx context.Context, reloader *minerProxyReloade
 	if reloader == nil {
 		return func() {}
 	}
-	setH3IdentityRelauncher(&minerH3Relauncher{ctx: ctx, reloader: reloader})
+	ctx, cancel := context.WithCancel(ctx)
+	relauncher := &minerH3Relauncher{ctx: ctx, reloader: reloader}
+	setH3IdentityRelauncher(relauncher)
 	shedder := &h3OutageShedder{}
-	go runH3OutageShed(ctx, shedder, h3OutageEvidence)
+	shedDone := make(chan struct{})
+	go func() {
+		defer close(shedDone)
+		runH3OutageShed(ctx, shedder, h3OutageEvidence)
+	}()
+	// The run waits for the goroutines it started here, so none of them is
+	// still reading run state when a later run replaces it.
 	return func() {
 		setH3IdentityRelauncher(nil)
+		cancel()
+		<-shedDone
+		relauncher.stopPasses()
 		resetH3OutageShed(shedder)
 	}
 }
@@ -727,6 +738,34 @@ func (r *minerProxyReloader) relaunchIdentityContext(ctx context.Context, key st
 type minerH3Relauncher struct {
 	ctx      context.Context
 	reloader *minerProxyReloader
+
+	passMu  sync.Mutex
+	stopped bool
+	passes  sync.WaitGroup
+}
+
+// goPass runs a relaunch pass that stopPasses waits for. A pass started after
+// the stop is dropped: the run is ending.
+func (r *minerH3Relauncher) goPass(pass func()) {
+	r.passMu.Lock()
+	defer r.passMu.Unlock()
+	if r.stopped {
+		return
+	}
+	r.passes.Add(1)
+	go func() {
+		defer r.passes.Done()
+		pass()
+	}()
+}
+
+// stopPasses refuses new passes and waits for the running ones. The caller
+// cancels ctx first so they end promptly.
+func (r *minerH3Relauncher) stopPasses() {
+	r.passMu.Lock()
+	r.stopped = true
+	r.passMu.Unlock()
+	r.passes.Wait()
 }
 
 func (r *minerH3Relauncher) detachForRelaunch(key string) bool {

@@ -519,15 +519,19 @@ func TestExplicitSignInWaitsForARenewalAndWins(t *testing.T) {
 	}
 
 	// watch every state the file passes through for the one that must never
-	// exist: the renewed file without its lineage
+	// exist: the renewed file without its lineage. The two files are read
+	// one after the other, so the lineage check sits between two reads of
+	// the token: a sign-in that replaces the file and then removes the lineage
+	// between them is not that state.
 	stopWatch := make(chan struct{})
 	watched := make(chan bool, 1)
 	go func() {
 		unprotected := false
 		for {
-			token, _ := ReadToken(networkPath)
+			before, _ := ReadToken(networkPath)
 			_, lineageErr := os.Stat(networkPath + ".lineage")
-			if token == "old-sign-in-renewed" && errors.Is(lineageErr, os.ErrNotExist) {
+			after, _ := ReadToken(networkPath)
+			if before == "old-sign-in-renewed" && after == before && errors.Is(lineageErr, os.ErrNotExist) {
 				unprotected = true
 			}
 			select {

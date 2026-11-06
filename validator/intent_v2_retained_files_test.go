@@ -182,6 +182,7 @@ func TestIntentV2RetainedFileIdentitySkipsOnlyAnUnchangedFile(t *testing.T) {
 			t.Fatal(err)
 		}
 		raw[len(raw)-2] ^= 1
+		waitForFixtureChangeTick(t, path, info)
 		file, err := os.OpenFile(path, os.O_WRONLY, 0)
 		if err != nil {
 			t.Fatal(err)
