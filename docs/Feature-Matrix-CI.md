@@ -13,9 +13,10 @@ there is no bash assumption, no jq and no python3 (Alpine, debian-slim,
 openSUSE and Arch images all lack at least one of them). The feature harness
 only needs the payload (`miner`, `urnet-tools`), core POSIX utilities, and —
 for the raw control-socket probes — a netcat that supports `nc -U`. The CI
-job installs `netcat-openbsd` where the base image does not carry it (Alpine's
-busybox `nc` has no unix-socket mode; without the install those checks
-degrade to `SKIP-UNSUPPORTED`, they never fail).
+job installs `netcat-openbsd` where the base image does not carry it. Alpine's
+busybox `nc` has no unix-socket mode. Without a suitable netcat, the mandatory
+`control-keys-live-raw` check becomes a `FAIL`; other raw-socket checks may
+remain `SKIP-UNSUPPORTED`.
 
 Everything reads and writes only inside `STATE_HOME` (`HOME`): the harness
 creates its own sandbox, points the invoking user's passwd home at it (a
