@@ -621,8 +621,8 @@ func TestManagerStartRunsTheProxyAuditTicker(t *testing.T) {
 	t.Cleanup(func() { currentProxyAuditStatus.Store(nil) })
 	t.Cleanup(func() { setProxyAuditSystemdState(0, false) })
 
-	// The audit runner's immediate publish happens on start, so a poll for the
-	// registered auditor is deterministic enough without sleeping.
+	// The runner registers the auditor and then publishes, both on its own
+	// goroutine, so poll for both.
 	prev := currentProxyAuditor.Load()
 	t.Cleanup(func() { currentProxyAuditor.Store(prev) })
 
@@ -631,7 +631,7 @@ func TestManagerStartRunsTheProxyAuditTicker(t *testing.T) {
 		t.Fatalf("manager start: %v", err)
 	}
 	deadline := time.Now().Add(2 * time.Second)
-	for currentProxyAuditor.Load() == nil && time.Now().Before(deadline) {
+	for (currentProxyAuditor.Load() == nil || proxyAuditStatusSnapshot() == nil) && time.Now().Before(deadline) {
 		time.Sleep(time.Millisecond)
 	}
 	if currentProxyAuditor.Load() == nil {
