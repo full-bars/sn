@@ -217,5 +217,4 @@ jobs:
         run: ./urnet-tools auto-start off || true
 
       - name: Verify no agent plists remain
-        run: |
-          ls "$HOME/Library/LaunchAgents/" 2>/dev/null | grep -c "urnetwork" || echo "OK: no urnetwork agent plists"
+        run: sh .github/scripts/assert-no-urnetwork-agents.sh "$HOME/Library/LaunchAgents"

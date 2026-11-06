@@ -13,6 +13,30 @@ else
     . /app/update_verify.sh
 fi
 
+# Keep this standalone copy in sync with the installer and other wrapper.
+ensure_extender_cap ()
+(
+    [ "$(uname -s)" = Linux ] || return 0
+    cap_file=$1
+    cap_present() {
+        command -v getcap >/dev/null 2>&1 || return 1
+        getcap "$cap_file" 2>/dev/null | awk '
+            { for (i=2; i<=NF; i++) {
+                split($i, parts, /[=+]/); split(parts[1], caps, ",")
+                for (c in caps) if (caps[c] == "cap_net_bind_service" && parts[2] ~ /e/ && parts[2] ~ /p/) found=1
+            } } END { exit !found }'
+    }
+    if cap_present; then
+        return 0
+    fi
+    if command -v setcap >/dev/null 2>&1 && setcap cap_net_bind_service=+ep "$cap_file" 2>/dev/null && cap_present; then
+        return 0
+    fi
+    quoted_file=$(printf '%s' "$cap_file" | sed "s/'/'\\\\''/g")
+    printf "WARNING: extender capability missing or unverified; run: sudo setcap cap_net_bind_service=+ep '%s'\n" "$quoted_file" >&2
+    return 0
+)
+
 operation="${1:-}"
 [ -z "$operation" ] && { echo "Usage: urnet-tools <command> [args]"; exit 1; }
 shift
@@ -162,6 +186,7 @@ do_update() {
         exit 1
     fi
 
+    ensure_extender_cap "$provider_bin"
     echo "Provider binary updated to $version."
     rm -rf "$tmpdir"
 

@@ -651,10 +651,27 @@ jobs:
           # POSIX sh on purpose: this runs in the distro's own shell. The
           # harness never prints the token; its report file stays inside
           # STATE_HOME.
+          #
+          # The log is STREAMED, and the harness is capped below the job's
+          # 75-minute limit. Before, the output went to a file that was only
+          # cat'd after the harness exited, so a hang (it alternates between
+          # debian and alpine across runs) was cancelled by the job timeout
+          # with nothing printed: no way to see which check it stopped in.
+          # Now the last line in the log names the check, and 124/143 are
+          # reported as a harness timeout instead of a silent cancel.
           set +e
-          sh /tmp/payload/distro-features.sh >/tmp/feature-matrix.log 2>&1
+          : >/tmp/feature-matrix.log
+          timeout 3600 sh /tmp/payload/distro-features.sh >/tmp/feature-matrix.log 2>&1 &
+          hpid=$!
+          tail -n +1 -f /tmp/feature-matrix.log &
+          tpid=$!
+          wait "$hpid"
           rc=$?
-          cat /tmp/feature-matrix.log
+          sleep 1
+          kill "$tpid" 2>/dev/null
+          if [ "$rc" = "124" ] || [ "$rc" = "143" ]; then
+            echo "::error::the feature harness hit its 60-minute cap; the last lines above are where it stopped"
+          fi
           echo "harness rc=$rc"
           exit "$rc"
 

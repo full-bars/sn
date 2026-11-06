@@ -58,9 +58,9 @@ release blocker in them is not masked by proxy churn.
 | `logging-events` | at default verbosity, `events.log` records `STARTUP: version=…`, and a clean SIGTERM records `SIGNAL: context cancelled` + `PROVIDER EXIT: normal shutdown` |
 | `ramlog-routing` | `URNETWORK_RAMLOGS=1` and `URNETWORK_PROFILE=lowmem` each redirect the long-running provide's stdio to `/dev/shm/urnetwork.log` with the `[ramlogs] Active at …` banner |
 | `key-ramlogs` | `set ramlogs on` reports the restart-required semantics and, on the NEXT start, the persisted key beats an explicit `URNETWORK_RAMLOGS=0`: the banner appears and the important buffer (`important.log`) exists |
-| `identity-gate-fresh` | a fresh state dir without `--allow-client-registration` must not allocate (no socket) |
-| `identity-gate-adopt` | `--adopt-legacy-provider-key` against a fresh dir must not allocate either |
-| `identity-gate-*-no-side-effects` | a refused start leaves no `.provider.key`, `.provider.jwt` or `.client_jwts.json` and logs no registration call (the harness cannot see the wire; this is artifact and log evidence) |
+| `identity-gate-fresh` | a bare `provide` on a fresh state dir exits nonzero without creating `.provider.key` or calling the registration endpoint; the harness waits for process exit and counts calls at a local fixture |
+| `identity-gate-adopt` | `--adopt-legacy-provider-key` against a fresh dir must not allocate (refresh only, no new client) |
+| `identity-gate-adopt-no-side-effects` | the refused adopt start leaves no `.provider.key`, `.provider.jwt` or `.client_jwts.json` and logs no registration call (the harness cannot see the wire; this is artifact and log evidence) |
 | `control-key-live-runtime` | after `set gogc 250` the runtime's own `urnet_gc_gogc` reads 250, and not 250 after the clear |
 | `state-isolation-<group>` | each independent group (url, manip, surface) starts from a freshly created state dir; the previous one is archived under the work dir |
 | `exit-75-quarantine` | a rejected sign-in with `--quarantine-rejected-sign-in` exits 75 (EX_TEMPFAIL; environmental when not reproducible) |
@@ -84,7 +84,7 @@ release blocker in them is not masked by proxy churn.
 | `proxy-remove` | `proxy remove <host:port> -f` removes exactly one address and the state diff is present |
 | `remove-dead-preview` | `proxy remove-dead --preview` either lists candidates without writing, or reports the warmup gate (exit 61: `need 1h … uptime`) without writing |
 | `remove-match` | `proxy remove --match=<pattern>` removes by pattern when the surface exposes it |
-| `refresh-add-only` | `proxy refresh -f` reports the curated list up to date or an add-only diff (`0 proxies will be removed`) and a non-interactive run writes nothing |
+| `refresh-add-only` | `proxy refresh -f` reports the list up to date or its two-way plan (`N proxies will be removed, M will be added`; it was never add-only) and a non-interactive run writes nothing (the confirmation reads EOF). The row keeps its name for report continuity |
 | `proxy-paste` | `proxy paste` accepts a stdin list when the grammar exposes it |
 | `proxy-clear` | `proxy clear -f` removes every configured proxy |
 
