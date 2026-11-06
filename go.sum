@@ -117,8 +117,8 @@ github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMo
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
-github.com/full-bars/connect v0.0.0-20261103001629-0995412c628f h1:HagN/D5tejUlKJ21LY+d5JynFhCGylvLfcZBOKrWeNg=
-github.com/full-bars/connect v0.0.0-20261103001629-0995412c628f/go.mod h1:a/FXsgqF1lnCBs5Jg04URGus+4tiPSMRQ2dUoFu3WLM=
+github.com/full-bars/connect v0.0.0-20261106051808-847cba8c64c2 h1:Tu2ozrIMBCjF9d6DY+elc4zMGaKFNObgElwg9zD3PdA=
+github.com/full-bars/connect v0.0.0-20261106051808-847cba8c64c2/go.mod h1:a/FXsgqF1lnCBs5Jg04URGus+4tiPSMRQ2dUoFu3WLM=
 github.com/full-bars/sdk v0.0.0-20261103020602-9a1e3e49010e h1:1wkVWSMevceOz0sJ14OsKawSx48cxl2ArH/twsRdksM=
 github.com/full-bars/sdk v0.0.0-20261103020602-9a1e3e49010e/go.mod h1:WLi1Xb+RAlK/wQuIahzrRzjPbUCaVRBkWwdIeejxnNI=
 github.com/gagliardetto/binary v0.8.0 h1:U9ahc45v9HW0d15LoN++vIXSJyqR/pWw8DDlhd7zvxg=
