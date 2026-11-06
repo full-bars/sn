@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -132,6 +133,19 @@ func shortenRefusalGate(t *testing.T) {
 	t.Cleanup(func() { extenderRefusalGateRetry, extenderRefusalGateDeadline = retry, deadline })
 }
 
+// waitGroupWithin waits for goroutines a bounded wait left running, and fails
+// the test if they are still running after bound.
+func waitGroupWithin(t *testing.T, wg *sync.WaitGroup, bound time.Duration, what string) {
+	t.Helper()
+	done := make(chan struct{})
+	go func() { wg.Wait(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(bound):
+		t.Fatalf("%s still running after %s", what, bound)
+	}
+}
+
 // Shutdown with a store that is gone and a journal that cannot be written
 // returns once the deadline passes, says what was lost in the log, and records
 // it in refusal-loss.log where the next start can find it.
@@ -155,6 +169,14 @@ func TestShutdownIsBoundedWhenNothingCanHoldTheRefusal(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		t.Fatal("shutdown never finished: the wait is unbounded")
 	}
+	// The loss record runs aside and the wait gives it only what is left of
+	// the deadline (50ms under the shortened gate), so a slow disk can leave
+	// it still writing when the wait returns. Wait for it before reading the
+	// log, and before this test's state directory goes away: a record that
+	// outlives the test resolves the state directory after t.Setenv has been
+	// undone and writes into whatever directory is current then.
+	waitGroupWithin(t, &extenderDurableAttempts, 10*time.Second, "the abandoned durability attempts")
+	waitGroupWithin(t, &extenderLossAttempts, 10*time.Second, "the loss record")
 	path, err := providerStatePath("refusal-loss.log")
 	if err != nil {
 		t.Fatal(err)
