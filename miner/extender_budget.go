@@ -752,12 +752,13 @@ func allowUncountedExtenderLaunch(cause error) bool {
 // hostActivationPostsProbe is hostActivationPosts with the store opened once
 // at the probe timeout. A store that will not open is the unmeasured host, which
 // is charged the conservative two, rather than a second open at the ordinary
-// two-second timeout.
+// two-second timeout. A store that opens charges only the posts the stored
+// activation pacing lets this launch make (pacedActivationPosts).
 func hostActivationPostsProbe() int {
 	if _, err := openProviderStoreForProcessRetry(true, true, probeOpenTimeout); err != nil {
 		return 2
 	}
-	return hostActivationPosts()
+	return pacedActivationPosts(hostActivationPosts(), time.Now())
 }
 
 // The startup decision may spend a few hundred milliseconds waiting for a

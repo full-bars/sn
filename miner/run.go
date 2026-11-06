@@ -1885,6 +1885,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// it as soon as the budget allows a post (sdk HoldProvideExtenderSession).
 		extenderRoleCapable := proxySettings == nil && extenderGate != nil
 		settings.ProvideExtenderEnabled = extenderRoleCapable
+		if extenderRoleCapable {
+			// The activation loop's pacing survives a restart in the provider
+			// state store (extender_pacing_store.go), so a restarted process
+			// does not post every family at once.
+			settings.ExtenderPacingStore = extenderPacingStore{}
+		}
 		extenderRoleAllowed := !extenderRoleCapable || extenderGate.allowLaunch()
 		if proxySettings == nil {
 			// The startup head start is waiting on this verdict: a role the
