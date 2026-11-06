@@ -176,7 +176,12 @@ func uninstallProvider(p Provider) error {
 	// Another provider's supervisor is not ours to stop, and a bare provider
 	// is stopped through its own pid. Decide before anything is stopped: the
 	// proof (supervisor lock, process ancestry) is gone once it has stopped.
-	serviceOwned := providerOwnedByServiceFn(p)
+	// When the owner can't be told, neither path is safe: refuse.
+	owner := providerOwnedByServiceFn(p)
+	if owner.State == serviceOwnershipUnknown {
+		return ownershipUnknownError("uninstall", p, owner)
+	}
+	serviceOwned := owner.owned()
 	if serviceOwned {
 		if err := stopProviderServiceFn(p); err != nil {
 			return fmt.Errorf("uninstall %s: could not stop the provider service: %w", providerLabel(p), err)

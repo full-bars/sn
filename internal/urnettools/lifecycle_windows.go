@@ -177,42 +177,56 @@ func stopProviderService(_ Provider) error {
 }
 
 // providerOwnedByService reports whether the saved provider service owns the
-// selected provider, so a restart or uninstall of the service cannot hit an
-// unrelated supervisor. No saved service, or an unreadable one, owns nothing.
-func providerOwnedByService(p Provider) bool {
+// selected provider, so a lifecycle command or uninstall of the service
+// cannot hit an unrelated supervisor. No saved service owns nothing; a lookup
+// that failed in any other way leaves ownership unknown.
+func providerOwnedByService(p Provider) providerServiceOwnership {
+	var l serviceLookup
 	config, err := loadWindowsProviderService(windowsProviderServiceName)
 	if err != nil {
-		return false
+		if windowsPathMissing(err) {
+			l.NotInstalled = true
+		} else {
+			l.LoadErr = err
+		}
+		return classifyServiceOwnership(p, l)
 	}
-	return providerOwnedByConfig(p, config.Executable, config.StateDir)
+	l.Executable, l.StateDir = config.Executable, config.StateDir
+	l.LogPath = filepath.Join(config.StateDir, winservice.LogName)
+	l.SupervisorPid, l.SupervisorErr = windowsServiceSupervisorPid(windowsProviderServiceName)
+	if l.SupervisorErr == nil && l.SupervisorPid > 0 {
+		l.Processes, l.ProcessesErr = windowsProcessSnapshot()
+	}
+	return classifyServiceOwnership(p, l)
 }
 
 // The saved service lookups, replaced by tests so they never read or create
-// files in the real profile folder (Running creates the lock file).
+// files in the real profile folder (Running creates the lock file) or depend
+// on the machine's processes.
 var (
 	loadWindowsProviderService  = winservice.Load
 	windowsServiceSupervisorPid = winservice.SupervisorPid
+	windowsProcessSnapshot      = processSnapshot
 )
 
-func providerOwnedByConfig(p Provider, configExecutable, configStateDir string) bool {
-	return serviceOwnsProvider(p, configExecutable, configStateDir, windowsServiceSupervisorPid(windowsProviderServiceName), processParent)
-}
-
-// processParent looks up a process's parent id in a toolhelp snapshot.
-func processParent(pid int) (int, bool) {
+// processSnapshot reads every process's parent id and image name from a
+// toolhelp snapshot.
+func processSnapshot() (map[int]serviceProcessEntry, error) {
 	snapshot, err := windows.CreateToolhelp32Snapshot(windows.TH32CS_SNAPPROCESS, 0)
 	if err != nil {
-		return 0, false
+		return nil, fmt.Errorf("list processes: %w", err)
 	}
 	defer windows.CloseHandle(snapshot)
+	out := map[int]serviceProcessEntry{}
 	var entry windows.ProcessEntry32
 	entry.Size = uint32(unsafe.Sizeof(entry))
 	for err = windows.Process32First(snapshot, &entry); err == nil; err = windows.Process32Next(snapshot, &entry) {
-		if int(entry.ProcessID) == pid {
-			return int(entry.ParentProcessID), true
-		}
+		out[int(entry.ProcessID)] = serviceProcessEntry{Parent: int(entry.ParentProcessID), Name: windows.UTF16ToString(entry.ExeFile[:])}
 	}
-	return 0, false
+	if !errors.Is(err, windows.ERROR_NO_MORE_FILES) {
+		return nil, fmt.Errorf("list processes: %w", err)
+	}
+	return out, nil
 }
 
 // stopBareProvider stops a running provider the service does not own. It goes

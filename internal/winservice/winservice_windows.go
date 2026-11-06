@@ -297,12 +297,27 @@ func lockSupervisor(file *os.File) (bool, error) {
 }
 
 // SupervisorPid is the process id of the running supervisor of this service,
-// 0 when none is running.
-func SupervisorPid(name string) int {
-	if running, _ := Running(name); !running {
-		return 0
+// 0 when none is running. An error means it could not be told: the lock
+// could not be probed, or it is held but names no process.
+func SupervisorPid(name string) (int, error) {
+	running, err := Running(name)
+	if err != nil {
+		return 0, err
 	}
-	return supervisorPid(name)
+	if !running {
+		return 0, nil
+	}
+	// a supervisor that has just taken its lock writes its pid a moment later
+	deadline := time.Now().Add(time.Second)
+	for {
+		if pid := supervisorPid(name); pid > 0 {
+			return pid, nil
+		}
+		if time.Now().After(deadline) {
+			return 0, errors.New("the service is running, but its process id is unknown")
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 }
 
 func supervisorPid(name string) int {

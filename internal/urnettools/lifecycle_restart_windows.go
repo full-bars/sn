@@ -64,20 +64,19 @@ func restartProviderWindows(p Provider) error {
 	if p.PID <= 0 && p.Binary == "" {
 		return fail("no process or binary ties it to the %s service; restart it manually", windowsProviderServiceName)
 	}
-	config, err := loadWindowsProviderService(windowsProviderServiceName)
-	if err != nil {
-		if windowsPathMissing(err) {
-			return fail("no provider service is installed; restart it manually")
-		}
-		return fail("read the provider service config: %v", err)
-	}
-	if !providerOwnedByConfig(p, config.Executable, config.StateDir) {
+	owner := providerOwnedByServiceFn(p)
+	switch {
+	case !owner.Installed:
+		return fail("no provider service is installed; restart it manually")
+	case owner.State == serviceOwnershipUnknown:
+		return fail("could not tell whether the %s service runs it: %v. Nothing was changed. Fix that, then try again", windowsProviderServiceName, owner.Err)
+	case !owner.owned():
 		return fail("it is not managed by the %s service; restart it manually", windowsProviderServiceName)
 	}
 	if err := stopProviderService(p); err != nil {
 		return fail("stop the provider service: %v", err)
 	}
-	if err := launchProviderService(config); err != nil {
+	if err := launchProviderService(owner.Executable, owner.LogPath); err != nil {
 		return fail("%v", err)
 	}
 	fmt.Printf("restarted %s\n", providerLabel(p))
@@ -86,8 +85,8 @@ func restartProviderWindows(p Provider) error {
 
 // launchProviderService starts the saved supervisor and waits up to 10
 // seconds for it to report running.
-func launchProviderService(config *winservice.Config) error {
-	if err := winservice.Launch(config.Executable, "service", "run", windowsProviderServiceName); err != nil {
+func launchProviderService(executable, logPath string) error {
+	if err := winservice.Launch(executable, "service", "run", windowsProviderServiceName); err != nil {
 		return fmt.Errorf("start the provider service: %w", err)
 	}
 	deadline := time.Now().Add(10 * time.Second)
@@ -96,7 +95,7 @@ func launchProviderService(config *winservice.Config) error {
 			return nil
 		}
 		if time.Now().After(deadline) {
-			return fmt.Errorf("the provider service did not start; see %s", filepath.Join(config.StateDir, winservice.LogName))
+			return fmt.Errorf("the provider service did not start; see %s", logPath)
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -115,7 +114,7 @@ func startProviderService(_ Provider) error {
 	if running, _ := winservice.Running(windowsProviderServiceName); running {
 		return nil
 	}
-	return launchProviderService(config)
+	return launchProviderService(config.Executable, filepath.Join(config.StateDir, winservice.LogName))
 }
 
 // windowsPathMissing reports a missing file or folder. Besides os.ErrNotExist

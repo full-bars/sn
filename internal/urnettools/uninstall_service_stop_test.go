@@ -55,7 +55,7 @@ func uninstallFixture(t *testing.T) Provider {
 // shortcut or service config.
 func stubServiceOwned(t *testing.T) {
 	t.Helper()
-	stubOwnership(t, true, func(Provider) error {
+	stubOwnership(t, serviceOwned, func(Provider) error {
 		t.Error("an owned provider is stopped through its service, not by pid")
 		return nil
 	}, func() {})

@@ -75,7 +75,7 @@ func TestRestartProviderWindowsUnownedBinary(t *testing.T) {
 				}
 				return c.config, c.err
 			}
-			windowsServiceSupervisorPid = func(string) int { return 0 }
+			windowsServiceSupervisorPid = func(string) (int, error) { return 0, nil }
 
 			err := restartProviderWindows(Provider{Binary: t.TempDir() + `\urnetwork.exe`, StateDir: t.TempDir()})
 			if err == nil || !strings.Contains(err.Error(), "could not restart provider") || !strings.Contains(err.Error(), c.want) {

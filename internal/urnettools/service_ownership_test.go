@@ -65,10 +65,10 @@ func TestServiceOwnsProvider(t *testing.T) {
 	}
 }
 
-func stubOwnership(t *testing.T, owned bool, stopBare func(Provider) error, removeFiles func()) {
+func stubOwnership(t *testing.T, state serviceOwnership, stopBare func(Provider) error, removeFiles func()) {
 	t.Helper()
 	po, sb, rf := providerOwnedByServiceFn, stopBareProviderFn, removeProviderServiceFilesFn
-	providerOwnedByServiceFn = func(Provider) bool { return owned }
+	providerOwnedByServiceFn = func(Provider) providerServiceOwnership { return testOwnership(state) }
 	stopBareProviderFn, removeProviderServiceFilesFn = stopBare, removeFiles
 	t.Cleanup(func() { providerOwnedByServiceFn, stopBareProviderFn, removeProviderServiceFilesFn = po, sb, rf })
 }
@@ -80,7 +80,7 @@ func TestUninstallLeavesForeignServiceAlone(t *testing.T) {
 	stubCleanup(t)
 	stubStopService(t, func(Provider) error { t.Error("foreign service must not be stopped"); return nil })
 	bare, removed := 0, 0
-	stubOwnership(t, false, func(Provider) error { bare++; return nil }, func() { removed++ })
+	stubOwnership(t, serviceNotOwned, func(Provider) error { bare++; return nil }, func() { removed++ })
 	if err := uninstallProvider(p); err != nil {
 		t.Fatalf("uninstallProvider: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestUninstallRemovesOwnedServiceFiles(t *testing.T) {
 	stopped := 0
 	stubStopService(t, func(Provider) error { stopped++; return nil })
 	removed := 0
-	stubOwnership(t, true, func(Provider) error { t.Error("owned provider is stopped by the service"); return nil }, func() { removed++ })
+	stubOwnership(t, serviceOwned, func(Provider) error { t.Error("owned provider is stopped by the service"); return nil }, func() { removed++ })
 	if err := uninstallProvider(p); err != nil {
 		t.Fatalf("uninstallProvider: %v", err)
 	}
@@ -111,7 +111,7 @@ func TestUninstallAbortsWhenBareProviderWillNotStop(t *testing.T) {
 	p := uninstallFixture(t)
 	stubCleanup(t)
 	stubStopService(t, func(Provider) error { return nil })
-	stubOwnership(t, false, func(Provider) error { return errors.New("access denied") }, func() {})
+	stubOwnership(t, serviceNotOwned, func(Provider) error { return errors.New("access denied") }, func() {})
 	if err := uninstallProvider(p); err == nil {
 		t.Fatal("must fail when the bare provider cannot be stopped")
 	}

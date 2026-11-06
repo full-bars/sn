@@ -27,7 +27,9 @@ func stopProviderService(_ Provider) error { return nil }
 
 // Only Windows has a per-user supervisor to own a provider. Elsewhere the
 // service seams are inert: everything is "owned", so nothing extra is stopped.
-func providerOwnedByService(_ Provider) bool { return true }
+func providerOwnedByService(_ Provider) providerServiceOwnership {
+	return providerServiceOwnership{State: serviceOwned, Installed: true}
+}
 
 func stopBareProvider(_ Provider) error { return nil }
 

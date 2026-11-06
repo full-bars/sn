@@ -1,6 +1,9 @@
 package urnettools
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // The Windows supervisor ("service run urnetwork-provider") is per user, and
 // a bare provider (started by hand, or by an older install) can run next to
@@ -53,4 +56,96 @@ func serviceOwnsProvider(p Provider, configExecutable, configStateDir string, su
 		return processDescendsFrom(p.PID, supervisorPid, parentOf)
 	}
 	return !p.Running && sameWindowsPath(p.Binary, configExecutable) && sameWindowsPath(p.StateDir, configStateDir)
+}
+
+// serviceOwnership is the answer to "does the saved service run this
+// provider?". Unknown is its own answer: a lookup that failed must not read as
+// "not owned", or plain stop would kill a miner the supervisor brings back,
+// and plain start would run a second provider beside it.
+type serviceOwnership int
+
+const (
+	serviceNotOwned serviceOwnership = iota
+	serviceOwned
+	serviceOwnershipUnknown
+)
+
+// providerServiceOwnership is what the saved service lookup found for one
+// provider.
+type providerServiceOwnership struct {
+	State serviceOwnership
+	// Installed is whether a saved service exists at all.
+	Installed bool
+	// Err is why ownership is unknown.
+	Err error
+	// the saved service, and the pid of its running supervisor (0 when none)
+	Executable    string
+	StateDir      string
+	LogPath       string
+	SupervisorPid int
+}
+
+func (o providerServiceOwnership) owned() bool { return o.State == serviceOwned }
+
+// serviceProcessEntry is one process in a process snapshot.
+type serviceProcessEntry struct {
+	Parent int
+	Name   string
+}
+
+// serviceLookup is the raw result of reading the saved service and the
+// process table. The Windows side fills it; classifyServiceOwnership decides,
+// so the decision is tested on every platform.
+type serviceLookup struct {
+	// NotInstalled: no saved service (its config or the profile folder is
+	// missing). Any other load failure is in LoadErr.
+	NotInstalled bool
+	LoadErr      error
+
+	Executable string
+	StateDir   string
+	LogPath    string
+
+	SupervisorPid int
+	SupervisorErr error
+
+	// read only while a supervisor runs
+	Processes    map[int]serviceProcessEntry
+	ProcessesErr error
+}
+
+func classifyServiceOwnership(p Provider, l serviceLookup) providerServiceOwnership {
+	o := providerServiceOwnership{Installed: !l.NotInstalled}
+	unknown := func(err error) providerServiceOwnership {
+		o.State, o.Err = serviceOwnershipUnknown, err
+		return o
+	}
+	if l.NotInstalled {
+		return o
+	}
+	if l.LoadErr != nil {
+		return unknown(fmt.Errorf("read the provider service config: %w", l.LoadErr))
+	}
+	o.Executable, o.StateDir, o.LogPath = l.Executable, l.StateDir, l.LogPath
+	if l.SupervisorErr != nil {
+		return unknown(fmt.Errorf("find the running %s service: %w", windowsProviderServiceName, l.SupervisorErr))
+	}
+	o.SupervisorPid = l.SupervisorPid
+	if p.PID > 0 && l.SupervisorPid > 0 && l.ProcessesErr != nil {
+		return unknown(l.ProcessesErr)
+	}
+	parentOf := func(pid int) (int, bool) {
+		entry, ok := l.Processes[pid]
+		return entry.Parent, ok
+	}
+	if serviceOwnsProvider(p, l.Executable, l.StateDir, l.SupervisorPid, parentOf) {
+		o.State = serviceOwned
+	}
+	return o
+}
+
+// ownershipUnknownError is the refusal when the saved service could not be
+// read. Nothing has been changed at that point.
+func ownershipUnknownError(action string, p Provider, o providerServiceOwnership) error {
+	return fmt.Errorf("could not %s provider %s: could not tell whether the %s service runs it: %v. Nothing was changed. Fix that, then run \"urnet-tools %s\" again", action, providerLabel(p), windowsProviderServiceName, o.Err, action)
 }

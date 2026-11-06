@@ -18,7 +18,7 @@ type windowsLifecycleCalls struct {
 	serviceStop, serviceStart, serviceRestart int
 }
 
-func stubWindowsLifecycle(t *testing.T, owned bool, serviceErr error) *windowsLifecycleCalls {
+func stubWindowsLifecycle(t *testing.T, state serviceOwnership, serviceErr error) *windowsLifecycleCalls {
 	t.Helper()
 	c := &windowsLifecycleCalls{}
 	po, ss, st, rs := providerOwnedByServiceFn, stopProviderServiceFn, startProviderServiceFn, restartProviderWindowsFn
@@ -27,7 +27,7 @@ func stubWindowsLifecycle(t *testing.T, owned bool, serviceErr error) *windowsLi
 		providerOwnedByServiceFn, stopProviderServiceFn, startProviderServiceFn, restartProviderWindowsFn = po, ss, st, rs
 		cmdStopWindowsFn, cmdStartWindowsFn, cmdRestartWindowsFn = ds, dst, dr
 	})
-	providerOwnedByServiceFn = func(Provider) bool { return owned }
+	providerOwnedByServiceFn = func(Provider) providerServiceOwnership { return testOwnership(state) }
 	stopProviderServiceFn = func(Provider) error { c.serviceStop++; return serviceErr }
 	startProviderServiceFn = func(Provider) error { c.serviceStart++; return serviceErr }
 	restartProviderWindowsFn = func(Provider) error { c.serviceRestart++; return serviceErr }
@@ -42,7 +42,7 @@ func windowsRoutingFixture() Provider {
 }
 
 func TestWindowsStopOwnedProviderStopsTheService(t *testing.T) {
-	c := stubWindowsLifecycle(t, true, nil)
+	c := stubWindowsLifecycle(t, serviceOwned, nil)
 	if err := stopWindowsProvider(windowsRoutingFixture(), false, false); err != nil {
 		t.Fatalf("stopWindowsProvider: %v", err)
 	}
@@ -52,7 +52,7 @@ func TestWindowsStopOwnedProviderStopsTheService(t *testing.T) {
 }
 
 func TestWindowsStopOwnedProviderReportsServiceFailure(t *testing.T) {
-	c := stubWindowsLifecycle(t, true, errors.New("supervisor did not stop"))
+	c := stubWindowsLifecycle(t, serviceOwned, errors.New("supervisor did not stop"))
 	err := stopWindowsProvider(windowsRoutingFixture(), false, false)
 	if err == nil || !strings.Contains(err.Error(), "could not stop provider") || !strings.Contains(err.Error(), "supervisor did not stop") {
 		t.Fatalf("err = %v, want a could-not-stop error carrying the cause", err)
@@ -63,7 +63,7 @@ func TestWindowsStopOwnedProviderReportsServiceFailure(t *testing.T) {
 }
 
 func TestWindowsStopUnownedProviderStopsTheProcess(t *testing.T) {
-	c := stubWindowsLifecycle(t, false, nil)
+	c := stubWindowsLifecycle(t, serviceNotOwned, nil)
 	if err := stopWindowsProvider(windowsRoutingFixture(), true, false); err != nil {
 		t.Fatalf("stopWindowsProvider: %v", err)
 	}
@@ -73,7 +73,7 @@ func TestWindowsStopUnownedProviderStopsTheProcess(t *testing.T) {
 }
 
 func TestWindowsStartOwnedProviderStartsTheService(t *testing.T) {
-	c := stubWindowsLifecycle(t, true, nil)
+	c := stubWindowsLifecycle(t, serviceOwned, nil)
 	p := windowsRoutingFixture()
 	p.PID, p.Running = 0, false
 	if err := startWindowsProvider(p, false, false); err != nil {
@@ -85,7 +85,7 @@ func TestWindowsStartOwnedProviderStartsTheService(t *testing.T) {
 }
 
 func TestWindowsStartOwnedProviderReportsServiceFailure(t *testing.T) {
-	stubWindowsLifecycle(t, true, errors.New("the provider service did not start"))
+	stubWindowsLifecycle(t, serviceOwned, errors.New("the provider service did not start"))
 	err := startWindowsProvider(windowsRoutingFixture(), false, false)
 	if err == nil || !strings.Contains(err.Error(), "could not start provider") {
 		t.Fatalf("err = %v, want a could-not-start error", err)
@@ -93,7 +93,7 @@ func TestWindowsStartOwnedProviderReportsServiceFailure(t *testing.T) {
 }
 
 func TestWindowsStartUnownedProviderStartsDirectly(t *testing.T) {
-	c := stubWindowsLifecycle(t, false, nil)
+	c := stubWindowsLifecycle(t, serviceNotOwned, nil)
 	if err := startWindowsProvider(windowsRoutingFixture(), false, false); err != nil {
 		t.Fatalf("startWindowsProvider: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestWindowsStartUnownedProviderStartsDirectly(t *testing.T) {
 }
 
 func TestWindowsRestartOwnedProviderRestartsTheService(t *testing.T) {
-	c := stubWindowsLifecycle(t, true, nil)
+	c := stubWindowsLifecycle(t, serviceOwned, nil)
 	if err := restartWindowsProvider(windowsRoutingFixture(), false, false); err != nil {
 		t.Fatalf("restartWindowsProvider: %v", err)
 	}
@@ -113,7 +113,7 @@ func TestWindowsRestartOwnedProviderRestartsTheService(t *testing.T) {
 }
 
 func TestWindowsRestartUnownedProviderRestartsDirectly(t *testing.T) {
-	c := stubWindowsLifecycle(t, false, nil)
+	c := stubWindowsLifecycle(t, serviceNotOwned, nil)
 	if err := restartWindowsProvider(windowsRoutingFixture(), true, false); err != nil {
 		t.Fatalf("restartWindowsProvider: %v", err)
 	}

@@ -16,6 +16,8 @@ const windowsProviderServiceName = "urnetwork-provider"
 // provider, and keep the direct process path for a provider it does not own.
 // providerOwnedByServiceFn decides ownership (process ancestry for a running
 // provider, the saved config's executable and state dir for a stopped one).
+// When it cannot tell (the saved service or the process list could not be
+// read), the command refuses rather than guess: either path could be wrong.
 
 // Seams so the routing below can be tested on any platform.
 var (
@@ -27,7 +29,11 @@ var (
 
 // stopWindowsProvider is "urnet-tools stop" on Windows.
 func stopWindowsProvider(p Provider, force, dryRun bool) error {
-	if !providerOwnedByServiceFn(p) {
+	owner := providerOwnedByServiceFn(p)
+	switch owner.State {
+	case serviceOwnershipUnknown:
+		return ownershipUnknownError("stop", p, owner)
+	case serviceNotOwned:
 		return cmdStopWindowsFn(p, force, dryRun)
 	}
 	fmt.Printf("stopping the %s service, which runs %s...\n", windowsProviderServiceName, providerLabel(p))
@@ -40,7 +46,11 @@ func stopWindowsProvider(p Provider, force, dryRun bool) error {
 
 // startWindowsProvider is "urnet-tools start" on Windows.
 func startWindowsProvider(p Provider, force, dryRun bool) error {
-	if !providerOwnedByServiceFn(p) {
+	owner := providerOwnedByServiceFn(p)
+	switch owner.State {
+	case serviceOwnershipUnknown:
+		return ownershipUnknownError("start", p, owner)
+	case serviceNotOwned:
 		return cmdStartWindowsFn(p, force, dryRun)
 	}
 	fmt.Printf("starting the %s service, which runs %s...\n", windowsProviderServiceName, providerLabel(p))
@@ -55,7 +65,11 @@ func startWindowsProvider(p Provider, force, dryRun bool) error {
 // provider restarts the supervisor as a whole, the same path update and tune
 // use (restartProviderWindows).
 func restartWindowsProvider(p Provider, force, dryRun bool) error {
-	if !providerOwnedByServiceFn(p) {
+	owner := providerOwnedByServiceFn(p)
+	switch owner.State {
+	case serviceOwnershipUnknown:
+		return ownershipUnknownError("restart", p, owner)
+	case serviceNotOwned:
 		return cmdRestartWindowsFn(p, force, dryRun)
 	}
 	fmt.Printf("restarting the %s service, which runs %s...\n", windowsProviderServiceName, providerLabel(p))
