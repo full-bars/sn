@@ -161,6 +161,12 @@ jobs:
           done
           echo "TMPDIR=$tmp" >> "$GITHUB_ENV"
 
+      - name: Fetch the complete module graph
+        # The source-graph census lists every module offline, as qualification
+        # does after its own download. The build cache holds only the modules
+        # a build needs, so fetch the rest of the graph first.
+        run: go list -m all > /dev/null
+
       - name: Census and run uncached test shard
         shell: bash
         env:
