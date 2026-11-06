@@ -219,6 +219,17 @@ Zero-downtime `urnet-tools hotswap` is not available on Windows in this release.
 
 When the provider runs under its per-user service (`urnetwork-provider`, set up by `provider service install`), `urnet-tools start`, `stop` and `restart` act on that service, not on the provider process alone. This matters because the service starts the provider again whenever it exits: stopping only the process would last about 15 seconds. `urnet-tools stop` stops the service and the provider together, and `urnet-tools start` starts the service again. A provider that the service does not run is still started and stopped directly.
 
+These rules apply to a provider that the service runs:
+
+- `start` and `restart` wait up to 30 seconds for the provider to come up. They report success only when it is up. If it does not come up in time, they say so and show the path to the service log.
+- `stop` makes sure the provider process ended. If the provider is still running after the service stopped, `stop` ends it. If it cannot end it, `stop` reports an error.
+- `--force` still goes through the service. It gives the service a short wait instead of the normal one, then ends the provider if it is still running.
+- `uninstall` removes nothing if the provider did not stop.
+
+`urnet-tools` must know whether the service runs the provider. If it cannot tell (for example, the service settings cannot be read), `start`, `stop`, `restart` and `uninstall` change nothing. They show the problem and what to do next.
+
+`uninstall` also refuses when another running provider uses the same program file or the same state folder. It names that provider. Stop that provider first, then run `uninstall` again.
+
 ### 📦 Tarball Install (Alternative)
 
 The Windows release tarball includes `urnet-tools` alongside the provider binary. If you prefer a manual or offline install:
