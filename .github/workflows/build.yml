@@ -161,11 +161,16 @@ jobs:
           done
           echo "TMPDIR=$tmp" >> "$GITHUB_ENV"
 
-      - name: Fetch the complete module graph
-        # The source-graph census lists every module offline, as qualification
-        # does after its own download. The build cache holds only the modules
-        # a build needs, so fetch the rest of the graph first.
-        run: go list -m all > /dev/null
+      - name: Fetch the complete test dependency graph
+        # The source-graph test lists all test dependencies offline. Listing
+        # modules alone fetches metadata, not every required source archive.
+        env:
+          GOWORK: 'off'
+          GOENV: 'off'
+          GOTOOLCHAIN: local
+        run: |
+          go list -m all > /dev/null
+          go list -mod=readonly -p=1 -deps -test ./... > /dev/null
 
       - name: Census and run uncached test shard
         shell: bash
