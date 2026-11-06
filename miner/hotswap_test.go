@@ -438,11 +438,19 @@ func TestYieldCoordinatorSessionRunsEveryCloserOnce(t *testing.T) {
 }
 
 func TestHandoffDrainParentExitsCleanlyOnCancelledContext(t *testing.T) {
+	// The drain writes the parent's final state (refusals, retention events,
+	// audit, counters) to the state directory and waits, bounded, for refusals
+	// another test left in memory. Without its own state directory and empty
+	// refusal and retention state, the drain ran against $HOME/.urnetwork and
+	// whatever earlier tests left behind, and under load took longer than the
+	// bound below.
+	testExtenderState(t)
+	resetRetentionEventWriterForTest(t)
+	t.Cleanup(func() { resetRetentionEventWriterForTest(t) })
 	ResetHotSwapStateForTest()
 	t.Cleanup(ResetHotSwapStateForTest)
 
 	origExit := exitFunc
-	defer func() { exitFunc = origExit }()
 	exitCh := make(chan int, 1)
 	exitFunc = func(code int) { exitCh <- code }
 
@@ -453,10 +461,15 @@ func TestHandoffDrainParentExitsCleanlyOnCancelledContext(t *testing.T) {
 
 	select {
 	case code := <-exitCh:
+		// Restored only once the drain has made its exit call. Restoring it
+		// while the drain still runs let a slow drain call the real os.Exit
+		// after the test had already failed, ending the whole test binary.
+		exitFunc = origExit
 		if code != 0 {
 			t.Fatalf("drain exit code = %d, want 0", code)
 		}
 	case <-time.After(5 * time.Second):
+		// exitFunc stays the stub: the drain is still running and will call it.
 		t.Fatal("the drain never reached its exit")
 	}
 	if isHotSwapDraining.Load() {
