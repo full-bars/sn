@@ -42,3 +42,17 @@ func TestTrimConfirmPromptNamesClearingTheCap(t *testing.T) {
 		t.Fatalf("prompt for a cap = %q, want a trim prompt", got)
 	}
 }
+
+// remove-dead --preview is consumed by the dispatcher as the global dry-run
+// flag, so it only reaches the provider (which lists candidates and writes
+// nothing) if the builder re-adds it. An apply must never carry it.
+func TestRemoveDeadProviderArgsCarriesPreviewOnlyWhenAsked(t *testing.T) {
+	got := strings.Join(removeDeadProviderArgs([]string{"--degraded=24h"}, true), " ")
+	if got != "proxy remove-dead --degraded=24h --preview" {
+		t.Fatalf("preview args = %q", got)
+	}
+	got = strings.Join(removeDeadProviderArgs([]string{"--degraded=24h"}, false), " ")
+	if got != "proxy remove-dead --degraded=24h" {
+		t.Fatalf("apply args = %q, want no --preview", got)
+	}
+}
