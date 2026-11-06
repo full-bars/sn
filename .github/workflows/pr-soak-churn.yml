@@ -1,0 +1,104 @@
+name: PR soak churn
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sampler-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/scripts/test-soak-growth.py
+      - run: bash .github/scripts/test-stop-provider.sh
+      - run: python3 .github/scripts/test-check-churn-reload.py
+
+  churn:
+    # Only this job uses the shared test account, so only it serializes with
+    # the other gauntlet-auth workflows. sampler-test needs no credentials.
+    concurrency:
+      group: gauntlet-auth
+      cancel-in-progress: false
+    # Fork PRs cannot access the account secrets. Never use pull_request_target
+    # to run untrusted PR code with credentials.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+      GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+      URNETWORK_METRICS: 127.0.0.1:19100
+      URNETWORK_PROXY_BENCHMARK: 'true'
+      URNETWORK_SELF_HEAL: '1'
+      PROXY_URL_REFRESH: 1m
+      PROXY_URL_MAX: '5'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build provider
+        run: go build -o /tmp/provider ./cli/miner/
+      - name: Authenticate test account
+        run: |
+          test -n "$GAUNTLET_USER" && test -n "$GAUNTLET_PW"
+          mkdir -p /tmp/mint
+          HOME=/tmp/mint /tmp/provider auth --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" --api_url=https://api.bringyour.com -f > /tmp/auth.log 2>&1
+          test -s /tmp/mint/.urnetwork/jwt
+          python3 -c 'import base64,json,pathlib,sys; t=pathlib.Path("/tmp/mint/.urnetwork/jwt").read_text().strip().split(".")[1]; d=json.loads(base64.urlsafe_b64decode(t+"="*(-len(t)%4))); n=d.get("network_name"); sys.exit(0 if isinstance(n,str) and n and n.lower() not in ("production","full-bars") else "Refusing missing or production account name")'
+          mkdir -p "$HOME/.urnetwork"
+          cp /tmp/mint/.urnetwork/jwt "$HOME/.urnetwork/jwt"
+          printf '%s\n' '{"interval_sec":60,"sample_width":6,"pass_bar":0.5,"stale_calm":"30m","stale_hot":"15m"}' > "$HOME/.urnetwork/proxy_grades.json"
+          curl -fsS --max-time 30 https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt -o /tmp/proxies.txt
+          python3 -c 'import ipaddress,pathlib; rows=pathlib.Path("/tmp/proxies.txt").read_text().splitlines(); valid=[]
+          for row in rows:
+              try:
+                  h,p=row.strip().rsplit(":",1)
+                  if ipaddress.IPv4Address(h).is_global and 0<int(p)<65536 and row.strip() not in valid: valid.append(row.strip())
+              except ValueError: pass
+              if len(valid)==4: break
+          if len(valid)!=4: raise SystemExit("need four distinct public SOCKS proxies")
+          pathlib.Path("/tmp/anchors").write_text("\n".join(valid[:3])+"\n")
+          pathlib.Path("/tmp/churn-proxy").write_text(valid[3]+"\n")'
+          /tmp/provider proxy add --proxy_file=/tmp/anchors -f
+      - name: Run eight-minute churn and resource bounds
+        run: |
+          nohup /tmp/provider provide --allow-client-registration > /tmp/provider.log 2>&1 &
+          echo $! > /tmp/provider.pid
+          # The first two minutes are the defined warmup, not readiness retries.
+          sleep 120
+          pid=$(cat /tmp/provider.pid)
+          sh .github/scripts/soak-growth.sh baseline "$pid" http://127.0.0.1:19100/metrics /tmp/churn-baseline
+          proxy=$(cat /tmp/churn-proxy)
+          for i in $(seq 1 6); do
+            echo "churn window $i"
+            began=$(date +%s)
+            start=$(wc -c < /tmp/provider.log)
+            if [ "$((i % 2))" -eq 1 ]; then
+              add_start=$start
+              /tmp/provider proxy add "$proxy" -f
+              expected=added
+            else
+              /tmp/provider proxy remove "$proxy"
+              expected=removed
+            fi
+            # proxy.state retains old identities, so wait for the live reload
+            # summary. A public proxy can die between windows; its slot then
+            # leaves the running set on its own and the removal has nothing to
+            # stop, which the check accepts only with the slot's stop logged.
+            python3 .github/scripts/check-churn-reload.py /tmp/provider.log "$start" "$expected" "$proxy" "$add_start"
+            # Keep each window a minute long, so the soak lasts as designed.
+            rest=$((began + 60 - $(date +%s)))
+            if [ "$rest" -gt 0 ]; then sleep "$rest"; fi
+          done
+          sh .github/scripts/soak-growth.sh check "$pid" http://127.0.0.1:19100/metrics /tmp/churn-baseline
+      - name: Teardown
+        if: always()
+        # Cleanup never decides the result; the churn step does. Wait for the
+        # provider to exit first, as it writes state while shutting down.
+        run: |
+          sh .github/scripts/stop-provider.sh /tmp/provider.pid 30 || echo "::warning::provider did not exit"
+          rm -rf "$HOME/.urnetwork" /tmp/mint || echo "::warning::state cleanup incomplete"
