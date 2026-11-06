@@ -146,6 +146,21 @@ jobs:
           git config --global user.name "sn ci fixture"
           git config --global user.email "sn-ci-fixture@users.noreply.github.com"
 
+      - name: Give tests a private TMPDIR
+        # Durable-state checks refuse a path with a group- or world-writable
+        # ancestor, and /tmp is one. Qualification runs with TMPDIR under a
+        # protected parent; this gives the hosted runner the same.
+        run: |
+          set -euo pipefail
+          tmp="$RUNNER_TEMP/private-tmp"
+          mkdir -p -m 700 "$tmp"
+          dir="$tmp"
+          while [ "$dir" != / ]; do
+            stat -c '%a %U %n' "$dir"
+            dir="$(dirname "$dir")"
+          done
+          echo "TMPDIR=$tmp" >> "$GITHUB_ENV"
+
       - name: Census and run uncached test shard
         shell: bash
         env:
