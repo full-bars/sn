@@ -177,7 +177,7 @@ func TestValidatorStakeCapabilityRejectsConsumedStorageChanges(t *testing.T) {
 // Metadata14 alone cannot establish a custom runtime API's wire version.
 func TestValidatorStakeCapabilityRejectsApiDrift(t *testing.T) {
 	t.Parallel()
-	for _, apis := range []string{`[]`, `[["0x8375104b299b74c5",3]]`, `[["0x8375104b299b74c5",2],["0x8375104b299b74c5",2]]`, `[["0x8375104b299b74c5","2"]]`} {
+	for _, apis := range []string{`[]`, `[["0x8375104b299b74c5",4]]`, `[["0x8375104b299b74c5",2],["0x8375104b299b74c5",2]]`, `[["0x8375104b299b74c5","2"]]`} {
 		fixture := newValidatorStakeCapabilityTestFixture(t)
 		fixture.apiVersions = json.RawMessage(apis)
 		observed, err := fixture.stake.read()
