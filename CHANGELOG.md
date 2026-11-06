@@ -4,7 +4,20 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Merged to `main` after `v2026.11.1-1087168030-sn`, not yet in a tagged release. Hashes are commits on `main`.
+Merged to `main` after `v2026.11.6-1091584480-sn`, not yet in a tagged release.
+
+### Fixed
+
+- **Uninstall and capability checks fail safely.** The Windows PowerShell uninstaller refuses to remove data if another provider is running or process checks fail. Linux updates check the bounding set and preserve unrelated file capabilities. The miner image includes the capability tools. (#391)
+
+### CI and documentation
+
+- **Proxied UDP guidance reflects unknown checks.** Unknown checks may allow an unverified proxy exit; failed checks and known mismatches do not fall back to the host. ([d2b00edd9](https://github.com/full-bars/sn/commit/d2b00edd9c22f44b0036fd708a8f3c045f06b2b2))
+- **SN25 live numbers refreshed.** ([10e388054](https://github.com/full-bars/sn/commit/10e388054))
+
+## [v2026.11.6-1091584480-sn] — 2026-11-06
+
+Changes after `v2026.11.1-1087168030-sn` through this tag. Hashes are commits on `main`.
 
 ### Added
 
@@ -17,10 +30,10 @@ Merged to `main` after `v2026.11.1-1087168030-sn`, not yet in a tagged release. 
 
 - **Extender setup handles incomplete host checks.** Unverifiable socket or firewall checks produce guidance instead of aborting setup. A systemd unit that blocks the file capability gets a warning. FreeBSD ignores commented sysctl settings, Linux refuses to set capabilities on symlinks or non-regular files, and Windows names the need for an elevated terminal. (c67ba09db, e9cc68504, 079b5b73c, 066102eb3, 720c45914, f2d6c32a1)
 - **Extender handover releases the right resources.** The baton path releases carrier ports, an old slot cannot clear its replacement's releaser, and an undecided direct launch ends its head start. (40371e4b3, 9b056cccb, d32f696a7)
-- **Windows lifecycle operations fail closed.** Restart, stop and uninstall check process and service ownership, and report failures rather than leaving an unmanaged supervisor or claiming success. The PowerShell uninstaller refuses to remove data if another provider is running or process checks fail. (#384, #391)
+- **Windows lifecycle operations fail closed.** Restart, stop and uninstall check process and service ownership, and report failures rather than leaving an unmanaged supervisor or claiming success. (#384)
 - **A fresh state directory needs authority to create the provider identity.** Interactive start asks. A direct unattended `provide` needs the registration flag or an allowing environment setting. Docker defaults to `auto`, which permits registration without a prompt. Restore missing existing state instead of allocating a replacement. (#378)
 - **Refresh preview includes cached URL proxies.** It uses the manager's desired-set read so the preview reflects the same cached inputs as refresh. (#379)
-- **Updates restore extender bind capability.** The Go update path reapplies a previously held capability after replacing the binary. The Linux installer and container wrappers also restore it after a swap when possible. They check the bounding set, preserve unrelated capabilities, and the miner image includes the capability tools. (#365, #366, #391)
+- **Updates restore extender bind capability.** The Go update path reapplies a previously held capability after replacing the binary. The Linux installer and container wrappers also restore it after a swap when possible. (#365, #366)
 - **Proxied client UDP uses the proxy relay.** Each flow uses its own SOCKS5 UDP association; a failed relay check refuses the flow rather than falling back to the host. IPv6 destinations are refused because the check only proves IPv4. Idle proxied flows close after 120 seconds; direct flows keep their 300-second default. (#387, #388)
 - **State recovery preserves identities and settings.** Extender identity is durable, conflicting migrations are recorded once, stale recovery backups are cleared and the provider-key census streams on supported platforms. Newer state-store schemas refuse startup rather than minting identities. (#374, #357)
 - **Extender setup handles platform failures.** It verifies binding in the provider context, repairs Windows firewall rules and handles a missing FreeBSD sysctl configuration. (#368)
