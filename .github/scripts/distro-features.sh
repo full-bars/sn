@@ -522,6 +522,7 @@ miner_crashed() { grep -qE 'panic:|SIGSEGV|fatal error' "$WORK/miner-main.log" "
 start_miner() { # $1=logfile; extra args passed through
     log="$1"; shift
     : >"$log"
+    MINER_LOG="$log"
     HOME="$STATE_HOME" "$MINER_WRAPPER" provide --port=0 $START_FLAGS "$@" >"$log" 2>&1 &
     MINER_PID=$!
     MINER_LAST_RC=""
@@ -671,6 +672,39 @@ fingerprint_files() { # fingerprints the state files without a tag prefix
 fingerprint_core() { # files the manipulation checks must not disturb
     printf 'proxy=%s proxy.state=%s trim=%s' \
         "$(fsum "$STATE_DIR/proxy")" "$(fsum "$STATE_DIR/proxy.state")" "$(fsum "$STATE_DIR/proxy_trim")"
+}
+
+# Barrier for the asynchronous reload that `proxy add` triggers. The add
+# command only writes the proxy file and the trigger; the running provider's
+# watcher (2s tick, 30s trigger debounce) assigns the new entries their
+# proxy.state identities later. A state fingerprint taken before that lands
+# overlaps the reload's own write, which is not what a "preview wrote state"
+# check is meant to catch. The applied sequence is memory-only, so the barrier
+# is the two things the provider does expose: every added address is present in
+# proxy.state (the reload's write), and the latest reload the miner log shows
+# has completed (no reload in flight). A failed attempt logs "reload requested"
+# with no "reload complete" and is retried on the next tick, so lifetime counts
+# can differ for good; only the newest request/complete line decides.
+# Bounded by FEATURE_RELOAD_TIMEOUT (> debounce + tick); returns 1 on timeout.
+FEATURE_RELOAD_TIMEOUT="${FEATURE_RELOAD_TIMEOUT:-45}"
+reload_settled() { # $1=expected synthetic entries in proxy.state
+    have="$(grep -o '192\.0\.2\.[0-9]*:1080' "$STATE_DIR/proxy.state" 2>/dev/null | sort -u | wc -l | tr -d ' ')"
+    [ "$(as_num "$have")" -ge "$1" ] || return 1
+    last="$(grep -e 'reload requested (trigger #' -e 'reload complete:' "$MINER_LOG" 2>/dev/null | tail -1)"
+    case "$last" in
+        *'reload complete:'*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+wait_reload_settled() { # $1=expected synthetic entries
+    i=0
+    while [ "$i" -lt "$FEATURE_RELOAD_TIMEOUT" ]; do
+        reload_settled "$1" && return 0
+        kill -0 "$MINER_PID" 2>/dev/null || return 1
+        sleep 1
+        i=$((i + 1))
+    done
+    reload_settled "$1"
 }
 
 # ---------------------------------------------------------------------------
@@ -1132,9 +1166,8 @@ b1_ramlogs() {
     fi
 }
 
-# registration identity gate: a fresh dir without --allow-client-registration
-# must not allocate; --adopt-legacy-provider-key on a fresh dir must not
-# allocate either (it is an adoption flag, not a bootstrap flag).
+# A fresh bare provide must refuse registration without creating a key or
+# contacting the registration endpoint. Adoption on a fresh dir must not allocate.
 b1_identity_gate() {
     gate_home="$WORK/gate-home"
     rm -rf "$gate_home"; mkdir -p "$gate_home/.urnetwork" "$gate_home/bin"
@@ -1143,7 +1176,7 @@ b1_identity_gate() {
         rm -rf "$gate_home/.urnetwork"; mkdir -p "$gate_home/.urnetwork"
         if [ -r "$JWT_FILE" ]; then cp "$JWT_FILE" "$gate_home/.urnetwork/jwt" && chmod 600 "$gate_home/.urnetwork/jwt"; fi
     }
-    gate_probe() { # $1=extra flag  $2=log
+    gate_probe() { # $1=extra flag  $2=log  $3=optional file the running provider must write
         gate_reset
         : >"$2"
         HOME="$gate_home" "$gate_home/bin/provider" provide --port=0 $1 >"$2" 2>&1 &
@@ -1155,16 +1188,73 @@ b1_identity_gate() {
             sleep 1; i=$((i + 1))
         done
         sock_up=no; [ -S "$gate_home/.urnetwork/provider.sock" ] && sock_up=yes
+        # The socket can come up before the identity is written. Wait on the
+        # real condition (a non-empty $3, while the provider is still alive),
+        # bounded by GATE_IDENTITY_TIMEOUT seconds, then stop it.
+        if [ "$sock_up" = yes ] && [ -n "${3:-}" ]; then
+            i=0
+            while [ ! -s "$3" ] && kill -0 "$gp" 2>/dev/null && [ "$i" -lt "${GATE_IDENTITY_TIMEOUT:-20}" ]; do
+                sleep 1; i=$((i + 1))
+            done
+        fi
         if kill -0 "$gp" 2>/dev/null; then kill -TERM "$gp" 2>/dev/null; sleep 1; kill -KILL "$gp" 2>/dev/null; fi
         wait "$gp" 2>/dev/null || true
         GATE_EXITED="$exited"; GATE_SOCK="$sock_up"
     }
-    gate_probe "" "$WORK/gate-fresh.log"
-    if [ "$GATE_SOCK" = "no" ]; then
-        record PASS identity-gate-fresh "fresh state dir without the registration flag produced no socket (exited=$GATE_EXITED)"
-    else
-        record FAIL identity-gate-fresh "bare provide started against a fresh dir without the explicit flag"
+    # The control socket can precede the gate. Wait for a natural process exit,
+    # and count registration requests at a local endpoint rather than inferring
+    # them from files, logs or socket readiness.
+    gate_reset
+    gate_addr="$WORK/gate-api.addr"
+    rm -f "$gate_addr" "$WORK/gate-api-server"
+    # Artifact downloads lose executable bits; use a private copy.
+    cp "${GATE_SERVER_BIN:-$BIN_DIR/release-server}" "$WORK/gate-api-server" && chmod +x "$WORK/gate-api-server"
+    "$WORK/gate-api-server" -identity-gate-addr-file "$gate_addr" >"$WORK/gate-api.log" 2>&1 &
+    gate_server=$!
+    i=0
+    while [ ! -s "$gate_addr" ] && kill -0 "$gate_server" 2>/dev/null && [ "$i" -lt 10 ]; do
+        sleep 1; i=$((i + 1))
+    done
+    gate_api=""; [ -s "$gate_addr" ] && gate_api="$(cat "$gate_addr")"
+    # Prove the counter detects the actual registration route before resetting.
+    # The counter is queried with curl only. Without it the control cannot run,
+    # which is a missing tool in the image, not a product failure.
+    gate_control=""
+    gate_skip=0
+    if [ -n "$gate_api" ] && ! have curl; then
+        gate_skip=1
+    elif [ -n "$gate_api" ]; then
+        curl -sS --max-time 3 -X POST "$gate_api/network/register-client-v1" >/dev/null 2>&1 &&
+            gate_control="$(curl -fsS --max-time 3 "$gate_api/__calls")"
     fi
+    if [ "$gate_skip" = 1 ]; then
+        record SKIP-UNSUPPORTED identity-gate-fresh "curl not available; the registration counter cannot be queried"
+    elif [ "$gate_control" != 1 ] || [ "$(curl -fsS --max-time 3 -X DELETE "$gate_api/__calls" 2>/dev/null)" != 0 ]; then
+        record FAIL identity-gate-fresh "registration counter did not pass its positive control"
+    else
+        HOME="$gate_home" "$gate_home/bin/provider" provide --port=0 "--api_url=$gate_api" >"$WORK/gate-fresh.log" 2>&1 &
+        gp=$!
+        i=0
+        while kill -0 "$gp" 2>/dev/null && [ "$i" -lt 25 ]; do
+            sleep 1; i=$((i + 1))
+        done
+        gate_timeout=no
+        if kill -0 "$gp" 2>/dev/null; then
+            gate_timeout=yes
+            kill -KILL "$gp" 2>/dev/null || true
+        fi
+        gate_rc=0; wait "$gp" 2>/dev/null || gate_rc=$?
+        gate_calls="$(curl -fsS --max-time 3 "$gate_api/__calls" 2>/dev/null)" || gate_calls=unavailable
+        gate_key=no; { [ -e "$gate_home/.urnetwork/.provider.key" ] || [ -L "$gate_home/.urnetwork/.provider.key" ]; } && gate_key=yes
+        gate_hint=no; grep -F -q -- '--allow-client-registration' "$WORK/gate-fresh.log" && gate_hint=yes
+        if [ "$gate_timeout" = no ] && [ "$gate_rc" -ne 0 ] && [ "$gate_key" = no ] && [ "$gate_calls" = 0 ] && [ "$gate_hint" = yes ]; then
+            record PASS identity-gate-fresh "bare provide exited nonzero without creating a key or calling registration (rc=$gate_rc)"
+        else
+            record FAIL identity-gate-fresh "bare provide: rc=$gate_rc timeout=$gate_timeout key=$gate_key registration-calls=$gate_calls gate-hint=$gate_hint"
+        fi
+    fi
+    kill "$gate_server" 2>/dev/null || true
+    wait "$gate_server" 2>/dev/null || true
     if miner_help | grep -q -- '--adopt-legacy-provider-key'; then
         gate_probe "--adopt-legacy-provider-key" "$WORK/gate-adopt.log"
         if [ "$GATE_SOCK" = "no" ]; then
@@ -1824,6 +1914,11 @@ b2_manipulations() {
         record FAIL proxy-add "rc=$rc file-entries=$nfile added-lines=$added_lines: $(printf '%s' "$out" | firstline)"
     fi
 
+    # The add's reload must have applied before the fingerprint is taken, or the
+    # reload's own proxy.state write lands inside the preview window.
+    if ! wait_reload_settled 4; then
+        record FAIL trim-preview-no-write "the reload triggered by proxy add did not settle in ${FEATURE_RELOAD_TIMEOUT}s; state fingerprint not comparable"
+    else
     pre="$(fingerprint_files)"
     out="$(TS proxy trim 2 --dry-run 2>&1)"; rc=$?
     post="$(fingerprint_files)"
@@ -1835,6 +1930,7 @@ b2_manipulations() {
         fi
     else
         record FAIL trim-preview-no-write "trim --dry-run rc=$rc: $(printf '%s' "$out" | firstline)"
+    fi
     fi
 
     out="$(TS proxy trim 2 -f 2>&1)"; rc=$?
@@ -1898,16 +1994,20 @@ b2_manipulations() {
         record FAIL remove-match "rc=$rc: $(printf '%s' "$out" | firstline)"
     fi
 
-    # refresh: the curated diff must be add-only (nothing removed) and a
-    # non-interactive run must not write.
+    # refresh: the provider diffs the desired list against proxy.state in BOTH
+    # directions (planProxyRefresh: "N proxies will be removed, M will be
+    # added") and asks before applying. It was never add-only; the old
+    # "0 proxies will be removed" assertion pinned a contract the code does not
+    # have. What must hold is that a non-interactive run (no tty, so the
+    # confirmation reads EOF) reports the plan and writes nothing.
     pre="$(fingerprint_files)"
     out="$(TS proxy refresh -f 2>&1)"; rc=$?
     post="$(fingerprint_files)"
     if [ "$rc" = "0" ] && printf '%s' "$out" | grep -q 'already up to date'; then
-        record PASS refresh-add-only "refresh reports the curated list up to date; no writes ($(printf '%s' "$out" | firstline))"
-    elif [ "$rc" = "0" ] && printf '%s' "$out" | grep -q '0 proxies will be removed'; then
+        record PASS refresh-add-only "refresh reports the list up to date; no writes ($(printf '%s' "$out" | firstline))"
+    elif [ "$rc" = "0" ] && printf '%s' "$out" | grep -qE 'proxy refresh: [0-9]+ proxies will be removed, [0-9]+ will be added'; then
         if [ "$pre" = "$post" ]; then
-            record PASS refresh-add-only "diff is add-only (0 removals) and the non-interactive run wrote nothing: $(printf '%s' "$out" | grep 'proxy refresh:' | firstline)"
+            record PASS refresh-add-only "refresh reported its two-way plan and the non-interactive run wrote nothing: $(printf '%s' "$out" | grep 'proxy refresh:' | firstline)"
         else
             record FAIL refresh-add-only "non-interactive refresh wrote state: $pre -> $post"
         fi
@@ -1969,6 +2069,40 @@ b3_cli_tree() {
     fi
 }
 
+# Health follows its event log indefinitely when one exists. Capture to a file
+# and stop the whole session, including tail, rather than leaving a pipe open.
+probe_health() {
+    health_log="$WORK/surface-proxy-health.log"
+    health_marker="$WORK/surface-proxy-health.timeout"
+    rm -f "$health_marker"
+    if ! have setsid; then
+        printf '%s\n' 'setsid is required to bound the streaming health probe' >"$health_log"
+        HEALTH_RC=1; HEALTH_TIMED_OUT=0
+        return
+    fi
+    HOME="$STATE_HOME" setsid "$TOOLS_BIN" proxy health --state-dir "$STATE_DIR" >"$health_log" 2>&1 &
+    health_pid=$!
+    (
+        sleep "${FEATURE_HEALTH_TIMEOUT:-5}"
+        if kill -0 "$health_pid" 2>/dev/null; then
+            : >"$health_marker"
+            kill -TERM "-$health_pid" 2>/dev/null || true
+            sleep 1
+            kill -KILL "-$health_pid" 2>/dev/null || true
+        fi
+    ) &
+    health_watch=$!
+    if wait "$health_pid"; then HEALTH_RC=0; else HEALTH_RC=$?; fi
+    if [ -f "$health_marker" ]; then
+        wait "$health_watch" 2>/dev/null || true
+        HEALTH_TIMED_OUT=1
+    else
+        kill "$health_watch" 2>/dev/null || true
+        wait "$health_watch" 2>/dev/null || true
+        HEALTH_TIMED_OUT=0
+    fi
+}
+
 b3_surface() {
     head1 "BLOCK 3 — broad surface"
     if [ "$CLIENT_SAFE" != "1" ]; then
@@ -1995,7 +2129,20 @@ b3_surface() {
         record FAIL surface-status "rc=$rc: $(printf '%s' "$out" | firstline)"
     fi
 
-    for sub in health traffic ids; do
+    probe_health
+    out="$(cat "$health_log")"; rc=$HEALTH_RC
+    if [ "$HEALTH_TIMED_OUT" = "1" ] && printf '%s' "$out" | grep -q 'Streaming proxy health events'; then
+        record PASS surface-proxy-health "health report opened the event stream; stopped after ${FEATURE_HEALTH_TIMEOUT:-5}s"
+    elif [ "$HEALTH_TIMED_OUT" = "1" ]; then
+        record FAIL surface-proxy-health "health command timed out without opening its event stream: $(printf '%s' "$out" | firstline)"
+    elif [ "$rc" = "0" ] && [ -n "$out" ]; then
+        record PASS surface-proxy-health "$(printf '%s' "$out" | head -2 | tr '\n' ' ' | firstline)"
+    elif printf '%s' "$out" | grep -qi 'unknown'; then
+        record SKIP-UNSUPPORTED surface-proxy-health "not exposed by this urnet-tools: $(printf '%s' "$out" | firstline)"
+    else
+        record FAIL surface-proxy-health "rc=$rc: $(printf '%s' "$out" | firstline)"
+    fi
+    for sub in traffic ids; do
         out="$(TS proxy $sub 2>&1)"; rc=$?
         if [ "$rc" = "0" ] && [ -n "$out" ]; then
             record PASS "surface-proxy-$sub" "$(printf '%s' "$out" | head -2 | tr '\n' ' ' | firstline)"

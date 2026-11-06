@@ -411,6 +411,12 @@ jobs:
           # release that claims its artifacts were scanned cleanly.
           bash .github/scripts/test-clamav-scan.sh
 
+      - name: Docker shakedown release-tag validation tests
+        run: |
+          # The shakedown only runs on a release tag, so a regression in its tag
+          # check would otherwise first surface by blocking a real release.
+          sh .github/scripts/test-docker-shakedown-tags.sh
+
       - name: Run vulnerability check
         continue-on-error: true
         run: |

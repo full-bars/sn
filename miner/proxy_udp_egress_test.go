@@ -28,8 +28,10 @@ func stubUdpCheckStore(status proxyUDPStatus) *proxyUDPCheckStore {
 	})
 }
 
-// proxiedIdentityNatSettings builds a proxied identity's local user nat
-// settings the way provideWithProxy does.
+// proxiedIdentityNatSettings builds local user nat settings whose udp dials
+// go through a proxy's udp relay, for the relay tests below. The proxied
+// slot's idle bound is not set here: production applies it through
+// providerSlotDialSettings (see TestProviderSlotDialSettingsProxiedUdpIdle).
 func proxiedIdentityNatSettings(proxySettings *connect.ProxySettings, checkStore *proxyUDPCheckStore) *connect.LocalUserNatSettings {
 	clientStrategySettings := connect.DefaultClientStrategySettings()
 	clientStrategySettings.ProxySettings = proxySettings
@@ -536,21 +538,6 @@ func TestProxiedIdentityUdpCheckOutlivesTheFlow(t *testing.T) {
 	}
 	if probes.Load() != 1 {
 		t.Fatalf("probes = %d, want the one check reused", probes.Load())
-	}
-}
-
-// Proxied identities hold a proxy connection per udp flow, so they close idle
-// flows sooner than the nat default; the direct identity keeps the default.
-func TestProxiedIdentityUdpFlowsIdleSooner(t *testing.T) {
-	natSettings := proxiedIdentityNatSettings(&connect.ProxySettings{Network: "tcp", Address: "127.0.0.1:1"}, stubUdpCheckStore(proxyUDPOK))
-	if natSettings.UdpBufferSettings.ReadTimeout > proxiedUdpFlowIdleTimeout || natSettings.UdpBufferSettings.IdleTimeout > proxiedUdpFlowIdleTimeout {
-		t.Fatalf("proxied udp timeouts = %s / %s", natSettings.UdpBufferSettings.ReadTimeout, natSettings.UdpBufferSettings.IdleTimeout)
-	}
-	direct := connect.DefaultLocalUserNatSettings()
-	want := direct.UdpBufferSettings.IdleTimeout
-	applyIdentityNatConnectSettings(direct, *connect.DefaultConnectSettings(), nil, stubUdpCheckStore(proxyUDPOK))
-	if direct.UdpBufferSettings.IdleTimeout != want {
-		t.Fatalf("the direct identity's udp idle timeout changed")
 	}
 }
 
