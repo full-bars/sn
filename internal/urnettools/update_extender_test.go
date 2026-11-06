@@ -63,7 +63,7 @@ func TestUpdateExtenderCapabilityAfterSwap(t *testing.T) {
 				}
 			}
 			var warnings bytes.Buffer
-			if err := installProviderBinaryWithConfig(src, dst, "", "linux", cfg, &warnings); err != nil {
+			if err := installProviderBinaryWithConfigAndStatus(src, dst, "", "linux", cfg, &warnings, filepath.Join(dir, "missing-status")); err != nil {
 				t.Fatalf("update failed: %v", err)
 			}
 			if checks == 0 || sets != tc.wantSetcap {
