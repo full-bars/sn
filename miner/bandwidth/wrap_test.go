@@ -109,6 +109,17 @@ func TestWrapDialContextSettingsCarriesThePacketConnFactory(t *testing.T) {
 	}
 }
 
+// The wrap rebuilds DialContextSettings, so it must carry the proxied slot's
+// UDP idle bound too. Dropping it resets a proxied slot's relayed flows to the
+// 300s default while each one holds a connection on the proxy.
+func TestWrapDialContextSettingsCarriesTheUdpIdleTimeout(t *testing.T) {
+	ds := &connect.DialContextSettings{UdpIdleTimeout: 120 * time.Second}
+	wrapped := WrapDialContextSettings(ds, &ProxyBandwidth{}, "proxy-4")
+	if wrapped.UdpIdleTimeout != 120*time.Second {
+		t.Fatalf("UdpIdleTimeout = %s after the wrap, want 120s", wrapped.UdpIdleTimeout)
+	}
+}
+
 // WrapConnectSettings rebuilds DialContextSettings the same way and must carry
 // the seam too. A proxy-only ConnectSettings has no seam of its own, so the
 // wrap must BUILD one from that proxy: connect's QUIC carriers read

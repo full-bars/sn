@@ -54,6 +54,9 @@ func WrapDialContextSettings(ds *connect.DialContextSettings, bw *ProxyBandwidth
 	return &connect.DialContextSettings{
 		DialContext:       wrappedDial,
 		PacketConnFactory: ds.PacketConnFactory,
+		// the NAT idle override rides on this struct; the rebuild must not
+		// reset a proxied slot's shortened idle back to the SDK default.
+		UdpIdleTimeout: ds.UdpIdleTimeout,
 	}
 }
 

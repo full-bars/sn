@@ -44,7 +44,8 @@ import (
 //   - the association lives exactly as long as the flow: closing the conn
 //     closes the relay socket and the association's control connection. Each
 //     flow holds a tcp connection on the proxy, so proxied identities close
-//     idle udp flows sooner than the nat default (proxiedUdpFlowIdleTimeout)
+//     idle udp flows sooner than the nat default (proxiedUdpFlowIdleTimeout,
+//     applied through providerSlotDialSettings)
 //   - bytes are counted by the nat the same way as a direct socket (trackDirect
 //     wraps the returned conn with the identity's bandwidth counters)
 //
@@ -90,9 +91,6 @@ func applyIdentityNatConnectSettings(localUserNatSettings *connect.LocalUserNatS
 		return
 	}
 	installProxiedUdpEgress(&localUserNatSettings.UdpBufferSettings.ConnectSettings, proxySettings, checkStore)
-	udpBufferSettings := localUserNatSettings.UdpBufferSettings
-	udpBufferSettings.ReadTimeout = min(udpBufferSettings.ReadTimeout, proxiedUdpFlowIdleTimeout)
-	udpBufferSettings.IdleTimeout = min(udpBufferSettings.IdleTimeout, proxiedUdpFlowIdleTimeout)
 }
 
 // installProxiedUdpEgress points the udp dials of connectSettings at the udp
