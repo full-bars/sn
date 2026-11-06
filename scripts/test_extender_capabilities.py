@@ -51,7 +51,7 @@ setcap() {
     printf '%s\n' "$*" >> "$CALLS"
     [ "$MODE" != fail ] || return 1
     [ "$MODE" != unverified ] || return 0
-    printf '%s' 'cap_net_bind_service=ep' > "$STATE"
+    if [ "$1" = -r ]; then printf '%s' '' > "$STATE"; else printf '%s' 'cap_net_bind_service=ep' > "$STATE"; fi
 }
 id() { printf '%s\n' "$UID_"; }
 sudo() {
@@ -96,7 +96,10 @@ sudo() {
             for initial in ("", "cap_net_bind_service=ep"):
                 with self.subTest(script=script, initial=initial):
                     result, calls, _ = self.run_helper(script, initial, capbnd="00000000a80421fb")
-                    self.assertEqual(calls, "")
+                    if initial:
+                        self.assertTrue(calls.startswith("-r "))
+                    else:
+                        self.assertEqual(calls, "")
                     self.assertIn("bounding set", result.stderr)
 
     def test_legacy_getcap_format_is_recognised(self):
