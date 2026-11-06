@@ -69,7 +69,7 @@ func TestUninstallIgnoresTheServicesOwnProcesses(t *testing.T) {
 	stubOwnership(t, serviceOwned, func(Provider) error { t.Error("an owned provider is stopped through its service"); return nil }, func() {})
 	owner := ownedWithMiner(4243)
 	stubOwner(t, owner)
-	stubServiceProcesses(t)
+	stubServiceProcesses(t, &fakeServiceProcess{pid: 4243})
 	stubRunningProviders(t,
 		Provider{PID: owner.SupervisorPid, Running: true, Binary: p.Binary, StateDir: p.StateDir},
 		p,
