@@ -477,7 +477,7 @@ A read of the cap no longer relaxes, clears or persists it: `standingThrashCap` 
 
 **Purpose**: A cancelled provider drained forever. One worker that ignored cancellation blocked the join with no deadline, so `cancel()` became a zombie: 317 threads, `clients=0`, no exit, and systemd's stop turned into a SIGKILL of a process already trying to leave. The same run leaked its slot accounting, because a slot cancelled before it reached the control plane was never marked stopped, which is why the not-connected count only ever grew.
 
-Three changes. Both slot spawn sites go through `runReloadedSlot`, which defers `slotStopped` so every exit path including a panic is accounted. The join has a grace (35-40 s, inside systemd's 90 s stop timeout) and a five-second watchdog that ends the process without waiting on the remaining defers or the persistent-error flush, with the incident bundle captured before the arming so the dump survives. A drain timeout on a quarantined run exits 75, not 1: the supervisor reads only 75 as a deliberate quarantine, and exiting 1 turned one into a restart on the wrong policy.
+Three changes. Both slot spawn sites go through `runReloadedSlot`, which defers `slotStopped` so every exit path including a panic is accounted. The join has a grace (35-40 s, inside systemd's 90 s stop timeout) and a five-second watchdog that ends the process without waiting on the remaining defers or the persistent-error flush. The watchdog is armed before the dump and incident capture, so either operation can no longer block the exit bound. A drain timeout on a quarantined run exits 75, not 1: the supervisor reads only 75 as a deliberate quarantine, and exiting 1 turned one into a restart on the wrong policy.
 
 **Files Modified**: `miner/run.go`, `miner/slot_join.go`, `miner/incident_capture.go`, `miner/provider_bringup.go`, plus their tests.
 
@@ -496,5 +496,53 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 **Files Modified**: `miner/proxy_slot_sampler.go`, `miner/provider_billing.go`, `miner/proxy_transport_health.go`, `miner/run.go`, plus tests.
 
 **How to Identify in New Upstream**: `proxySlotSamplerLoop`, `proxyTransportTracker`, `proxyBillingSampler`.
+
+**Status**: shipping in this release.
+
+---
+
+## 37. Identity Gate and Durable State (PR #357, #374, #376, #378)
+
+**Purpose**: Prevent an empty or incompatible state directory from silently replacing provider identity, and preserve settings and recovery evidence across starts.
+
+**Files Modified**: `miner/run.go`, `miner/state_schema.go`, `miner/state_startup.go`, `miner/state_settings.go`, `miner/state_migration.go`, `miner/state_reconcile.go`, `clientauth/provider_key.go` and related tests.
+
+**How to Identify in New Upstream**: `providerClientRegistrationAllowed`, `providerStoreNewerError`, migration family records and settings reconciliation. The S1 machinery is inert and exposes no state migration CLI.
+
+**Status**: shipping in this release.
+
+---
+
+## 38. Import Proof Custody and Reproof (PR #351)
+
+**Purpose**: Retain proven legacy identities through restarts, revocation and transient fallback without losing custody.
+
+**Files Modified**: `miner/legacy_import.go`, `miner/legacy_import_proofstore.go`, `miner/provider_callbacks.go`, `miner/run.go` and related tests.
+
+**How to Identify in New Upstream**: persisted import proof records, rejection ordinals and reproof on use.
+
+**Status**: shipping in this release.
+
+---
+
+## 39. Extender Control and Capability Restore (PR #358, #365)
+
+**Purpose**: Let operators inspect and prepare extender hosts and retain an existing bind capability when the Go updater swaps the binary.
+
+**Files Modified**: `internal/urnettools/extender_cmd.go`, `internal/urnettools/extender_setup.go`, `internal/urnettools/extender_platform.go`, `internal/urnettools/update_extender.go`, `miner/extender_observation.go` and related tests.
+
+**How to Identify in New Upstream**: extender control-socket observation, setup bind verification and update capability restoration.
+
+**Status**: shipping in this release.
+
+---
+
+## 40. Live Diagnostics and Proxy Refresh Preview (PR #360, #379)
+
+**Purpose**: Capture evidence from a running provider and preview the same proxy set the manager will read.
+
+**Files Modified**: `miner/diag_bundle.go`, `internal/urnettools/diag.go`, `miner/proxy_manager_commands.go`, `miner/proxy_manager_url_source.go` and related tests.
+
+**How to Identify in New Upstream**: `cmdDiag`, the diagnostic control request and `desiredForPreview`.
 
 **Status**: shipping in this release.

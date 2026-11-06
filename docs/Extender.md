@@ -40,12 +40,13 @@ docker run -d \
   -p 443:443/udp \
   -p 4053:4053/udp \
   -e URNETWORK_AUTH_CODE=YOUR_AUTH_CODE_HERE \
+  -e ALLOW_CLIENT_REGISTRATION=Y \
   -e HOST_HOSTNAME=$(hostname) \
   -v urnetwork_config:/root/.urnetwork \
   ghcr.io/full-bars/sn:latest
 ```
 
-The auth code is single-use and is only consumed on first run, when the volume is empty. Keep the volume: it holds the provider identity as well as the sign-in, and a container started on an empty volume registers a new provider (see [Docker Deployment](https://github.com/full-bars/sn/wiki/Docker-Deployment)).
+The auth code is single-use and is only consumed on first run, when the volume is empty. The registration setting in this example authorizes a new identity. Keep the volume: it holds the provider identity as well as the sign-in. If an existing identity is missing, restore its volume instead of authorizing a replacement (see [Docker Deployment](https://github.com/full-bars/sn/wiki/Docker-Deployment)).
 
 Expected result: `docker ps` shows the container running with `443/tcp` and `4053/udp` published.
 

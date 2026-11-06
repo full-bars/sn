@@ -218,4 +218,4 @@ proxy address.
 
 `miner/PROVIDER-REGISTRATION.md` covers custody rules, the immutable operation,
 and what replay does and does not guarantee. `docs/Miner-Image.md` covers the
-container's `ALLOW_CLIENT_REGISTRATION`, which is now accepted and has no effect.
+container's `ALLOW_CLIENT_REGISTRATION`, including its `auto` default.

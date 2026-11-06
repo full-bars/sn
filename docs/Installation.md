@@ -25,6 +25,8 @@ curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/script
 
 After installation, source your terminal profile so the new commands are available in the terminal you installed from (new terminals, `ssh host urnet-tools ...`, cron and root find them without this step: the installer links `urnet-tools` and `urnetwork` into `~/.local/bin` and `/usr/local/bin` and writes the PATH block to `~/.bashrc`, `~/.profile` and `~/.zshenv`), and authenticate the provider. Then you can load your proxy list:
 
+A direct unattended `provide` on a new state directory needs `--allow-client-registration` or an allowing `ALLOW_CLIENT_REGISTRATION` value such as `Y` or `auto`. With the variable unset or empty, a direct `provide` refuses registration. Docker instead defaults the variable to `auto`, which permits unattended registration, including when an identity is missing. Stop and restore the original state directory rather than registering a replacement. Interactive `provider start` asks before a first registration. The supplied systemd provider unit passes the flag; other service wrappers can differ.
+
 ```bash
 source ~/.bashrc
 urnetwork auth
