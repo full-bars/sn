@@ -180,15 +180,22 @@ func stopProviderService(_ Provider) error {
 // selected provider, so a restart or uninstall of the service cannot hit an
 // unrelated supervisor. No saved service, or an unreadable one, owns nothing.
 func providerOwnedByService(p Provider) bool {
-	config, err := winservice.Load(windowsProviderServiceName)
+	config, err := loadWindowsProviderService(windowsProviderServiceName)
 	if err != nil {
 		return false
 	}
 	return providerOwnedByConfig(p, config.Executable)
 }
 
+// The saved service lookups, replaced by tests so they never read or create
+// files in the real profile folder (Running creates the lock file).
+var (
+	loadWindowsProviderService  = winservice.Load
+	windowsServiceSupervisorPid = winservice.SupervisorPid
+)
+
 func providerOwnedByConfig(p Provider, configExecutable string) bool {
-	return serviceOwnsProvider(p, configExecutable, winservice.SupervisorPid(windowsProviderServiceName), processParent)
+	return serviceOwnsProvider(p, configExecutable, windowsServiceSupervisorPid(windowsProviderServiceName), processParent)
 }
 
 // processParent looks up a process's parent id in a toolhelp snapshot.

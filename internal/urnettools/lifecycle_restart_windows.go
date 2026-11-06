@@ -64,7 +64,7 @@ func restartProviderWindows(p Provider) error {
 	if p.PID <= 0 && p.Binary == "" {
 		return fail("no process or binary ties it to the %s service; restart it manually", windowsProviderServiceName)
 	}
-	config, err := winservice.Load(windowsProviderServiceName)
+	config, err := loadWindowsProviderService(windowsProviderServiceName)
 	if err != nil {
 		if windowsPathMissing(err) {
 			return fail("no provider service is installed; restart it manually")
