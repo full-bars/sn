@@ -178,8 +178,15 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		// Not root
 		exactCommand := formatSetupSudoCommand(opts)
 		_, sudoErr := lookPathFn("sudo")
-		sudoAvailable := sudoErr == nil && platform != "windows"
+		sudoAvailable := sudoErr == nil
 
+		if platform == "windows" {
+			// There is no sudo and no re-exec: the operator opens an elevated
+			// terminal and runs the same command.
+			cmd := fmt.Sprintf("%s extender setup", resolvedExecutablePath())
+			fmt.Fprintf(errOut, "extender setup requires Administrator privileges. Re-run from an elevated terminal (Run as administrator):\n  %s\n", cmd)
+			return fmt.Errorf("extender setup requires Administrator privileges; run from an elevated terminal: %s", cmd)
+		}
 		if opts.NonInteractive || !stdinIsInteractive() || !sudoAvailable {
 			fmt.Fprintf(errOut, "extender setup requires root privileges. Run:\n  %s\n", exactCommand)
 			return fmt.Errorf("extender setup requires root privileges; run: %s", exactCommand)

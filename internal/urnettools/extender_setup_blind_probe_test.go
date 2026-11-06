@@ -114,3 +114,24 @@ func TestUnitNoNewPrivilegesParsesSystemctl(t *testing.T) {
 		t.Fatal("systemctl failure must surface")
 	}
 }
+
+// Windows has no sudo: a non-elevated run must say so and name an elevated
+// terminal, not tell the operator to run a command that does not exist there.
+func TestExtenderSetupWindowsNonAdminDoesNotSuggestSudo(t *testing.T) {
+	var errOut bytes.Buffer
+	err := RunExtenderSetup(ExtenderSetupOptions{
+		Platform: "windows", PlatformCfg: &mockPlatformConfigurer{platform: "windows"},
+		IsRoot: func() bool { return false }, Stdout: &bytes.Buffer{}, Stderr: &errOut,
+		LookPath:    func(string) (string, error) { return "C:\\sudo.exe", nil }, // even a sudo on PATH
+		PortChecker: &PortChecker{Platform: "windows", ExecCmd: func(string, ...string) ([]byte, error) { return nil, nil }},
+		FirewallMgr: &FirewallManager{Platform: "windows", ExecCmd: func(string, ...string) ([]byte, error) { return nil, errors.New("no rule") }},
+	})
+	if err == nil {
+		t.Fatal("a non-admin Windows run must not proceed")
+	}
+	for _, text := range []string{err.Error(), errOut.String()} {
+		if strings.Contains(text, "sudo") || !strings.Contains(text, "Administrator") || !strings.Contains(text, "extender setup") {
+			t.Fatalf("message = %q", text)
+		}
+	}
+}
