@@ -836,8 +836,10 @@ var extenderBudgetRecheckInterval = 2 * time.Minute
 func startExtenderBudgetRecheck(ctx context.Context, holder extenderSessionHolder, allowed func() bool) func() {
 	stop := make(chan struct{})
 	var once sync.Once
+	// Read before the goroutine starts: stop does not wait for it to exit.
+	interval := extenderBudgetRecheckInterval
 	go func() {
-		ticker := time.NewTicker(extenderBudgetRecheckInterval)
+		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
 			select {
