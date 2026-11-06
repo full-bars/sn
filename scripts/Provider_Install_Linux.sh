@@ -87,9 +87,21 @@ ensure_extender_cap ()
         awk '/^CapBnd:/ { seen=1; h=$2; if (length(h) >= 3) ok = (substr(h, length(h) - 2, 1) ~ /[4-7cdefCDEF]/); else ok = 1 }
             END { if (!seen) exit 0; exit !ok }' /proc/self/status
     }
+    # SUDO is only set when a dependency install needed it; with the
+    # downloader and parser already present it is empty. Elevate here when
+    # passwordless sudo exists (this subshell leaves the caller's SUDO alone).
+    elevate=${SUDO:-}
+    if [ -z "$elevate" ] && [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+        elevate=sudo
+    fi
     if ! cap_bindable; then
         if cap_present; then
-            if ! command -v setcap >/dev/null 2>&1 || ! ${SUDO:-} setcap -r "$cap_file" 2>/dev/null || cap_present; then
+            # setcap -r clears the whole xattr; never erase other capabilities.
+            if ! getcap "$cap_file" 2>/dev/null | awk '{ v=$NF; exit !(v == "cap_net_bind_service=ep" || v == "cap_net_bind_service+ep") }'; then
+                printf "WARNING: blocked file has other capabilities or unrecognized flags; refusing to remove them\n" >&2
+                return 1
+            fi
+            if ! command -v setcap >/dev/null 2>&1 || ! $elevate setcap -r "$cap_file" 2>/dev/null || cap_present; then
                 printf "WARNING: could not remove blocked file capability; provider may not start\n" >&2
                 return 1
             fi
@@ -99,13 +111,6 @@ ensure_extender_cap ()
     fi
     if cap_present; then
         return 0
-    fi
-    # SUDO is only set when a dependency install needed it; with the
-    # downloader and parser already present it is empty. Elevate here when
-    # passwordless sudo exists (this subshell leaves the caller's SUDO alone).
-    elevate=${SUDO:-}
-    if [ -z "$elevate" ] && [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
-        elevate=sudo
     fi
     if command -v setcap >/dev/null 2>&1 && $elevate setcap cap_net_bind_service=+ep "$cap_file" 2>/dev/null && cap_present; then
         return 0

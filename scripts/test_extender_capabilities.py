@@ -64,7 +64,7 @@ sudo() {
 [ "$MODE" != missing-getcap ] || unset -f getcap
 ''' + helper(script).replace('/proc/self/status', str(status)) + '\nensure_extender_cap "$BINARY"\n'
             result = subprocess.run(["/bin/sh", "-c", harness], env=env,
-                                    text=True, capture_output=True, check=True)
+                                    text=True, capture_output=True, check=False)
             return result, calls.read_text() if calls.exists() else "", str(binary)
 
     def test_scenarios(self):
@@ -102,6 +102,23 @@ sudo() {
                         self.assertEqual(calls, "")
                     self.assertIn("bounding set", result.stderr)
 
+    def test_blocked_cap_does_not_remove_other_capabilities(self):
+        for script in SCRIPTS:
+            with self.subTest(script=script):
+                result, calls, _ = self.run_helper(script, "cap_chown,cap_net_bind_service=ep", capbnd="00000000a80421fb")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(calls, "")
+                self.assertIn("other capabilities", result.stderr)
+
+    def test_allowed_bounding_set(self):
+        for script in SCRIPTS:
+            for mask in ("000001ffffffffff", "00000000a80425fb"):
+                for initial in ("", "cap_net_bind_service=ep"):
+                    with self.subTest(script=script, mask=mask, initial=initial):
+                        result, calls, binary = self.run_helper(script, initial, capbnd=mask)
+                        self.assertEqual(calls, "" if initial else f"cap_net_bind_service=+ep {binary}\n")
+                        self.assertEqual(result.stderr, "")
+
     def test_legacy_getcap_format_is_recognised(self):
         # libcap 2.2x (Ubuntu 16.04/18.04) prints "<file> = <caps>+<flags>".
         for script in SCRIPTS:
@@ -115,6 +132,11 @@ sudo() {
                     result, calls, _ = self.run_helper(script, initial)
                     self.assertEqual(bool(calls), expect_call)
                     self.assertEqual(result.stderr, "")
+
+    def test_blocked_cap_removal_uses_passwordless_sudo(self):
+        result, calls, binary = self.run_helper(SCRIPTS[0], "cap_net_bind_service=ep", uid="1000", sudo="passwordless", capbnd="00000000a80421fb")
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(calls, f"sudo -r {binary}\n")
 
     def test_installer_elevates_with_passwordless_sudo_when_SUDO_unset(self):
         installer = SCRIPTS[0]
