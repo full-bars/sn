@@ -177,11 +177,11 @@ irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provi
 
 | Component | Location |
 |-----------|----------|
-| Provider binary | `%LOCALAPPDATA%\urnetwork\provider\windows\<arch>\urnetwork.exe` |
+| Provider binary | `%LOCALAPPDATA%\urnetwork\provider\urnetwork.exe` |
 | Management tool | `urnet-tools` (Go binary) |
 | State directory | `%USERPROFILE%\.urnetwork\` |
 | Startup (optional) | Task Scheduler logon task `urnetwork-autostart` |
-| PATH | User PATH updated to include `%LOCALAPPDATA%\urnetwork\provider\windows\<arch>\` |
+| PATH | User PATH updated to include `%LOCALAPPDATA%\urnetwork\provider\` |
 
 ### Post-install commands
 
@@ -232,22 +232,9 @@ These rules apply to a provider that the service runs:
 
 `uninstall` also refuses when another running provider uses the same program file or the same state folder. It names that provider. Stop that provider first, then run `uninstall` again.
 
-### 📦 Tarball Install (Alternative)
+### 📦 Release archives
 
-The Windows release tarball includes `urnet-tools` alongside the provider binary. If you prefer a manual or offline install:
-
-1. Download the release tarball from [GitHub Releases](https://github.com/full-bars/sn/releases).
-2. Extract the archive to your desired location (e.g. `%LOCALAPPDATA%\urnetwork`).
-3. Open **PowerShell** and run the included install script:
-
-```powershell
-.\Provider_Install_Win32.ps1
-```
-
-This registers the PATH entry and optional Task Scheduler logon task: the same result as the CDN installer, but sourced entirely from the tarball. No internet access is required at install time. The script detects `amd64`/`arm64` automatically and places the correct binaries.
-
-> [!TIP]
-> The tarball method is useful for air-gapped machines or when you want to pin a specific release version rather than always pulling `latest`.
+The [GitHub release page](https://github.com/full-bars/sn/releases) also offers provider archives and standalone `urnet-tools` binaries for Windows. The PowerShell installer above downloads the release assets; it is not an offline installer.
 
 ## 📊 System Auditor & Host Optimization
 
