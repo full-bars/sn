@@ -173,6 +173,12 @@ func (sp *SystemPlatformConfigurer) applyLinux(binary string) (bool, string, err
 			return false, "", fmt.Errorf("refusing to set cap_net_bind_service on %s: it is %s, not a regular file; point setup at the real provider binary", binary, info.Mode().Type())
 		}
 	}
+	// Applying a capability outside the bounding set makes exec fail.
+	if sp.ReadFile != nil {
+		if status, err := sp.ReadFile("/proc/self/status"); err == nil && bindCapabilityBlocked(status) {
+			return false, "", fmt.Errorf("cap_net_bind_service is excluded from the process bounding set")
+		}
+	}
 	// Apply capability
 	if out, err := sp.ExecCmd("setcap", "cap_net_bind_service=+ep", binary); err != nil {
 		return false, "", fmt.Errorf("setcap cap_net_bind_service=+ep %s failed: %s: %w", binary, strings.TrimSpace(string(out)), err)
