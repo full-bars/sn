@@ -151,7 +151,14 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	desc := strings.Join(descs, "; ")
 
 	fwStatus := fwMgr.Detect()
-	fwConfigured := fwStatus.Kind != FirewallUnknown && (fwStatus.PortsOpen || (!fwStatus.Active && fwStatus.Kind == FirewallNone))
+	// No firewall service detected means there is nothing for setup to open;
+	// it is reported as an advisory below, not treated as unconfigured, so a
+	// re-run can reach the "already configured" path and the bind check.
+	fwConfigured := fwStatus.PortsOpen || (!fwStatus.Active && (fwStatus.Kind == FirewallNone || fwStatus.Kind == FirewallUnknown))
+
+	if fwStatus.Kind == FirewallUnknown && !opts.DryRun {
+		fmt.Fprintf(errOut, "warn: %s\n", fwStatus.Message)
+	}
 
 	// Check if already configured on host
 	if configured && fwConfigured {
@@ -216,6 +223,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	}
 
 	// STEP 5: Apply firewall rules
+	firewallUnverified := false
 	if opts.DryRun {
 		fmt.Fprintf(out, "[dry-run] would configure firewall (%s)\n", fwStatus.Kind)
 	} else {
@@ -229,7 +237,11 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 			for _, r := range fwStatus.SuggestedRules {
 				fmt.Fprintf(out, "  %s\n", r)
 			}
-			return fmt.Errorf("firewall configuration unverified for %s; verify inbound rules manually", fwStatus.Kind)
+			// Not fatal: the rules cannot be checked or applied here, but the
+			// capability and bind steps below are independent of them. Stopping
+			// would make setup unfinishable on every nftables, iptables, pf or
+			// ipfw host, and would skip the bind verification.
+			firewallUnverified = true
 		}
 	}
 
@@ -242,6 +254,10 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		}
 	}
 
+	if firewallUnverified {
+		fmt.Fprintf(out, "extender: setup complete, firewall NOT verified (%s); confirm inbound TCP 443, UDP 443, UDP 4053 are allowed\n", fwStatus.Kind)
+		return nil
+	}
 	fmt.Fprintf(out, "extender: setup complete\n")
 	return nil
 }
