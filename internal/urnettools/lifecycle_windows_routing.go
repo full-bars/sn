@@ -79,6 +79,9 @@ func restartWindowsProvider(p Provider, force, dryRun bool) error {
 	case serviceOwnershipUnknown:
 		return ownershipUnknownError("restart", p, owner)
 	case serviceNotOwned:
+		if err := refuseRestartWhileProfileShared(p); err != nil {
+			return err
+		}
 		return cmdRestartWindowsFn(p, force, dryRun)
 	}
 	fmt.Printf("restarting the %s service, which runs %s...\n", windowsProviderServiceName, providerLabel(p))

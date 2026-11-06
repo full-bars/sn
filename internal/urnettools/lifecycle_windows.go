@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 	"unsafe"
@@ -281,20 +282,32 @@ func (self *windowsServiceProcess) Close() { windows.CloseHandle(self.handle) }
 
 // runningProviderProcesses is the raw process scan, one row per running
 // provider process, before discovery folds rows that share a state dir.
-func runningProviderProcesses() []Provider {
-	var out []Provider
-	for _, p := range discoverProcesses() {
-		if p.Running {
-			out = append(out, p)
-		}
+// An enumeration failure is an error, not an empty list: callers use the
+// list to prove that no other provider is running.
+func runningProviderProcesses() ([]Provider, error) {
+	processes, err := windowsProcessSnapshot()
+	if err != nil {
+		return nil, err
 	}
-	return out
+	var out []Provider
+	for pid, entry := range processes {
+		if !isProviderArg(entry.Name) {
+			continue
+		}
+		out = append(out, Provider{
+			User:     currentUser(),
+			StateDir: windowsStateDir(),
+			Binary:   resolveProcessExe(pid, entry.Name),
+			PID:      pid,
+			Running:  true,
+		})
+	}
+	slices.SortFunc(out, func(a, b Provider) int { return a.PID - b.PID })
+	return out, nil
 }
 
-// providerServiceUp looks once at the service starting for owner: up when
-// the control socket in its state dir answers, or when a miner runs under the
-// supervisor (the one it recorded; with an older supervisor that records
-// none, any provider process under it).
+// providerServiceUp looks once at the service starting for owner: up when a
+// miner runs under the supervisor (see observeProviderServiceUp).
 func providerServiceUp(owner providerServiceOwnership) providerUpState {
 	pid, err := windowsServiceSupervisorPid(windowsProviderServiceName)
 	if err != nil {
@@ -304,18 +317,9 @@ func providerServiceUp(owner providerServiceOwnership) providerUpState {
 	if pid <= 0 {
 		return providerUpState{}
 	}
-	if controlSocketReachable(Provider{StateDir: owner.StateDir}) {
-		return providerUpState{Up: true, ServiceRunning: true}
-	}
 	processes, err := windowsProcessSnapshot()
 	if err != nil {
 		return providerUpState{ServiceRunning: true}
 	}
-	recorded := windowsServiceMinerPid(windowsProviderServiceName)
-	found := classifyServiceOwnership(Provider{PID: pid, Running: true}, serviceLookup{
-		Executable: owner.Executable, StateDir: owner.StateDir,
-		SupervisorPid: pid, Processes: processes, RecordedMinerPid: recorded,
-	})
-	up := found.MinerPid > 0 || (recorded <= 0 && len(found.ServicePids) > 0)
-	return providerUpState{Up: up, ServiceRunning: true}
+	return observeProviderServiceUp(owner, pid, processes, windowsServiceMinerPid(windowsProviderServiceName))
 }

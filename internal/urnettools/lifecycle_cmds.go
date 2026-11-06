@@ -189,7 +189,12 @@ func uninstallProvider(p Provider) error {
 	serviceOwned := owner.owned()
 	// Uninstall removes the binary and the state dir; another live provider
 	// that uses either would break, and its socket would go with the state.
-	if other, ok := colocatedLiveProvider(p, owner, runningProviderProcessesFn()); ok {
+	// The guard cannot prove safety from a list it could not read: fail closed.
+	running, err := runningProviderProcessesFn()
+	if err != nil {
+		return fmt.Errorf("uninstall %s: refused: could not list running provider processes to check that no other provider uses the same binary or state dir: %v. Nothing was changed. Check the process list, then run \"urnet-tools uninstall\" again", providerLabel(p), err)
+	}
+	if other, ok := colocatedLiveProvider(p, owner, running); ok {
 		return fmt.Errorf("uninstall %s: refused: another running provider (pid %d, binary %s, state dir %s) uses the same binary or state dir, and removing them would break it. Nothing was changed. Stop that provider first, then run \"urnet-tools uninstall\" again", providerLabel(p), other.PID, other.Binary, other.StateDir)
 	}
 	if serviceOwned {

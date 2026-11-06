@@ -192,7 +192,15 @@ func TestClassifyServiceOwnershipFindsTheMiner(t *testing.T) {
 		if got.State != serviceOwned || got.MinerPid != c.wantMiner {
 			t.Errorf("%s: state %d miner %d, want owned and %d", c.name, got.State, got.MinerPid, c.wantMiner)
 		}
-		if want := []int{200, 210}; len(got.ServicePids) != 2 || got.ServicePids[0] != want[0] || got.ServicePids[1] != want[1] {
+		// a known miner is the only service process a stop must wait for: the
+		// update check (210) is not the miner and must not block a restart.
+		// With no miner known, every provider process under the supervisor
+		// is held.
+		want := []int{200}
+		if c.wantMiner == 0 {
+			want = []int{200, 210}
+		}
+		if len(got.ServicePids) != len(want) || got.ServicePids[0] != want[0] || (len(want) > 1 && got.ServicePids[1] != want[1]) {
 			t.Errorf("%s: service pids %v, want %v", c.name, got.ServicePids, want)
 		}
 	}

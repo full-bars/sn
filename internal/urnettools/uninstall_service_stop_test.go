@@ -29,7 +29,7 @@ func stubCleanup(t *testing.T) {
 	prev, prevRunning := cleanupLifecycleFn, runningProviderProcessesFn
 	cleanupLifecycleFn = func(Provider) {}
 	// nor read the machine's real process list
-	runningProviderProcessesFn = func() []Provider { return nil }
+	runningProviderProcessesFn = func() ([]Provider, error) { return nil, nil }
 	t.Cleanup(func() { cleanupLifecycleFn, runningProviderProcessesFn = prev, prevRunning })
 }
 

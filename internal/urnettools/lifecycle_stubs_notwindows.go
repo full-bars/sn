@@ -45,7 +45,7 @@ func openServiceProcess(_ int) (serviceProcessHandle, error) {
 	return nil, errors.New("not supported on this platform")
 }
 
-func runningProviderProcesses() []Provider { return nil }
+func runningProviderProcesses() ([]Provider, error) { return nil, nil }
 
 // providerServiceUp has no service to look at off Windows.
 func providerServiceUp(_ providerServiceOwnership) providerUpState {

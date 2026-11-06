@@ -156,13 +156,6 @@ func classifyServiceOwnership(p Provider, l serviceLookup) providerServiceOwners
 	under := func(pid int) bool {
 		return pid != l.SupervisorPid && processDescendsFrom(pid, l.SupervisorPid, parentOf)
 	}
-	exeName := l.Executable[strings.LastIndexAny(l.Executable, `\/`)+1:]
-	for pid, entry := range l.Processes {
-		if under(pid) && (isProviderArg(entry.Name) || strings.EqualFold(entry.Name, exeName)) {
-			o.ServicePids = append(o.ServicePids, pid)
-		}
-	}
-	slices.Sort(o.ServicePids)
 	// the recorded miner, unless it has exited (or its id was reused);
 	// else the selected provider when it is the miner and not the supervisor
 	switch {
@@ -171,6 +164,22 @@ func classifyServiceOwnership(p Provider, l serviceLookup) providerServiceOwners
 	case under(p.PID):
 		o.MinerPid = p.PID
 	}
+	// With the miner known, a stop waits for it and for provider processes
+	// below it. Another same-executable child of the supervisor (an update
+	// check) is not the miner: waiting on it would fail the restart whenever
+	// an update runs. With no miner known, hold every provider process under
+	// the supervisor, as nothing tells them apart.
+	exeName := l.Executable[strings.LastIndexAny(l.Executable, `\/`)+1:]
+	for pid, entry := range l.Processes {
+		if !under(pid) || !(isProviderArg(entry.Name) || strings.EqualFold(entry.Name, exeName)) {
+			continue
+		}
+		if o.MinerPid > 0 && !processDescendsFrom(pid, o.MinerPid, parentOf) {
+			continue
+		}
+		o.ServicePids = append(o.ServicePids, pid)
+	}
+	slices.Sort(o.ServicePids)
 	if o.MinerPid > 0 && !slices.Contains(o.ServicePids, o.MinerPid) {
 		o.ServicePids = append(o.ServicePids, o.MinerPid)
 		slices.Sort(o.ServicePids)

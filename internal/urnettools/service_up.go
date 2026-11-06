@@ -22,6 +22,22 @@ var (
 	providerUpPoll      = 500 * time.Millisecond
 )
 
+// observeProviderServiceUp decides one look at a starting service from the
+// supervisor pid, the process table and the miner pid the supervisor
+// recorded. A control socket that answers is not evidence: a bare provider on
+// the same state dir answers it too, so a restart could report the service up
+// while only that other provider runs. Up needs a provider process under the
+// supervisor (the recorded miner; with an older supervisor that records
+// none, any provider process under it).
+func observeProviderServiceUp(owner providerServiceOwnership, supervisorPid int, processes map[int]serviceProcessEntry, recordedMiner int) providerUpState {
+	found := classifyServiceOwnership(Provider{PID: supervisorPid, Running: true}, serviceLookup{
+		Executable: owner.Executable, StateDir: owner.StateDir,
+		SupervisorPid: supervisorPid, Processes: processes, RecordedMinerPid: recordedMiner,
+	})
+	up := found.MinerPid > 0 || (recordedMiner <= 0 && len(found.ServicePids) > 0)
+	return providerUpState{Up: up, ServiceRunning: true}
+}
+
 // waitProviderServiceUp waits up to providerUpWait for the provider the
 // service runs to come up.
 func waitProviderServiceUp(p Provider, owner providerServiceOwnership) error {

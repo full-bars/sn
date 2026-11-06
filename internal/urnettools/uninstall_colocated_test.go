@@ -15,7 +15,7 @@ func stubRunningProviders(t *testing.T, running ...Provider) {
 	t.Helper()
 	prev := runningProviderProcessesFn
 	t.Cleanup(func() { runningProviderProcessesFn = prev })
-	runningProviderProcessesFn = func() []Provider { return running }
+	runningProviderProcessesFn = func() ([]Provider, error) { return running, nil }
 }
 
 func TestUninstallRefusesWithAColocatedLiveProvider(t *testing.T) {
