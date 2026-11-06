@@ -657,3 +657,21 @@ func TestProxiedSlotQuicEndpointIsNotAHostSocket(t *testing.T) {
 		t.Fatal("the direct slot's network space grew a dial context, replacing the engine's own dial path")
 	}
 }
+
+// A proxied slot's relayed UDP flows idle out after 120s instead of the SDK's
+// 300s direct default, and the bandwidth wrap must not reset it. A direct
+// slot sets nothing, so it keeps the SDK default.
+func TestProviderSlotDialSettingsProxiedUdpIdle(t *testing.T) {
+	direct := providerSlotDialSettings(nil, nil, &bandwidth.ProxyBandwidth{}, "")
+	if direct.UdpIdleTimeout != 0 {
+		t.Fatalf("direct slot udp idle override = %s, want none", direct.UdpIdleTimeout)
+	}
+
+	proxy := newFakeSocks5Proxy(t, fakeUDPRelayWorking, "203.0.113.7", "203.0.113.7")
+	settings := proxy.settings()
+	stubH3UDPVerdict(t, settings, proxyUDPOK)
+	proxied := providerSlotDialSettings(nil, settings, &bandwidth.ProxyBandwidth{}, proxy.address())
+	if proxied.UdpIdleTimeout != 120*time.Second {
+		t.Fatalf("proxied slot udp idle override = %s, want 120s", proxied.UdpIdleTimeout)
+	}
+}
