@@ -194,11 +194,31 @@ func (sp *SystemPlatformConfigurer) checkFreeBSD(user string) (bool, string, err
 	if err != nil {
 		return false, "net.inet.ip.portrange.reservedhigh=0 live, but /etc/sysctl.conf unreadable", nil
 	}
-	if !strings.Contains(string(confBytes), "net.inet.ip.portrange.reservedhigh=0") {
+	if !sysctlConfSetsReservedHighZero(string(confBytes)) {
 		return false, "net.inet.ip.portrange.reservedhigh=0 live, but not persisted in /etc/sysctl.conf", nil
 	}
 
 	return true, "net.inet.ip.portrange.reservedhigh=0 (live and persisted in /etc/sysctl.conf)", nil
+}
+
+// sysctlConfSetsReservedHighZero reports whether /etc/sysctl.conf, as the boot
+// scripts read it, leaves net.inet.ip.portrange.reservedhigh at 0. Only live
+// assignment lines count: a commented-out line does not persist anything, and
+// when the file assigns the name more than once the last assignment wins.
+func sysctlConfSetsReservedHighZero(content string) bool {
+	const name = "net.inet.ip.portrange.reservedhigh"
+	set := false
+	for _, line := range strings.Split(content, "\n") {
+		if i := strings.Index(line, "#"); i >= 0 {
+			line = line[:i]
+		}
+		key, val, ok := strings.Cut(line, "=")
+		if !ok || strings.TrimSpace(key) != name {
+			continue
+		}
+		set = strings.TrimSpace(val) == "0"
+	}
+	return set
 }
 
 func (sp *SystemPlatformConfigurer) applyFreeBSD(user string) (bool, string, error) {
@@ -230,7 +250,7 @@ func (sp *SystemPlatformConfigurer) applyFreeBSD(user string) (bool, string, err
 
 	// Persist in /etc/sysctl.conf
 	content := string(data)
-	if !strings.Contains(content, "net.inet.ip.portrange.reservedhigh=0") {
+	if !sysctlConfSetsReservedHighZero(content) {
 		var buf bytes.Buffer
 		buf.WriteString(content)
 		if len(content) > 0 && !strings.HasSuffix(content, "\n") {
