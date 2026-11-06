@@ -108,7 +108,7 @@ func launchProviderService(config *winservice.Config) error {
 // supervisor starts at the next sign-in. A supervisor that is already
 // running is left alone.
 func startProviderService(_ Provider) error {
-	config, err := winservice.Load(windowsProviderServiceName)
+	config, err := loadWindowsProviderService(windowsProviderServiceName)
 	if err != nil {
 		return fmt.Errorf("read the provider service config: %w", err)
 	}
