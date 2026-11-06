@@ -278,3 +278,15 @@ func (self *windowsServiceProcess) Terminate() error {
 }
 
 func (self *windowsServiceProcess) Close() { windows.CloseHandle(self.handle) }
+
+// runningProviderProcesses is the raw process scan, one row per running
+// provider process, before discovery folds rows that share a state dir.
+func runningProviderProcesses() []Provider {
+	var out []Provider
+	for _, p := range discoverProcesses() {
+		if p.Running {
+			out = append(out, p)
+		}
+	}
+	return out
+}

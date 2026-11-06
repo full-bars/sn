@@ -166,6 +166,11 @@ var (
 	removeProviderServiceFilesFn = removeProviderServiceFiles
 )
 
+// runningProviderProcessesFn lists every running provider process, one row
+// each (Windows only; elsewhere uninstall does not check for co-located
+// providers).
+var runningProviderProcessesFn = runningProviderProcesses
+
 // uninstallProvider does the work after target selection and confirmation:
 // stop whatever supervises the provider, disable the unit, then remove files.
 func uninstallProvider(p Provider) error {
@@ -182,6 +187,11 @@ func uninstallProvider(p Provider) error {
 		return ownershipUnknownError("uninstall", p, owner)
 	}
 	serviceOwned := owner.owned()
+	// Uninstall removes the binary and the state dir; another live provider
+	// that uses either would break, and its socket would go with the state.
+	if other, ok := colocatedLiveProvider(p, owner, runningProviderProcessesFn()); ok {
+		return fmt.Errorf("uninstall %s: refused: another running provider (pid %d, binary %s, state dir %s) uses the same binary or state dir, and removing them would break it. Nothing was changed. Stop that provider first, then run \"urnet-tools uninstall\" again", providerLabel(p), other.PID, other.Binary, other.StateDir)
+	}
 	if serviceOwned {
 		if err := stopOwnedProviderService(p, owner, "uninstall", false); err != nil {
 			return fmt.Errorf("uninstall %s: could not stop the provider service: %w. Nothing was removed", providerLabel(p), err)

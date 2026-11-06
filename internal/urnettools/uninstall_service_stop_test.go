@@ -26,9 +26,11 @@ func stubStopService(t *testing.T, fn func(Provider) error) {
 // config.
 func stubCleanup(t *testing.T) {
 	t.Helper()
-	prev := cleanupLifecycleFn
+	prev, prevRunning := cleanupLifecycleFn, runningProviderProcessesFn
 	cleanupLifecycleFn = func(Provider) {}
-	t.Cleanup(func() { cleanupLifecycleFn = prev })
+	// nor read the machine's real process list
+	runningProviderProcessesFn = func() []Provider { return nil }
+	t.Cleanup(func() { cleanupLifecycleFn, runningProviderProcessesFn = prev, prevRunning })
 }
 
 func uninstallFixture(t *testing.T) Provider {

@@ -44,3 +44,5 @@ func removeProviderServiceFiles() {}
 func openServiceProcess(_ int) (serviceProcessHandle, error) {
 	return nil, errors.New("not supported on this platform")
 }
+
+func runningProviderProcesses() []Provider { return nil }

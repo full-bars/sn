@@ -183,3 +183,23 @@ func classifyServiceOwnership(p Provider, l serviceLookup) providerServiceOwners
 func ownershipUnknownError(action string, p Provider, o providerServiceOwnership) error {
 	return fmt.Errorf("could not %s provider %s: could not tell whether the %s service runs it: %v. Nothing was changed. Fix that, then run \"urnet-tools %s\" again", action, providerLabel(p), windowsProviderServiceName, o.Err, action)
 }
+
+// colocatedLiveProvider finds a running provider that shares p's binary or
+// state dir, other than p itself and the processes of the service that owns
+// p. Uninstall removes that binary and state dir, so it would break such a
+// provider; discovery folds same-state-dir rows together, so the caller
+// passes the raw process scan.
+func colocatedLiveProvider(p Provider, owner providerServiceOwnership, running []Provider) (Provider, bool) {
+	for _, other := range running {
+		if !other.Running || other.PID <= 0 || other.PID == p.PID {
+			continue
+		}
+		if owner.owned() && (other.PID == owner.SupervisorPid || slices.Contains(owner.ServicePids, other.PID)) {
+			continue
+		}
+		if sameWindowsPath(other.Binary, p.Binary) || sameWindowsPath(other.StateDir, p.StateDir) {
+			return other, true
+		}
+	}
+	return Provider{}, false
+}
