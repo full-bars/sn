@@ -24,13 +24,16 @@ def helper(path):
 
 
 class ExtenderCapabilityTest(unittest.TestCase):
-    def run_helper(self, script, initial, mode="success", platform="Linux", uid="0", sudo="none", env_sudo=""):
+    def run_helper(self, script, initial, mode="success", platform="Linux", uid="0", sudo="none", env_sudo="", capbnd=None):
         with tempfile.TemporaryDirectory() as tmp:
             state = Path(tmp) / "state"
             calls = Path(tmp) / "calls"
             binary = Path(tmp) / "fake provider's binary"
             binary.touch()
             state.write_text(initial)
+            status = Path(tmp) / "status"
+            if capbnd is not None:
+                status.write_text("CapBnd:\t" + capbnd + "\n")
             mock_path = Path(tmp) / "bin"
             mock_path.mkdir()
             for tool in ("sh", "awk", "cat", "sed"):
@@ -59,7 +62,7 @@ sudo() {
 [ "$SUDO_MODE" != none ] || unset -f sudo
 [ "$MODE" != missing-setcap ] || unset -f setcap
 [ "$MODE" != missing-getcap ] || unset -f getcap
-''' + helper(script) + '\nensure_extender_cap "$BINARY"\n'
+''' + helper(script).replace('/proc/self/status', str(status)) + '\nensure_extender_cap "$BINARY"\n'
             result = subprocess.run(["/bin/sh", "-c", harness], env=env,
                                     text=True, capture_output=True, check=True)
             return result, calls.read_text() if calls.exists() else "", str(binary)
@@ -87,6 +90,14 @@ sudo() {
                         self.assertEqual(len(result.stderr.splitlines()), 1)
                         quoted = "'" + binary.replace("'", "'\\''") + "'"
                         self.assertIn("sudo setcap cap_net_bind_service=+ep " + quoted, result.stderr)
+
+    def test_excluded_bounding_set_warns(self):
+        for script in SCRIPTS:
+            for initial in ("", "cap_net_bind_service=ep"):
+                with self.subTest(script=script, initial=initial):
+                    result, calls, _ = self.run_helper(script, initial, capbnd="00000000a80421fb")
+                    self.assertEqual(calls, "")
+                    self.assertIn("bounding set", result.stderr)
 
     def test_legacy_getcap_format_is_recognised(self):
         # libcap 2.2x (Ubuntu 16.04/18.04) prints "<file> = <caps>+<flags>".

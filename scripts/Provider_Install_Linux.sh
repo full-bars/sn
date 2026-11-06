@@ -82,6 +82,15 @@ ensure_extender_cap ()
                 for (c in caps) if (caps[c] == "cap_net_bind_service" && parts[2] ~ /e/ && parts[2] ~ /p/) found=1
             } } END { exit !found }'
     }
+    cap_bindable() {
+        [ -r /proc/self/status ] || return 0
+        awk '/^CapBnd:/ { seen=1; h=$2; if (length(h) >= 3) ok = (substr(h, length(h) - 2, 1) ~ /[4-7cdefCDEF]/); else ok = 1 }
+            END { if (!seen) exit 0; exit !ok }' /proc/self/status
+    }
+    if ! cap_bindable; then
+        printf "WARNING: extender capability blocked; CAP_NET_BIND_SERVICE is not in this process's bounding set and the binary would fail to start\n" >&2
+        return 0
+    fi
     if cap_present; then
         return 0
     fi
