@@ -8,6 +8,7 @@ Merged to `main` after `v2026.11.6-1091584480-sn`, not yet in a tagged release.
 
 ### Fixed
 
+- **`urnet-tools logs` keeps following a trimmed RAM log.** With RAM logs on, the log file is trimmed by rename. `urnet-tools logs` could stop showing new lines or replay the trimmed log. The command now follows the file across a trim, without repeating a fragment. In Docker it uses `tail -F`.
 - **Uninstall and capability checks fail safely.** The Windows PowerShell uninstaller refuses to remove data if another provider is running or process checks fail. Linux updates check the bounding set and preserve unrelated file capabilities. The miner image includes the capability tools. (#391)
 
 ### CI and documentation
