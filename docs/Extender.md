@@ -1,6 +1,6 @@
 # Let the network reach your provider on port 443
 
-An extender is a provider that also listens on a port the internet can reach, so the network can publish your address and clients can connect through it. This page walks you through publishing TCP 443 from a Docker provider, then reading the log to see whether the role started and whether the network accepted it. You need it only if the host has a public IPv4 address and you can open inbound TCP 443. A host behind NAT cannot take the role today.
+An extender is a provider that also listens on a port the internet can reach, so the network can publish your address and clients can connect through it. The network accepts each address family on its own, IPv4 and IPv6, and each one has its own `activate v4` or `activate v6` log line. This page walks you through publishing TCP 443 from a Docker provider, then reading the log to see whether the role started and whether the network accepted it. You need it only if the host has a public IPv4 address and you can open inbound TCP 443. A host behind NAT cannot take the role today.
 
 ## Before you start
 
