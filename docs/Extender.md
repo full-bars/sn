@@ -22,7 +22,7 @@ Expected result: the container starts and provides as before, with no proxy slot
 
 **2. Open TCP 443 on the host.**
 
-Allow inbound TCP 443 in the host firewall, and forward it on the router or security group in front of the host. Optionally allow UDP 443, UDP 4053 and UDP 53 as well. The network uses them when offered, and none is required.
+Allow inbound TCP 443 in the host firewall, and forward it on the router or security group in front of the host. Optionally allow UDP 443, UDP 4053 and UDP 53 as well. The network uses them when offered, and none is required. To offer UDP 53 with Docker, also add `-p 53:53/udp` to the command in step 3.
 
 Cloud providers block inbound ports by default. Add an inbound rule for these ports in the Oracle security list, the GCP VPC firewall rules, the AWS security group or the Azure network security group.
 
@@ -96,7 +96,7 @@ When the network accepts an address family, the log shows it once:
 🌉✅ [extender] IPv4 is now activated on try 1. The platform can reach this host over IPv4.
 ```
 
-Expected result: the `is now activated` line for IPv4, and no `refused` line. If you see one, the reason names the test that failed; the usual cause is that the network could not reach TCP 443 on your public address, so recheck step 2 from outside your network. A failure that never reached the network reads differently: `[extender] activation failed without a refusal ...` costs no hold and usually means the path to the network is flaky, not that the port is closed. Every extender line and what it means is listed in the [log message reference](https://github.com/full-bars/sn/wiki/Log-Message-Reference).
+Expected result: the latest IPv4 activation result is `is now activated`, or `urnet-tools extender status` shows IPv4 activated. An earlier `refused` line can remain in the log after a successful retry. If the latest result is a refusal, the reason names the test that failed; the usual cause is that the network could not reach TCP 443 on your public address, so recheck step 2 from outside your network. A failure that never reached the network reads differently: `[extender] activation failed without a refusal ...` costs no hold and usually means the path to the network is flaky, not that the port is closed. Every extender line and what it means is listed in the [log message reference](https://github.com/full-bars/sn/wiki/Log-Message-Reference).
 
 **6. If the log says the launch was held, wait it out.**
 

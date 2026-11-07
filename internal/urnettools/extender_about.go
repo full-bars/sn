@@ -20,7 +20,8 @@ PORTS
 The platform checks each address family before listing it. A public address and
 inbound access are needed. A provider using proxies cannot be the direct role.
 A container also needs the ports published and the host firewall configured.
-See docs/Extender.md for setup, activation and troubleshooting.
+For setup, activation and troubleshooting, see docs/Extender.md in
+https://github.com/full-bars/sn.
 `
 
 func newExtenderAboutCmd() *cobra.Command {

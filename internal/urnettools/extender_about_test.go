@@ -14,10 +14,23 @@ func TestExtenderAbout(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"extender setup", "extender status", "TCP 443", "UDP 443", "UDP 4053", "UDP 53"} {
+	for _, want := range []string{"extender setup", "extender status", "TCP 443", "UDP 443", "UDP 4053", "UDP 53", "https://github.com/full-bars/sn"} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("about output missing %q", want)
 		}
+	}
+}
+
+func TestExtenderRootHelpListsAbout(t *testing.T) {
+	var out bytes.Buffer
+	cmd := buildRootCmd()
+	cmd.SetOut(&out)
+	cmd.SetArgs([]string{"--help"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "extender <status|setup|about>") {
+		t.Errorf("root help does not list extender about: %s", out.String())
 	}
 }
 
