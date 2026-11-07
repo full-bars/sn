@@ -118,24 +118,15 @@ func TestDiagCmdProviderNotRunning(t *testing.T) {
 }
 
 func TestDiagCmdSocketMissing(t *testing.T) {
-	dir, _ := os.MkdirTemp("/tmp", "dg")
-	t.Cleanup(func() { os.RemoveAll(dir) })
-	_, _, err := runDiagForTest(t, nil, Provider{Unit: "urnetwork.service", StateDir: dir, Running: true})
+	dir := t.TempDir()
+	out, progress, err := runDiagForTest(t, nil, Provider{Unit: "urnetwork.service", StateDir: dir, Running: true})
 	if err == nil {
 		t.Fatal("want an error with no control socket")
 	}
-	out, progress, _ := runDiagForTest(t, nil, Provider{Unit: "urnetwork.service", StateDir: dir, Running: true})
 	if out != "" || progress != "" {
 		t.Errorf("announced a capture that could not start: %q %q", out, progress)
 	}
-	// On Windows the provider is a service with no resolvable systemd state
-	// directory, so that error comes before the socket check. Other platforms
-	// have the directory and fail on the missing socket itself.
-	wantErr := []string{"control socket " + filepath.Join(dir, "provider.sock") + " is not available", "urnet-tools status"}
-	if runtime.GOOS == "windows" {
-		wantErr = []string{"no resolvable state directory", "urnet-tools status"}
-	}
-	for _, want := range wantErr {
+	for _, want := range []string{"control socket " + filepath.Join(dir, "provider.sock") + " is not available", "urnet-tools status"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error lacks %q: %v", want, err)
 		}
