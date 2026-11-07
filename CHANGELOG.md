@@ -6,6 +6,10 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 Merged to `main` after `v2026.11.6-1091584480-sn`, not yet in a tagged release.
 
+### Added
+
+- **The extender role has an explanation command.** `urnet-tools extender about` prints the role, its ports and how to prepare the host. It only prints text.
+
 ### Fixed
 
 - **Uninstall and capability checks fail safely.** The Windows PowerShell uninstaller refuses to remove data if another provider is running or process checks fail. Linux updates check the bounding set and preserve unrelated file capabilities. The miner image includes the capability tools. (#391)

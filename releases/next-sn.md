@@ -56,6 +56,10 @@ Asset names use the release tag in place of `<tag>`. Download them from the rele
 
 ## What changed
 
+I added a command that explains the extender role. Run `urnet-tools extender about` to read the role, its ports and the setup steps. Read that output before you run `urnet-tools extender setup`.
+
+**The extender role has an explanation command.** `urnet-tools extender about` prints the role, its ports and how to prepare the host. It only prints text and takes no arguments.
+
 **I made uninstall and capability checks safer.** [redeploy] The Windows PowerShell uninstaller recognizes the legacy install path and refuses to remove data if another provider is running or process checks fail. Linux updates check the bounding set before applying the extender bind capability. The installer preserves unrelated file capabilities, and the miner image includes the capability tools. (#391)
 
 **Proxied UDP guidance.** An unknown check result can allow an unverified proxy exit. Proxied flows close after 120 seconds without sends or without replies; a known mismatch or failed relay check refuses the flow without falling back to the host address. This is a documentation correction, not a new behavior change. ([d2b00edd9](https://github.com/full-bars/sn/commit/d2b00edd9c22f44b0036fd708a8f3c045f06b2b2))

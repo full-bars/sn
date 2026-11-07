@@ -16,7 +16,7 @@ func newExtenderCmd() *cobra.Command {
 		Long:    "Inspect the live extender role or configure host privileges once.",
 		Example: "  urnet-tools extender status\n  urnet-tools extender setup",
 	}
-	cmd.AddCommand(newExtenderStatusCmd(), newExtenderSetupCmd())
+	cmd.AddCommand(newExtenderStatusCmd(), newExtenderSetupCmd(), newExtenderAboutCmd())
 	return cmd
 }
 
