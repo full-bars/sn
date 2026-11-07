@@ -5,7 +5,7 @@ An extender is a provider that also listens on a port the internet can reach, so
 ## Before you start
 
 - The extender role needs inbound TCP 443. That port needs privilege on Linux, FreeBSD, and macOS, and an inbound firewall rule on Windows.
-- A normal install stays unprivileged at user level. Run `urnet-tools extender setup` as the one-time privileged configuration step to grant the required binding privilege or firewall access; this step can safely be re-run after an update or binary swap to repair dropped capabilities.
+- A normal install stays unprivileged at user level. Run `urnet-tools extender setup` as the one-time privileged configuration step to grant the required binding privilege or firewall access; this step can safely be re-run after an update or binary swap to repair dropped capabilities. Run `urnet-tools extender about` for a short description of the role and its ports.
 - A host with a public IPv4 address where you control inbound TCP 443, both in the host firewall and in any router or cloud security group in front of it.
 - A free TCP 443 on that host. If another process holds it, the role stays off while the provider keeps providing without listening.
 - A provider that runs direct. A provider with proxies configured never listens, because the role must bind this host's own ports and publish this host's own address, and a proxied identity can do neither.
