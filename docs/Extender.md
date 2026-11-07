@@ -22,7 +22,9 @@ Expected result: the container starts and provides as before, with no proxy slot
 
 **2. Open TCP 443 on the host.**
 
-Allow inbound TCP 443 in the host firewall, and forward it on the router or security group in front of the host. Optionally allow UDP 443 and UDP 4053 as well; the network uses them when offered, and neither is required.
+Allow inbound TCP 443 in the host firewall, and forward it on the router or security group in front of the host. Optionally allow UDP 443, UDP 4053 and UDP 53 as well. The network uses them when offered, and none is required.
+
+Cloud providers block inbound ports by default. Add an inbound rule for these ports in the Oracle security list, the GCP VPC firewall rules, the AWS security group or the Azure network security group.
 
 Expected result: the rules are saved. You test them from outside in step 4, once the provider is listening.
 
@@ -59,12 +61,14 @@ docker logs urnetwork 2>&1 | grep '\[extender\]'
 Expected result: one line per carrier that bound, for example (the log may prefix each with a timestamp):
 
 ```text
-[extender] listen tcp 443
-[extender] listen udp 443 (quic)
-[extender] listen udp 4053 (dns)
+[extender] bound transport=tcp port=443 carrier=tcp
+[extender] bound transport=udp port=443 carrier=quic
+[extender] bound transport=udp port=4053 carrier=dns
 ```
 
-A carrier that failed to bind logs `[extender] listen error (<carrier>): <reason>` instead. A failed UDP carrier leaves only that carrier down. If the TCP carrier fails, the role stays off while the provider keeps providing.
+The miner also tries UDP 53 for the DNS carrier. A `port=53` line appears when that port binds.
+
+A carrier that failed to bind logs `[extender] bind failed transport=<tcp or udp> port=<port> carrier=<carrier> error=<reason>` instead. A failed UDP carrier leaves only that carrier down. If the TCP carrier fails, the role stays off while the provider keeps providing.
 
 Then, from a machine on a different network, check that the port answers:
 
@@ -79,13 +83,20 @@ Expected result: `succeeded` or `open`. A timeout means the firewall or router r
 Run the same grep a few minutes later. The network dials your public address on the TCP carrier, checks the challenge signature, and performs a `GET /hello` through it. A refusal is logged with the network's own reason:
 
 ```text
-[extender]activate v4 refused = <the network's reason>
+[extender] activate v4 refused carriers=tcp api=... error=<the network's reason>
+🌉⛔ [extender] IPv4 activation try 3 failed after 12.4s: <the network's reason>
 [extender] activation refused; next attempt in 10m
 ```
 
-A post that never got an answer is logged as `[extender]activate v4 err = http request attempts exhausted: <cause>`, where each cause is one reason an attempt failed (for example a dial or DNS error). Builds before this release printed only the fixed words.
+A post that never got an answer is logged as `[extender] activate v4 failed carriers=tcp api=... error=...`. The error lists the cause of each attempt, for example a dial or DNS error.
 
-Expected result: no `refused` line. If you see one, the reason names the test that failed; the usual cause is that the network could not reach TCP 443 on your public address, so recheck step 2 from outside your network. A failure that never reached the network reads differently: `[extender] activation failed without a refusal ...` costs no hold and usually means the path to the network is flaky, not that the port is closed. Every extender line and what it means is listed in the [log message reference](https://github.com/full-bars/sn/wiki/Log-Message-Reference).
+When the network accepts an address family, the log shows it once:
+
+```text
+🌉✅ [extender] IPv4 is now activated on try 1. The platform can reach this host over IPv4.
+```
+
+Expected result: the `is now activated` line for IPv4, and no `refused` line. If you see one, the reason names the test that failed; the usual cause is that the network could not reach TCP 443 on your public address, so recheck step 2 from outside your network. A failure that never reached the network reads differently: `[extender] activation failed without a refusal ...` costs no hold and usually means the path to the network is flaky, not that the port is closed. Every extender line and what it means is listed in the [log message reference](https://github.com/full-bars/sn/wiki/Log-Message-Reference).
 
 **6. If the log says the launch was held, wait it out.**
 
@@ -105,8 +116,8 @@ After a restart another process may still hold that port for a moment. The miner
 
 ## What this does not tell you
 
-- `[extender] listen tcp 443` means the process bound the port inside the container. It does not mean the internet can reach it. Only the absence of a refusal after the network's own probe tells you that, and a probe that fails is retried only after the hold in step 6.
-- The provider's own log has no line that confirms an accepted activation, so a quiet log is the absence of a refusal, not a report of success.
+- `[extender] bound transport=tcp port=443` means the process bound the port inside the container. It does not mean the internet can reach it. Only the network's answer tells you that: the `is now activated` line. A refused probe is retried only after the hold in step 6.
+- The `is now activated` line appears once, when the network accepts an address family. Renewals do not print it again, so a quiet log after that line is normal.
 - An accepted activation does not mean clients will use you. The network publishes your address and clients choose among the addresses it lists.
-- UDP 443 and UDP 4053 do not gate activation. A host with TCP 443 and no UDP is accepted; a host with both UDP ports and no TCP 443 is not.
+- UDP 443, UDP 4053 and UDP 53 do not gate activation. A host with TCP 443 and no UDP is accepted; a host with both UDP ports and no TCP 443 is not.
 - A host without inbound TCP 443 cannot run this role today. The network's design describes a peer-to-peer webrtc path for hosts behind NAT, but the provider has no switch for it and does not offer that carrier.
