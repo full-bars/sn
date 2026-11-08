@@ -10,6 +10,10 @@ The provider runs as an `rc.d` service named `urnetwork` under an unprivileged u
 > [!WARNING]
 > **FreeBSD has no durable client registration in this line.** Durable client registration is refused on FreeBSD with `durable client registration requires Unix custody support` (`clientauth/registration_store_unsupported.go:13`, the stub built for every platform except Linux, macOS and Windows). The stub's own comment says legacy authentication remains available there. The release matrix records this gap as `TODO(freebsd-durable-registration)` in `docs/Distro-Matrix-CI.md`. Do not deploy FreeBSD nodes for production until that gap is closed.
 
+## Extender setup
+
+Extender setup is untested on FreeBSD in this release. `urnet-tools extender setup` prints temporary sysctl commands and an undo command; it does not elevate, change the host or edit `/etc/sysctl.conf`. The suggested change allows all users to bind privileged ports, so review it before applying it yourself. Regular providing is unaffected. The FreeBSD port checker uses `sockstat`, but setup returns before inspecting ports. UDP 53 is optional and user-managed. See [Extender](/full-bars/sn/wiki/Extender).
+
 ## Before you start
 
 The base system has no `jq`, no `python3` and no `curl`. Downloads need none of them: the installer uses `curl` when it is installed, then `fetch` from the base system, then `wget`. The installer does need one JSON parser, though: the provider tarball is installed only after its SHA-256 is checked against the digest in the release metadata, and reading that metadata takes `jq` or `python3`. With neither, the install stops before downloading anything. Install `sudo` and `jq`:

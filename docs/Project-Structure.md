@@ -24,7 +24,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 | `scripts/` | Installers and uninstallers for Linux, macOS, Windows and FreeBSD, plus build and release check scripts. |
 | `deploy/` | A systemd unit for the provider, and the policy files for the test and main networks. |
 | `fake-release-server/` | A built binary of the fake release server that the installer tests use. Its source is in `scripts/ci/fake-release-server/`. |
-| `releases/` | Release notes, one file per release. |
+| `releases/` | Release notes. Draft the next sn body as `next-sn.md`; at tag time use `releases/<tag>.md`, which the release workflow reads. |
 
 > [!NOTE]
 > `cmd/provider/` and the `provider/` package were removed in commit `d79c04bf2`, which archived the relay. The provider entry point is now `cli/miner/` and its library is `miner/`. `Dockerfile.miner` was also removed, in commit `0d8c4604c`. `Dockerfile` is now the only image build. If a script or document still builds `./cmd/provider/` or tests `./provider/...`, switch it to the commands under [Build and test](#build-and-test).

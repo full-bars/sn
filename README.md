@@ -85,6 +85,10 @@ urnet-docker logs --unit urnet-miner 100
 urnet-docker update --unit urnet-miner
 ```
 
+### Extender setup
+
+On supported hosts, `urnet-tools extender setup` previews the proposed changes and asks before applying them. Use `--dry-run` to inspect the plan. FreeBSD extender setup is untested this release and prints manual commands only; regular providing is unaffected. Container networking must be configured separately. See the [extender guide](docs/Extender.md).
+
 ### Uninstall
 
 ```sh

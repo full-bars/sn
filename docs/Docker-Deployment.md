@@ -11,6 +11,12 @@ This page keeps the copy-paste Docker examples from the README in one place. Use
 
 Authentication is chosen with `AUTH=authcode` (with `AUTHCODE` or `URNETWORK_AUTH_CODE`, or a trailing auth-code argument) or `AUTH=userpass` (with `USER_AUTH` and `PASSWORD`). When `AUTH` is not set, it is inferred from what is present. The old `BUILD=stable` and `BUILD=jwt` still start: they map to `AUTH=userpass` and `AUTH=authcode` with a deprecation warning, and an explicit `AUTH` wins. `BUILD=nightly` has no equivalent and is ignored. The examples below use `AUTH`.
 
+## Extender networking
+
+`extender setup` does not configure containers. Publish TCP 443 and, if wanted, UDP 443 and UDP 4053, and configure the host firewall and any router separately. UDP 53 is optional and user-managed. For Compose IPv6, enable IPv6 on the Compose network and configure routing and port publishing; changing Docker's default bridge alone does not configure a Compose network. See [Extender](/full-bars/sn/wiki/Extender).
+
+With Docker RAM logs, the log follower may replay retained lines after a trim.
+
 ## 🛠️ Managing Containers with `urnet-docker`
 
 > [!IMPORTANT]

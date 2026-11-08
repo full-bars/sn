@@ -4,7 +4,7 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Merged to `main` after `v2026.11.6-1091584480-sn`, not yet in a tagged release.
+Changes after `v2026.11.6-1091565100-sn` through the pending release.
 
 ### Added
 
@@ -12,7 +12,9 @@ Merged to `main` after `v2026.11.6-1091584480-sn`, not yet in a tagged release.
 
 ### Fixed
 
-- **Extender setup confirms host changes before execution.** `urnet-tools extender setup` plans port, capability, and firewall commands, previews them to the user, and requires explicit confirmation (`--yes` in non-interactive sessions) before modifying the system.
+- **Extender setup confirms host changes before execution.** Setup shows the platform and firewall plan, requires confirmation and checks the plan again before applying it. An unverified firewalld plan is rejected. Runtime and permanent firewalld rules are planned separately without a reload. Existing Linux file capabilities are preserved. FreeBSD setup is untested and prints manual commands only; regular providing is unaffected. UDP 53 is optional and user-managed.
+- **Extender port inspection is more accurate.** FreeBSD uses `sockstat`, including dual-stack entries. macOS `lsof` inspection matches the exact local port.
+- **Diagnostic capture handles negative filesystem availability.** Negative available block counts are treated as zero rather than wrapping to a large value.
 - **`urnet-tools logs` keeps following a trimmed RAM log.** With RAM logs on, the log file is trimmed by rename. `urnet-tools logs` could stop showing new lines or replay the trimmed log. The command now follows the file across a trim, without repeating a fragment. In Docker it uses `tail -F`.
 - **Uninstall and capability checks fail safely.** The Windows PowerShell uninstaller refuses to remove data if another provider is running or process checks fail. Linux updates check the bounding set and preserve unrelated file capabilities. The miner image includes the capability tools. (#391)
 

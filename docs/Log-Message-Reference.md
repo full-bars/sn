@@ -118,6 +118,10 @@ All nonzero exit codes write `FATAL [exit N]: ...` to stderr and the shm log.
 | 79 | Authentication stopped after 30 failed logins over at least 2 hours; fix the credentials and restart. The shipped units set `RestartPreventExitStatus=79`, so systemd does not restart it |
 | 80-82 | Proxy paste failures: input file, temp file, executable path |
 
+## Following RAM logs
+
+`urnet-tools logs` follows a host RAM log across a trim. The Docker log follower can still replay retained lines after a trim; repeated lines are not necessarily new events.
+
 ## Log files
 
 - Standard output: the provider logs to stdout and systemd journal (or Docker logs).

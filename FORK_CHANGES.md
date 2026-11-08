@@ -9,9 +9,13 @@ This document tracks all modifications made to the upstream `sn` (connect v2026)
 
 **Fork Based On**: urfoundation/sn (connect v2026: H3/QUIC transport + IPv6 dual-stack)
 **Repository**: github.com/full-bars/sn
-**Binary Versioning**: `v2026.<month>.<day>-<epoch>` for releases of this fork since 2026.10.22, which dropped the `-meso` suffix; upstream publishes tags in the same shape, so read the CHANGELOG entry rather than the tag to tell the two apart
+**Binary Versioning**: `v<YYYY.M.D>-<build>-sn` for current fork releases; earlier releases used `-meso`.
 
 ---
+
+## Current extender setup
+
+The host setup command lives in `internal/urnettools/`; the provider is built from `cli/miner/` and `miner/`. Setup previews platform and firewall actions before confirmation, checks for plan drift and preserves existing file capabilities when adding Linux bind privilege. FreeBSD setup is untested this release and prints manual commands only. UDP 53 is optional and user-managed. See [Extender](docs/Extender.md).
 
 ## Porting Status
 
