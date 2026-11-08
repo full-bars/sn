@@ -97,6 +97,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	}
 
 	// TCP 443 busy check: stop, name process, change nothing, exit non-zero. Never kill anything.
+	holderHidden := false
 	if ports.TCP443.Held {
 		isTargetHolder := false
 		for _, p := range targets {
@@ -114,7 +115,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		// elevation, is therefore not proof of a foreign process: a root provider
 		// holding 443 reads exactly like this. Defer the verdict to the elevated
 		// re-run, which sees every socket.
-		holderHidden := !isRootFn() && ports.TCP443.Process == "" && ports.TCP443.PID == 0
+		holderHidden = !isRootFn() && ports.TCP443.Process == "" && ports.TCP443.PID == 0
 		if holderHidden {
 			fmt.Fprintf(errOut, "warn: TCP 443 is held by a process this user cannot see; re-checking after elevation\n")
 		}
@@ -161,7 +162,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	}
 
 	// Check if already configured on host
-	if configured && fwConfigured {
+	if configured && fwConfigured && !holderHidden {
 		if !opts.DryRun {
 			for _, p := range targets {
 				if err := reportExtenderBind(out, platformCfg, p, ports.TCP443.Held); err != nil {

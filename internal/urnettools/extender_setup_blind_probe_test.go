@@ -12,7 +12,7 @@ import (
 func TestExtenderSetupHiddenPortHolderDefersToElevation(t *testing.T) {
 	ssOut := "State Recv-Q Send-Q Local Address:Port Peer Address:Port Process\nLISTEN 0 4096 *:443 *:*\n"
 	run := func(root bool) (struct{}, error) {
-		cfg := &mockPlatformConfigurer{platform: "linux"}
+		cfg := &mockPlatformConfigurer{platform: "linux", configured: true}
 		err := RunExtenderSetup(ExtenderSetupOptions{
 			Platform: "linux", PlatformCfg: cfg, IsRoot: func() bool { return root },
 			Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, Force: true,
@@ -30,7 +30,7 @@ func TestExtenderSetupHiddenPortHolderDefersToElevation(t *testing.T) {
 	// Non-root sees nothing about the holder: must reach elevation.
 	// Without a TTY it stops at the "run sudo" instruction, which is the
 	// elevation step; the failure it must not produce is a port conflict.
-	if _, err := run(false); err != nil && (strings.Contains(err.Error(), "port TCP 443 is held") || !strings.Contains(err.Error(), "requires root privileges")) {
+	if _, err := run(false); err == nil || strings.Contains(err.Error(), "port TCP 443 is held") || !strings.Contains(err.Error(), "requires root privileges") {
 		t.Fatalf("hidden holder aborted setup before elevation: %v", err)
 	}
 	// Root sees everything: an unidentified holder is still a conflict.
