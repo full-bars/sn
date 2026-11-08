@@ -5,12 +5,13 @@ An extender is a provider that also listens on a port the internet can reach, so
 ## Before you start
 
 - The extender role needs inbound TCP 443. That port needs privilege on Linux, FreeBSD, and macOS, and an inbound firewall rule on Windows.
-- A normal install stays unprivileged at user level. Run `urnet-tools extender setup` as the one-time privileged configuration step to grant the required binding privilege or firewall access; this step can safely be re-run after an update or binary swap to repair dropped capabilities. Run `urnet-tools extender about` for a short description of the role and its ports.
+- A normal install stays unprivileged at user level. On supported hosts, run `urnet-tools extender setup` to inspect binding privilege and firewall access; it can safely be re-run after an update or binary swap to repair dropped capabilities. On FreeBSD, extender setup is untested this release and prints manual commands only; it does not elevate or change the host. Regular providing is unaffected. Run `urnet-tools extender about` for a short description of the role and its ports.
 - A host with a public IPv4 address where you control inbound TCP 443, both in the host firewall and in any router or cloud security group in front of it.
 - A free TCP 443 on that host. If another process holds it, the role stays off while the provider keeps providing without listening.
 - A provider that runs direct. A provider with proxies configured never listens, because the role must bind this host's own ports and publish this host's own address, and a proxied identity can do neither.
 - A first-run auth code from [ur.io](https://ur.io), or a volume that already holds a signed-in provider.
-- Docker containers are not automated by `extender setup`. For Docker, publish `-p 443:443 -p 443:443/udp -p 4053:4053/udp`, and supply either `--cap-add=NET_BIND_SERVICE` or `--network host`. Publishing is only half of it: the host firewall still has to allow the ports.
+- Docker containers are not automated by `extender setup`. For bridge networking, publish `-p 443:443 -p 443:443/udp -p 4053:4053/udp` and allow the ports in the host firewall. A non-root process may need `--cap-add=NET_BIND_SERVICE` to bind TCP 443. UDP 53 is optional and user-managed; setup does not open it. If you want to expose it and the host port is free, publish `-p 53:53/udp` and manage its firewall rule yourself. The DNS ports answer public DNS queries, so expose them deliberately.
+- For Compose IPv6, enable IPv6 on the Compose network and configure routing and port publishing. Changing only Docker's default bridge does not configure a Compose-created network. Check reachability from outside.
 
 ## Prepare the host with `urnet-tools extender setup`
 
@@ -130,7 +131,9 @@ Expected result: the role comes back on its own when the time shown has passed, 
 
 TCP 443 is the one port the role cannot do without. While it cannot bind, the role is fully off: no UDP carrier, no node, no activation.
 
-After a restart another process may still hold that port for a moment. The miner retries quickly at first, seconds apart, and then every three minutes, so the role comes back on its own once the port is free. Restarting again before it settles only adds another wait: restart once and leave it.
+After a restart another process may still hold that port for a moment. The miner retries quickly at first, seconds apart, and then every three minutes, so the role comes back on its own once the port is free. A hot-swap can race the old process releasing the port, so recovery may wait for a retry. Restarting again before it settles only adds another wait: restart once and leave it.
+
+If Docker RAM logs are enabled, the log follower may replay retained lines after a trim. Treat repeated lines as possible replays, not necessarily new events.
 
 ## What this does not tell you
 

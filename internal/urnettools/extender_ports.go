@@ -49,9 +49,9 @@ func (p ExtenderPorts) UDPWarnings() []string {
 			proc = fmt.Sprintf("%s (PID %d)", proc, p.UDP443.PID)
 		}
 		if proc != "" {
-			warnings = append(warnings, fmt.Sprintf("UDP 443 is held by %s; extender will operate on TCP alone (QUIC carrier disabled)", proc))
+			warnings = append(warnings, fmt.Sprintf("UDP 443 is held by %s; check whether the QUIC carrier can bind", proc))
 		} else {
-			warnings = append(warnings, "UDP 443 is held; extender will operate on TCP alone (QUIC carrier disabled)")
+			warnings = append(warnings, "UDP 443 is held; check whether the QUIC carrier can bind")
 		}
 	}
 	if p.UDP4053.Held {
@@ -62,9 +62,9 @@ func (p ExtenderPorts) UDPWarnings() []string {
 			proc = fmt.Sprintf("%s (PID %d)", proc, p.UDP4053.PID)
 		}
 		if proc != "" {
-			warnings = append(warnings, fmt.Sprintf("UDP 4053 is held by %s; extender will operate on TCP alone (DNS carrier disabled)", proc))
+			warnings = append(warnings, fmt.Sprintf("UDP 4053 is held by %s; check whether the UDP 4053 DNS carrier can bind", proc))
 		} else {
-			warnings = append(warnings, "UDP 4053 is held; extender will operate on TCP alone (DNS carrier disabled)")
+			warnings = append(warnings, "UDP 4053 is held; check whether the UDP 4053 DNS carrier can bind")
 		}
 	}
 	return warnings

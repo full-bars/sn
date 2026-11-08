@@ -157,7 +157,7 @@ func newExtenderSetupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                "setup [-y|--yes] [-f|--force] [-n|--dry-run] [target]",
 		Short:              "one-time privileged configuration for extender role",
-		Long:               "Perform one-time privileged host configuration for the extender role. Inspects port 443 occupancy, binary bind capability and host firewall rules, prints the exact commands needed, and asks for confirmation before changing anything (use -y/--yes for non-interactive runs).",
+		Long:               "Perform one-time privileged host configuration for the extender role. Inspects port 443 occupancy, binary bind capability and host firewall rules, prints the exact commands needed, and asks for confirmation before changing anything (use -y/--yes for non-interactive runs). UDP 53 is optional and user-managed; setup does not open it. FreeBSD extender setup is untested and prints manual instructions only.",
 		Example:            "  urnet-tools extender setup\n  urnet-tools extender setup --yes\n  urnet-tools extender setup --dry-run",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
