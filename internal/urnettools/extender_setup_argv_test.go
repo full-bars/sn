@@ -9,16 +9,48 @@ import (
 func TestExtenderSetupElevationKeepsExplicitConfirmation(t *testing.T) {
 	old := runExtenderSetupFn
 	defer func() { runExtenderSetupFn = old }()
-	for _, args := range [][]string{{"setup"}, {"setup", "--yes"}} {
+	for _, tc := range []struct {
+		args []string
+		want []string
+	}{
+		{args: []string{"--yes"}, want: []string{"extender", "setup", "--yes"}},
+		{args: []string{"setup", "--yes"}, want: []string{"extender", "setup", "--yes"}},
+		{args: []string{"setup"}, want: []string{"extender", "setup"}},
+	} {
 		var got ExtenderSetupOptions
 		runExtenderSetupFn = func(opts ExtenderSetupOptions) error { got = opts; return nil }
-		if err := cmdExtenderSetup(args); err != nil {
+		if err := cmdExtenderSetup(tc.args); err != nil {
 			t.Fatal(err)
 		}
-		want := append([]string{"extender"}, args...)
-		if !reflect.DeepEqual(got.Argv, want) {
-			t.Fatalf("argv = %q, want %q", got.Argv, want)
+		if !reflect.DeepEqual(got.Argv, tc.want) {
+			t.Fatalf("argv = %q, want %q", got.Argv, tc.want)
 		}
+	}
+}
+
+func TestExtenderSetupRealCLIArgvIncludesSetup(t *testing.T) {
+	old := runExtenderSetupFn
+	defer func() { runExtenderSetupFn = old }()
+	var got ExtenderSetupOptions
+	runExtenderSetupFn = func(opts ExtenderSetupOptions) error {
+		got = opts
+		return nil
+	}
+
+	if err := Run([]string{"extender", "setup", "--yes"}); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"extender", "setup", "--yes"}
+	if !reflect.DeepEqual(got.Argv, want) {
+		t.Fatalf("argv = %q, want %q", got.Argv, want)
+	}
+
+	if err := Run([]string{"extender", "setup", "--user", "alice"}); err != nil {
+		t.Fatal(err)
+	}
+	want = []string{"extender", "setup", "--user", "alice"}
+	if !reflect.DeepEqual(got.Argv, want) {
+		t.Fatalf("argv = %q, want %q", got.Argv, want)
 	}
 }
 

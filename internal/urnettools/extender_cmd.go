@@ -141,7 +141,13 @@ func cmdExtenderSetup(args []string) error {
 	if err != nil {
 		return err
 	}
-	argv := append([]string{"extender"}, args...)
+	argv := []string{"extender", "setup"}
+	for i, tok := range args {
+		if i == 0 && strings.EqualFold(strings.TrimSpace(tok), "setup") {
+			continue
+		}
+		argv = append(argv, tok)
+	}
 	return runExtenderSetupFn(ExtenderSetupOptions{
 		Yes:    yes,
 		Force:  yes,
