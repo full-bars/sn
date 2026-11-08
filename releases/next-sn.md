@@ -79,4 +79,4 @@ Auth codes are single-use. Keep the state volume. If an existing identity is mis
 - A hot-swap candidate can race the old process releasing the extender port. Recovery can wait for a retry.
 - FreeBSD extender setup is untested this release and only prints manual commands. It does not change regular providing.
 
-[Full changelog](https://github.com/full-bars/sn/compare/v2026.11.6-1091565100-sn...main)
+[Full changelog](https://github.com/full-bars/sn/compare/v2026.11.6-1091584480-sn...main)

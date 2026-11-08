@@ -4,7 +4,7 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Changes after `v2026.11.6-1091565100-sn` through the pending release.
+Changes after `v2026.11.6-1091584480-sn` through the pending release.
 
 ### Added
 
