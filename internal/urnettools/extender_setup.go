@@ -249,11 +249,8 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		lookPathFn = exec.LookPath
 	}
 
-	// Resolve the provider(s) this setup acts on. The command takes no flags,
-	// so a host with several providers cannot be narrowed by the operator:
-	// capabilities and the bind probe are per provider binary and user, so every
-	// distinct provider is configured instead of refusing with an inventory the
-	// operator has no flag to answer.
+	// Resolve the provider(s) this setup acts on: explicit target when set,
+	// otherwise every distinct provider is configured.
 	targets, err := setupTargets(setupDiscoverFn(), opts.Target)
 	if err != nil {
 		return fmt.Errorf("resolving target provider: %w", err)
@@ -358,10 +355,8 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		sudoAvailable := sudoErr == nil
 
 		if platform == "windows" {
-			// There is no sudo and no re-exec: the operator opens an elevated
-			// terminal and runs the same command.
-			cmd := fmt.Sprintf("%s extender setup", resolvedExecutablePath())
-			fmt.Fprintf(errOut, "extender setup requires Administrator privileges. Re-run from an elevated terminal (Run as administrator):\n  %s\n", cmd)
+			cmd := formatSetupPowerShellCommand(opts)
+			fmt.Fprintf(errOut, "extender setup requires Administrator privileges. Re-run from an elevated PowerShell terminal (Run as administrator):\n  %s\n", cmd)
 			return fmt.Errorf("extender setup requires Administrator privileges; run from an elevated terminal: %s", cmd)
 		}
 		if opts.NonInteractive || !stdinIsInteractive() || !sudoAvailable {
@@ -513,10 +508,30 @@ func warnUnitNoNewPrivileges(out io.Writer, cfg PlatformConfigurer, p Provider) 
 	}
 }
 
-// formatSetupSudoCommand is the exact command to run by hand. `extender setup`
-// takes no flags, so the command is the same on every host.
-func formatSetupSudoCommand(ExtenderSetupOptions) string {
-	return fmt.Sprintf("sudo %s extender setup", resolvedExecutablePath())
+func setupManualArgs(opts ExtenderSetupOptions) []string {
+	if len(opts.Argv) == 0 {
+		return []string{"extender", "setup"}
+	}
+	return opts.Argv
+}
+
+// formatSetupSudoCommand is the exact command to run by hand.
+func formatSetupSudoCommand(opts ExtenderSetupOptions) string {
+	return setupCommand{name: "sudo", args: append([]string{resolvedExecutablePath()}, setupManualArgs(opts)...)}.String()
+}
+
+func formatSetupPowerShellCommand(opts ExtenderSetupOptions) string {
+	quote := func(s string) string {
+		if setupShellWord(s) == s {
+			return s
+		}
+		return "'" + strings.ReplaceAll(s, "'", "''") + "'"
+	}
+	words := []string{"&", quote(resolvedExecutablePath())}
+	for _, arg := range setupManualArgs(opts) {
+		words = append(words, quote(arg))
+	}
+	return strings.Join(words, " ")
 }
 
 // setupTargets lists the providers setup configures: the explicit target when
