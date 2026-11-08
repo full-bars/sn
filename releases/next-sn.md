@@ -1,6 +1,14 @@
 # Next sn release
 
+I tightened extender setup, capability handling and Windows uninstall checks. I also updated the log follower and diagnostic capture checks. FreeBSD extender setup is untested in this release and prints instructions only.
+
 ## Quick start
+
+Already running a provider? Update in place:
+
+```sh
+urnet-tools update
+```
 
 Install on Linux or Alpine:
 
@@ -20,11 +28,11 @@ Install on Windows in PowerShell:
 irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 | iex
 ```
 
-Install on FreeBSD as root. Set `SERVICE_USER_OVERRIDE` to an existing non-root account:
+On FreeBSD, download the installer and run it with a non-root service account selected:
 
 ```sh
 fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_FreeBSD.sh
-SERVICE_USER_OVERRIDE=urnet sh urnet-install.sh install
+sudo sh urnet-install.sh install
 ```
 
 Start a new provider container:
@@ -37,33 +45,38 @@ docker run -d --name urnetwork --restart unless-stopped \
   ghcr.io/full-bars/sn:latest
 ```
 
-The `:miner` tag uses the same image configuration but can point to a different build.
-
-Keep the state volume. If an existing identity is missing, restore its original volume instead of authorizing a replacement. For optional extender ports, see [Extender](https://github.com/full-bars/sn/wiki/Extender).
-
-### Downloads
-
-Asset names use the release tag in place of `<tag>`. Download them from the release's Assets section.
-
-| What | Asset |
-| --- | --- |
-| Provider, Linux amd64 | `urnetwork-provider-<tag>-linux-amd64.tar.gz` |
-| Provider, Linux arm64 | `urnetwork-provider-<tag>-linux-arm64.tar.gz` |
-| Miner, Linux amd64 | `urnetwork-miner-<tag>-linux-amd64.tar.gz` |
-| Miner, Linux arm64 | `urnetwork-miner-<tag>-linux-arm64.tar.gz` |
-| Linux amd64 tools | `urnet-tools-linux-amd64`, `urnet-docker-linux-amd64` |
-| Monitoring configuration | `urnetwork-monitoring-<tag>.tar.gz` |
+Auth codes are single-use. Keep the state volume. If an existing identity is missing, restore its original volume instead of authorizing a replacement. For optional extender ports, see the [extender guide](https://github.com/full-bars/sn/wiki/Extender).
 
 ## What changed
 
-I added a command that explains the extender role. Run `urnet-tools extender about` to read the role, its ports and the setup steps. Read that output before you run `urnet-tools extender setup`.
+`[redeploy]` means update the affected binary or image and restart it. `[no redeploy]` means documentation or test changes need no restart.
 
-**The extender role has an explanation command.** `urnet-tools extender about` prints the role, its ports and how to prepare the host. It only prints text and takes no arguments.
+### Extender
 
-**I made uninstall and capability checks safer.** [redeploy] The Windows PowerShell uninstaller recognizes the legacy install path and refuses to remove data if another provider is running or process checks fail. Linux updates check the bounding set before applying the extender bind capability. The installer preserves unrelated file capabilities, and the miner image includes the capability tools. (#391)
+- **`urnet-tools extender about` explains the role** [redeploy]. It prints the role, its ports and how to prepare the host. It only prints text and takes no arguments. Read it before you run `urnet-tools extender setup`.
+- **Setup previews and confirms host changes** [redeploy]. The plan includes platform actions such as `setcap` and firewall commands. Setup recomputes it after confirmation and refuses a changed plan. An unverified firewalld plan is rejected before changes. Use `-y`/`--yes` or `-f`/`--force` for non-interactive approval; elevation does not imply approval. `-n`/`--dry-run` previews the plan, and setup accepts a target.
+- **Firewall and capability changes are safer** [redeploy]. Firewalld runtime and permanent rules are planned separately without a reload. Linux setup preserves existing file capabilities and recognizes grouped capability entries. The FreeBSD port checker uses `sockstat`; macOS `lsof` matching uses the exact local port. FreeBSD setup returns before port inspection.
+- **FreeBSD setup is print-only and untested** [redeploy]. It prints temporary sysctl commands and their undo, without changing the host or elevating. Regular providing is unaffected. UDP 53 is optional and user-managed on all platforms.
 
-**Proxied UDP guidance.** An unknown check result can allow an unverified proxy exit. Proxied flows close after 120 seconds without sends or without replies; a known mismatch or failed relay check refuses the flow without falling back to the host address. This is a documentation correction, not a new behavior change. ([d2b00edd9](https://github.com/full-bars/sn/commit/d2b00edd9c22f44b0036fd708a8f3c045f06b2b2))
+### Tools and diagnostics
 
-**Updated SN25 figures.** See the [head-tier page](https://github.com/full-bars/sn/blob/main/docs/Bittensor-Head-Tier.md) for the latest snapshot. ([10e388054](https://github.com/full-bars/sn/commit/10e388054))
+- **RAM log following survives host log trims** [redeploy]. The host follower tracks the replacement file and avoids replaying retained fragments, including when log lines repeat. The Docker follower follows the replacement too, but can still replay retained lines.
+- **Diagnostic capture treats negative available blocks as zero** [redeploy]. This prevents a negative count from wrapping into a large free-space value. The help now names the 512 MiB requirement and the filesystem containing the diagnostic directory.
 
-`[redeploy]` takes effect when you update and restart the provider.
+### Installers and container
+
+- **Windows uninstall fails safely** [redeploy]. It checks that provider processes have exited before removing shared data, recognizes the legacy install path and reports processor-query failures. It accepts a processor architecture only when the reported processors agree.
+- **Capability checks respect the Linux bounding set** [redeploy]. Updates avoid adding a bind capability the process cannot use. The installer can remove a blocked bind capability when safe, but stops rather than erase unrelated capabilities or proceed when checks fail. The miner image includes capability utilities.
+
+### Networking and documentation
+
+- **The connect pin includes receive-loop and extender changes** [redeploy]. It carries a receive-loop panic fix and quieter repeated diagnostics. It also includes activation-record verification, bounded restored pacing, carrier status reporting and per-service counts. These changes have not been live-verified here.
+- **Operator guidance is updated** [no redeploy]. The extender, platform and log guides explain the setup limits and the optional UDP ports. Proxied UDP guidance clarifies that an unknown check may allow an unverified exit, while a known mismatch or failed relay check does not fall back to the host.
+
+## Known limitations
+
+- The Docker log follower may replay retained lines after a trim.
+- A hot-swap candidate can race the old process releasing the extender port. Recovery can wait for a retry.
+- FreeBSD extender setup is untested this release and only prints manual commands. It does not change regular providing.
+
+[Full changelog](https://github.com/full-bars/sn/compare/v2026.11.6-1091565100-sn...main)
