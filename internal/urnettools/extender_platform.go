@@ -1,11 +1,8 @@
 package urnettools
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"io/fs"
 	"net"
 	"os"
 	"os/exec"
@@ -313,49 +310,21 @@ func sysctlConfSetsReservedHighZero(content string) bool {
 	return set
 }
 
+const freeBSDSetupInstructions = `FreeBSD extender setup is untested this release. No changes were made.
+For a non-root provider, these temporary commands allow all users to bind
+privileged ports. Run them in the same shell; stop if the first fails:
+  previous=$(sysctl -n net.inet.ip.portrange.reservedhigh)
+  sudo sysctl net.inet.ip.portrange.reservedhigh=0
+Undo in that same shell:
+  sudo sysctl net.inet.ip.portrange.reservedhigh="$previous"
+The change is not persistent; setup does not edit /etc/sysctl.conf.
+Manage your firewall manually: TCP 443 is required; UDP 443 and UDP 4053
+are optional. UDP 53 is optional and user-managed. Check your pf or ipfw
+rules and undo firewall changes using your own ruleset procedure.
+`
+
 func (sp *SystemPlatformConfigurer) applyFreeBSD(user string) (bool, string, error) {
-	// Read the existing file before changing either the kernel or the file. A
-	// file that does not exist yet is empty; any other read failure stops here,
-	// because writing back over a file we could not read would drop its contents.
-	sysctlConf := "/etc/sysctl.conf"
-	data, err := sp.ReadFile(sysctlConf)
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return false, "", fmt.Errorf("reading %s: %w", sysctlConf, err)
-	}
-	curOut, err := sp.ExecCmd("sysctl", "-n", "net.inet.ip.portrange.reservedhigh")
-	if err != nil {
-		return false, "", fmt.Errorf("reading sysctl net.inet.ip.portrange.reservedhigh: %w", err)
-	}
-	curVal := strings.TrimSpace(string(curOut))
-
-	// Set sysctl
-	if out, err := sp.ExecCmd("sysctl", "net.inet.ip.portrange.reservedhigh=0"); err != nil {
-		return false, "", fmt.Errorf("sysctl net.inet.ip.portrange.reservedhigh=0 failed: %s: %w", strings.TrimSpace(string(out)), err)
-	}
-
-	// Read value after
-	afterOut, err := sp.ExecCmd("sysctl", "-n", "net.inet.ip.portrange.reservedhigh")
-	if err != nil {
-		return false, "", fmt.Errorf("re-reading sysctl net.inet.ip.portrange.reservedhigh failed: %w", err)
-	}
-	afterVal := strings.TrimSpace(string(afterOut))
-
-	// Persist in /etc/sysctl.conf
-	content := string(data)
-	if !sysctlConfSetsReservedHighZero(content) {
-		var buf bytes.Buffer
-		buf.WriteString(content)
-		if len(content) > 0 && !strings.HasSuffix(content, "\n") {
-			buf.WriteString("\n")
-		}
-		buf.WriteString("# Extender role: allow unprivileged binding of port 443\nnet.inet.ip.portrange.reservedhigh=0\n")
-		if err := sp.WriteFile(sysctlConf, buf.Bytes(), 0644); err != nil {
-			return false, "", fmt.Errorf("failed to persist in %s: %w", sysctlConf, err)
-		}
-	}
-
-	desc := fmt.Sprintf("net.inet.ip.portrange.reservedhigh changed from %s to %s and persisted in %s", curVal, afterVal, sysctlConf)
-	return true, desc, nil
+	return false, "FreeBSD extender setup is manual only", nil
 }
 
 // --- Windows implementation ---

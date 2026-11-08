@@ -218,6 +218,11 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		platform = runtime.GOOS
 	}
 
+	if platform == "freebsd" {
+		fmt.Fprint(out, freeBSDSetupInstructions)
+		return nil
+	}
+
 	checker := opts.PortChecker
 	if checker == nil {
 		checker = DefaultPortChecker(platform)

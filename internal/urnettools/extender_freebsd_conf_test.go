@@ -1,31 +1,8 @@
 package urnettools
 
 import (
-	"io/fs"
-	"os"
-	"strings"
 	"testing"
 )
-
-// sysctl.conf that does not exist yet is created; one that cannot be read is
-// never overwritten.
-func TestExtenderFreeBSDMissingSysctlConfIsCreated(t *testing.T) {
-	var written string
-	sp := &SystemPlatformConfigurer{PlatformName: "freebsd",
-		ReadFile: func(string) ([]byte, error) {
-			return nil, &fs.PathError{Op: "open", Path: "/etc/sysctl.conf", Err: fs.ErrNotExist}
-		},
-		WriteFile: func(_ string, d []byte, _ os.FileMode) error { written = string(d); return nil },
-		ExecCmd:   func(string, ...string) ([]byte, error) { return []byte("0\n"), nil }}
-	if ok, _, err := sp.applyFreeBSD("alice"); err != nil || !ok || !strings.Contains(written, "net.inet.ip.portrange.reservedhigh=0") {
-		t.Fatalf("ok=%v err=%v written=%q", ok, err, written)
-	}
-	sp.ReadFile = func(string) ([]byte, error) { return nil, fs.ErrPermission }
-	written = ""
-	if _, _, err := sp.applyFreeBSD("alice"); err == nil || written != "" {
-		t.Fatalf("unreadable sysctl.conf: err=%v written=%q", err, written)
-	}
-}
 
 // A commented-out line persists nothing, and the last assignment wins.
 func TestSysctlConfSetsReservedHighZero(t *testing.T) {
@@ -53,26 +30,14 @@ func TestSysctlConfSetsReservedHighZero(t *testing.T) {
 	}
 }
 
-// The check and the apply agree: a commented-out line is rewritten as a live
-// one, not trusted as already persisted.
+// A commented-out line is not trusted as persisted.
 func TestFreeBSDCommentedSysctlIsNotPersisted(t *testing.T) {
 	const conf = "# net.inet.ip.portrange.reservedhigh=0\n"
-	var written string
 	sp := &SystemPlatformConfigurer{
 		ReadFile: func(string) ([]byte, error) { return []byte(conf), nil },
 		ExecCmd:  func(string, ...string) ([]byte, error) { return []byte("0\n"), nil },
-		WriteFile: func(_ string, data []byte, _ os.FileMode) error {
-			written = string(data)
-			return nil
-		},
 	}
 	if ok, _, err := sp.checkFreeBSD("alice"); err != nil || ok {
 		t.Fatalf("a commented line read as persisted: ok=%v err=%v", ok, err)
-	}
-	if _, _, err := sp.applyFreeBSD("alice"); err != nil {
-		t.Fatal(err)
-	}
-	if !sysctlConfSetsReservedHighZero(written) {
-		t.Fatalf("apply left no live assignment: %q", written)
 	}
 }

@@ -3,7 +3,6 @@ package urnettools
 import (
 	"bytes"
 	"errors"
-	"os"
 	"strings"
 	"testing"
 )
@@ -21,19 +20,6 @@ func TestExtenderFreeBSDProviderUserNotSetupCaller(t *testing.T) {
 	configured, _, err = sp.checkFreeBSD("root")
 	if err != nil || !configured || calls != 1 {
 		t.Fatalf("root: configured=%v err=%v calls=%d", configured, err, calls)
-	}
-}
-
-func TestExtenderFreeBSDSysctlReadFailureNeverWrites(t *testing.T) {
-	failure := errors.New("permission denied")
-	sp := &SystemPlatformConfigurer{
-		ReadFile:  func(string) ([]byte, error) { return nil, failure },
-		WriteFile: func(string, []byte, os.FileMode) error { t.Fatal("unexpected write"); return nil },
-		ExecCmd:   func(string, ...string) ([]byte, error) { t.Fatal("unexpected sysctl"); return nil, nil },
-	}
-	_, _, err := sp.applyFreeBSD("provider")
-	if !errors.Is(err, failure) {
-		t.Fatalf("expected read failure, got %v", err)
 	}
 }
 
