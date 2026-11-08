@@ -124,13 +124,8 @@ func planSetupCommands(platform string, platformCfg PlatformConfigurer, needPlat
 	if !fwStatus.PortsOpen {
 		switch fwStatus.Kind {
 		case FirewallFirewalld:
-			if len(fwStatus.firewalldPlan) > 0 {
-				for _, args := range fwStatus.firewalldPlan {
-					addCmd(setupCommand{name: "firewall-cmd", args: args})
-				}
-			} else {
-				addCmd(setupCommand{name: "firewall-cmd", args: []string{"--permanent", "--add-port=443/tcp", "--add-port=443/udp", "--add-port=4053/udp"}})
-				addCmd(setupCommand{name: "firewall-cmd", args: []string{"--reload"}})
+			for _, args := range fwStatus.firewalldPlan {
+				addCmd(setupCommand{name: "firewall-cmd", args: args})
 			}
 		case FirewallUFW:
 			addCmd(setupCommand{name: "ufw", args: []string{"allow", "443/tcp"}})
@@ -161,6 +156,9 @@ func computeExtenderSetupPlan(platform string, platformCfg PlatformConfigurer, f
 	}
 	desc := strings.Join(descs, "; ")
 	fwStatus := fwMgr.Detect()
+	if fwStatus.Kind == FirewallFirewalld && !fwStatus.PortsOpen && len(fwStatus.firewalldPlan) == 0 {
+		return nil, fwStatus, nil, false, "", fmt.Errorf("%s", fwStatus.Message)
+	}
 	plan, plannedTargets, err := planSetupCommands(platform, platformCfg, needPlatformTargets, fwStatus)
 	if err != nil {
 		return nil, FirewallStatus{}, nil, false, "", err
@@ -313,6 +311,9 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	plan, fwStatus, confirmedPlatformTargets, configured, desc, err := computeExtenderSetupPlan(platform, platformCfg, fwMgr, targets)
 	if err != nil {
 		return err
+	}
+	if fwStatus.Kind == FirewallFirewalld && !fwStatus.PortsOpen && len(fwStatus.firewalldPlan) == 0 {
+		return fmt.Errorf("%s", fwStatus.Message)
 	}
 
 	// No firewall service detected means there is nothing for setup to open;
