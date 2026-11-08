@@ -24,6 +24,7 @@ func TestExtenderSetupConfiguresEveryProviderWithoutFlags(t *testing.T) {
 	cfg := &recordingConfigurer{mockPlatformConfigurer: mockPlatformConfigurer{platform: "linux"}}
 	opts := setupRegressionOptions()
 	opts.IsRoot = func() bool { return true }
+	opts.Yes = true
 	opts.PlatformCfg = cfg
 	opts.FirewallMgr = &FirewallManager{Platform: "linux", LookPath: func(string) (string, error) { return "", errors.New("missing") }}
 	err := RunExtenderSetup(opts)

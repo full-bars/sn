@@ -13,14 +13,19 @@ import (
 )
 
 func TestExtenderSetupRejectsFlags(t *testing.T) {
-	for _, sub := range []string{"setup", "status"} {
-		for _, flag := range []string{"--enable", "-e", "--json", "--non-interactive", "--force", "--dry-run", "--user", "positional"} {
-			t.Run(sub+"/"+flag, func(t *testing.T) {
-				if err := Run([]string{"extender", sub, flag}); err == nil {
-					t.Fatalf("%s accepted %s", sub, flag)
-				}
-			})
-		}
+	for _, flag := range []string{"--enable", "-e", "--json", "--non-interactive", "--user", "positional"} {
+		t.Run("setup/"+flag, func(t *testing.T) {
+			if err := Run([]string{"extender", "setup", flag}); err == nil {
+				t.Fatalf("setup accepted %s", flag)
+			}
+		})
+	}
+	for _, flag := range []string{"--enable", "-e", "--json", "--non-interactive", "--force", "--dry-run", "--user", "positional"} {
+		t.Run("status/"+flag, func(t *testing.T) {
+			if err := Run([]string{"extender", "status", flag}); err == nil {
+				t.Fatalf("status accepted %s", flag)
+			}
+		})
 	}
 }
 

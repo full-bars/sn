@@ -137,14 +137,14 @@ func TestExtenderSetup_UDPBusyOnly(t *testing.T) {
 
 	var stdout, stderr bytes.Buffer
 	opts := ExtenderSetupOptions{
-		Platform:       "linux",
-		PortChecker:    checker,
-		PlatformCfg:    platformCfg,
-		FirewallMgr:    fwMgr,
-		IsRoot:         func() bool { return true },
-		Stdout:         &stdout,
-		Stderr:         &stderr,
-		NonInteractive: true,
+		Platform:    "linux",
+		PortChecker: checker,
+		PlatformCfg: platformCfg,
+		FirewallMgr: fwMgr,
+		IsRoot:      func() bool { return true },
+		Stdout:      &stdout,
+		Stderr:      &stderr,
+		Yes:         true,
 	}
 
 	err := RunExtenderSetup(opts)

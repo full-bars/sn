@@ -118,6 +118,7 @@ func TestExtenderSetupTargetResolutionError(t *testing.T) {
 func TestExtenderSetupFirewallApplyFailure(t *testing.T) {
 	opts := setupRegressionOptions()
 	opts.IsRoot = func() bool { return true }
+	opts.Yes = true
 	failure := errors.New("denied firewall")
 	opts.FirewallMgr = &FirewallManager{Platform: "linux", LookPath: func(name string) (string, error) {
 		if name == "firewall-cmd" {

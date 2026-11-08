@@ -96,6 +96,7 @@ func TestExtenderSetupUnverifiableFirewallFinishesWithWarning(t *testing.T) {
 	cfg := &mockPlatformConfigurer{platform: "linux"}
 	err := RunExtenderSetup(ExtenderSetupOptions{
 		Platform: "linux", PlatformCfg: cfg, IsRoot: func() bool { return true }, Stdout: &output,
+		Yes:         true,
 		PortChecker: &PortChecker{Platform: "linux", ExecCmd: func(string, ...string) ([]byte, error) { return nil, nil }},
 		FirewallMgr: &FirewallManager{Platform: "linux",
 			LookPath: func(f string) (string, error) {

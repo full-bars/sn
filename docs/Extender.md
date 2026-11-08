@@ -12,6 +12,24 @@ An extender is a provider that also listens on a port the internet can reach, so
 - A first-run auth code from [ur.io](https://ur.io), or a volume that already holds a signed-in provider.
 - Docker containers are not automated by `extender setup`. For Docker, publish `-p 443:443 -p 443:443/udp -p 4053:4053/udp`, and supply either `--cap-add=NET_BIND_SERVICE` or `--network host`. Publishing is only half of it: the host firewall still has to allow the ports.
 
+## Prepare the host with `urnet-tools extender setup`
+
+```sh
+urnet-tools extender setup
+urnet-tools extender setup --dry-run
+urnet-tools extender setup --yes
+```
+
+`urnet-tools extender setup` inspects the host and proposes only the missing privilege and firewall steps:
+
+1. **Port 443 occupancy.** Checks whether another process already holds TCP 443 and stops with the holder's name and PID if one does.
+2. **Low-port bind privilege.** On Linux, checks `getcap` on the installed provider binary (resolving symlinks) and the process capability bounding set (`/proc/self/status` `CapBnd`), and plans `setcap cap_net_bind_service=+ep <binary>` when missing. On FreeBSD, checks `mac_portacl` and `security.bsd.unprivileged_reserved_ports`.
+3. **Host firewall rules.** Inspects the active local firewall (`ufw`, `firewalld`, `iptables`/`ip6tables`, `nftables`, `pf`/`ipfw`, or Windows Firewall) for inbound TCP 443 (required TLS carrier), UDP 443 (optional QUIC carrier) and UDP 4053 (optional DNS carrier), and plans only the rules that are not already present. For example, if `ufw` is active and already allows `443/tcp` while `443/udp` and `4053/udp` are missing, it proposes only `ufw allow 443/udp` and `ufw allow 4053/udp`.
+4. **Confirmation gate.** Prints the port summary and every command it will run under `Commands to run:`, then asks `Apply these changes? [y/N]:` before changing anything. In a non-interactive session without `--yes` (or `--force`) it executes nothing and exits with an error; `--dry-run` (`-n`) prints the plan and exits without prompting.
+5. **Bind verification.** On Linux, after capability checks, runs `<provider-binary> --extender-bind-probe` as the provider's user (`sudo -n -u <user>`) when TCP 443 is free to confirm a live low-port bind. When the running provider already holds TCP 443 or the probe cannot run without a password prompt, `setup` states plainly that the live TCP 443 bind was not tested.
+
+Docker containers are not modified by `extender setup`; publish the ports on `docker run` or use `--network host` as shown below, and allow the ports in the host firewall.
+
 ## Steps
 
 **1. Remove any proxy configuration from this provider.**

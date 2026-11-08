@@ -13,10 +13,142 @@ import (
 // setupDiscoverFn is Discover behind a seam for tests.
 var setupDiscoverFn = Discover
 
+// setupCommand is a command and its exact arguments, without shell expansion.
+type setupCommand struct {
+	name string
+	args []string
+}
+
+func setupShellWord(s string) string {
+	if s != "" && strings.IndexFunc(s, func(r rune) bool {
+		return !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || strings.ContainsRune("_./:=-+", r))
+	}) == -1 {
+		return s
+	}
+	return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'"
+}
+
+func (c setupCommand) String() string {
+	words := []string{setupShellWord(c.name)}
+	for _, arg := range c.args {
+		words = append(words, setupShellWord(arg))
+	}
+	return strings.Join(words, " ")
+}
+
+// executeExtenderSetupPlan prints and confirms the complete plan before running it.
+func executeExtenderSetupPlan(out io.Writer, plan []setupCommand, yes, dryRun bool, confirm func() (bool, error), run func(setupCommand) error) error {
+	if len(plan) == 0 {
+		return nil
+	}
+	fmt.Fprintln(out, "Commands to run:")
+	for _, c := range plan {
+		fmt.Fprintln(out, "  "+c.String())
+	}
+	if dryRun {
+		return nil
+	}
+	if !yes {
+		ok, err := confirm()
+		if err != nil {
+			return fmt.Errorf("confirmation required; use --yes for non-interactive setup: %w", err)
+		}
+		if !ok {
+			return fmt.Errorf("extender setup cancelled; no commands executed")
+		}
+	}
+	for _, c := range plan {
+		if err := run(c); err != nil {
+			return fmt.Errorf("%s: %w", c.String(), err)
+		}
+	}
+	return nil
+}
+
+// platformPlanner is an optional interface implemented by PlatformConfigurers
+// that can report the exact commands ApplyRequirement will run.
+type platformPlanner interface {
+	PlanRequirement(binary, user string) ([]setupCommand, error)
+}
+
+func fallbackPlatformPlan(platform string, p Provider) []setupCommand {
+	switch platform {
+	case "linux":
+		if p.User == "root" {
+			return nil
+		}
+		bin := p.Binary
+		if bin == "" {
+			bin = "/usr/local/bin/urnetwork"
+		}
+		return []setupCommand{{name: "setcap", args: []string{"cap_net_bind_service=+ep", bin}}}
+	case "freebsd":
+		if p.User == "root" {
+			return nil
+		}
+		return []setupCommand{{name: "sysctl", args: []string{"net.inet.ip.portrange.reservedhigh=0"}}}
+	case "windows":
+		return []setupCommand{
+			{name: "netsh", args: []string{"advfirewall", "firewall", "add", "rule", "name=URnetwork Extender", "dir=in", "action=allow", "protocol=TCP", "localport=443"}},
+			{name: "netsh", args: []string{"advfirewall", "firewall", "add", "rule", "name=URnetwork Extender UDP", "dir=in", "action=allow", "protocol=UDP", "localport=443,4053"}},
+		}
+	default:
+		return nil
+	}
+}
+
+func planSetupCommands(platform string, platformCfg PlatformConfigurer, needPlatformTargets []Provider, fwStatus FirewallStatus) []setupCommand {
+	var plan []setupCommand
+	seenCmd := map[string]bool{}
+	addCmd := func(c setupCommand) {
+		key := c.String()
+		if !seenCmd[key] {
+			seenCmd[key] = true
+			plan = append(plan, c)
+		}
+	}
+	for _, p := range needPlatformTargets {
+		if planner, ok := platformCfg.(platformPlanner); ok {
+			cmds, err := planner.PlanRequirement(p.Binary, p.User)
+			if err == nil && len(cmds) > 0 {
+				for _, c := range cmds {
+					addCmd(c)
+				}
+				continue
+			}
+		}
+		for _, c := range fallbackPlatformPlan(platform, p) {
+			addCmd(c)
+		}
+	}
+	if !fwStatus.PortsOpen {
+		switch fwStatus.Kind {
+		case FirewallFirewalld:
+			if len(fwStatus.firewalldPlan) > 0 {
+				for _, args := range fwStatus.firewalldPlan {
+					addCmd(setupCommand{name: "firewall-cmd", args: args})
+				}
+			} else {
+				addCmd(setupCommand{name: "firewall-cmd", args: []string{"--permanent", "--add-port=443/tcp", "--add-port=443/udp", "--add-port=4053/udp"}})
+				addCmd(setupCommand{name: "firewall-cmd", args: []string{"--reload"}})
+			}
+		case FirewallUFW:
+			addCmd(setupCommand{name: "ufw", args: []string{"allow", "443/tcp"}})
+			addCmd(setupCommand{name: "ufw", args: []string{"allow", "443/udp"}})
+			addCmd(setupCommand{name: "ufw", args: []string{"allow", "4053/udp"}})
+		case FirewallWindowsAdv:
+			addCmd(setupCommand{name: "netsh", args: []string{"advfirewall", "firewall", "add", "rule", "name=URnetwork Extender", "dir=in", "action=allow", "protocol=TCP", "localport=443"}})
+			addCmd(setupCommand{name: "netsh", args: []string{"advfirewall", "firewall", "add", "rule", "name=URnetwork Extender UDP", "dir=in", "action=allow", "protocol=UDP", "localport=443,4053"}})
+		}
+	}
+	return plan
+}
+
 // ExtenderSetupOptions controls the behavior of `urnet-tools extender setup`.
 type ExtenderSetupOptions struct {
-	NonInteractive bool
+	Yes            bool
 	Force          bool
+	NonInteractive bool
 	DryRun         bool
 	Target         Target
 	Stdout         io.Writer
@@ -29,6 +161,7 @@ type ExtenderSetupOptions struct {
 	FirewallMgr *FirewallManager
 	IsRoot      func() bool
 	LookPath    func(string) (string, error)
+	ConfirmFunc func() (bool, error)
 	ElevateFunc func(args []string) error
 	Argv        []string
 }
@@ -141,12 +274,16 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	// STEP 2: Detect platform requirement
 	configured := true
 	var descs []string
+	var needPlatformTargets []Provider
 	for _, p := range targets {
 		ok, desc, err := platformCfg.CheckRequirement(p.Binary, p.User)
 		if err != nil {
 			return fmt.Errorf("checking platform requirement: %w", err)
 		}
-		configured = configured && ok
+		if !ok {
+			configured = false
+			needPlatformTargets = append(needPlatformTargets, p)
+		}
 		descs = append(descs, desc)
 	}
 	desc := strings.Join(descs, "; ")
@@ -174,9 +311,22 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		return nil
 	}
 
-	// STEP 3: Privilege check
+	// STEP 3: Build the exact command plan and explain which ports and why
+	plan := planSetupCommands(platform, platformCfg, needPlatformTargets, fwStatus)
+	fmt.Fprintln(out, "Extender ports: tcp 443 (required: TLS carrier), udp 443 (optional: QUIC carrier), udp 4053 (optional: DNS carrier)")
+
+	// STEP 4: Privilege check
 	if !isRootFn() {
 		// Not root
+		if len(plan) > 0 {
+			_ = executeExtenderSetupPlan(out, plan, false, true, nil, func(setupCommand) error { return nil })
+		}
+		if opts.DryRun {
+			fmt.Fprintf(out, "[dry-run] would apply platform requirement on %s\n", platform)
+			fmt.Fprintf(out, "[dry-run] would configure firewall (%s)\n", fwStatus.Kind)
+			return nil
+		}
+
 		exactCommand := formatSetupSudoCommand(opts)
 		_, sudoErr := lookPathFn("sudo")
 		sudoAvailable := sudoErr == nil
@@ -194,7 +344,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		}
 
 		// Interactive with sudo available: prompt operator
-		if !opts.Force {
+		if !opts.Yes && !opts.Force {
 			fmt.Fprintf(errOut, "Extender setup requires privileged access to configure port binding and firewall rules.\n")
 			ans, err := confirmStdinRead("Re-run under sudo now? [y/N] ")
 			if err != nil || (strings.ToLower(strings.TrimSpace(ans)) != "y" && strings.ToLower(strings.TrimSpace(ans)) != "yes") {
@@ -210,55 +360,75 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		}
 		args := opts.Argv
 		if len(args) == 0 {
-			args = []string{"extender", "setup"}
+			args = []string{"extender", "setup", "--yes"}
 		}
 		return elevateFn(args)
 	}
 
-	// STEP 4: Apply platform requirement
+	// STEP 5: Dry-run or print-and-ask confirmation gate before mutating anything
 	if opts.DryRun {
+		if len(plan) > 0 {
+			_ = executeExtenderSetupPlan(out, plan, false, true, nil, func(setupCommand) error { return nil })
+		}
 		fmt.Fprintf(out, "[dry-run] would apply platform requirement on %s\n", platform)
-	} else {
-		for _, p := range targets {
-			applied, applyDesc, err := platformCfg.ApplyRequirement(p.Binary, p.User)
-			if err != nil {
-				return fmt.Errorf("applying platform requirement: %w", err)
-			}
-			if applied {
-				fmt.Fprintf(out, "extender: %s\n", applyDesc)
-			}
-		}
-	}
-
-	// STEP 5: Apply firewall rules
-	firewallUnverified := false
-	if opts.DryRun {
 		fmt.Fprintf(out, "[dry-run] would configure firewall (%s)\n", fwStatus.Kind)
-	} else {
-		fwApplied, err := fwMgr.Apply(fwStatus)
-		if err != nil {
-			return fmt.Errorf("firewall configuration failed: %w", err)
-		} else if fwApplied {
-			fmt.Fprintf(out, "extender: firewall rules added (%s)\n", fwStatus.Kind)
-		} else if !fwStatus.PortsOpen && len(fwStatus.SuggestedRules) > 0 {
-			fmt.Fprintf(out, "extender: no automated firewall modification for %s; add these rules manually:\n", fwStatus.Kind)
-			for _, r := range fwStatus.SuggestedRules {
-				fmt.Fprintf(out, "  %s\n", r)
+		return nil
+	}
+
+	if len(plan) > 0 {
+		yes := opts.Yes || opts.Force || os.Getenv(urnetElevatedEnv) == "1"
+		confirmFn := opts.ConfirmFunc
+		if confirmFn == nil {
+			confirmFn = func() (bool, error) {
+				if opts.NonInteractive || !stdinIsInteractive() {
+					return false, fmt.Errorf("stdin is not a terminal; pass --yes (or -y) to confirm non-interactive setup")
+				}
+				ans, err := confirmStdinRead("Execute these commands? [y/N]: ")
+				if err != nil {
+					return false, err
+				}
+				trimmed := strings.ToLower(strings.TrimSpace(ans))
+				return trimmed == "y" || trimmed == "yes", nil
 			}
-			// Not fatal: the rules cannot be checked or applied here, but the
-			// capability and bind steps below are independent of them. Stopping
-			// would make setup unfinishable on every nftables, iptables, pf or
-			// ipfw host, and would skip the bind verification.
-			firewallUnverified = true
+		}
+		if err := executeExtenderSetupPlan(out, plan, yes, false, confirmFn, func(setupCommand) error { return nil }); err != nil {
+			return err
 		}
 	}
 
-	// STEP 6: Verify with real bind
-	if !opts.DryRun {
-		for _, p := range targets {
-			if err := reportExtenderBind(out, platformCfg, p, ports.TCP443.Held); err != nil {
-				return err
-			}
+	// STEP 6: Apply platform requirement and firewall rules
+	for _, p := range needPlatformTargets {
+		applied, applyDesc, err := platformCfg.ApplyRequirement(p.Binary, p.User)
+		if err != nil {
+			return fmt.Errorf("applying platform requirement: %w", err)
+		}
+		if applied {
+			fmt.Fprintf(out, "extender: %s\n", applyDesc)
+		}
+	}
+
+	firewallUnverified := false
+	fwApplied, err := fwMgr.Apply(fwStatus)
+	if err != nil {
+		return fmt.Errorf("firewall configuration failed: %w", err)
+	} else if fwApplied {
+		fmt.Fprintf(out, "extender: firewall rules added (%s)\n", fwStatus.Kind)
+	} else if !fwStatus.PortsOpen && len(fwStatus.SuggestedRules) > 0 {
+		fmt.Fprintf(out, "extender: no automated firewall modification for %s; add these rules manually:\n", fwStatus.Kind)
+		for _, r := range fwStatus.SuggestedRules {
+			fmt.Fprintf(out, "  %s\n", r)
+		}
+		// Not fatal: the rules cannot be checked or applied here, but the
+		// capability and bind steps below are independent of them. Stopping
+		// would make setup unfinishable on every nftables, iptables, pf or
+		// ipfw host, and would skip the bind verification.
+		firewallUnverified = true
+	}
+
+	// STEP 7: Verify with real bind
+	for _, p := range targets {
+		if err := reportExtenderBind(out, platformCfg, p, ports.TCP443.Held); err != nil {
+			return err
 		}
 	}
 
@@ -366,6 +536,7 @@ func findProviderBinary(p Provider) string {
 		"/usr/bin/provider",
 		"/usr/local/bin/miner",
 		"/usr/bin/miner",
+		"/usr/local/libexec/urnetwork-provider/bin/urnetwork",
 	}
 	home, _ := os.UserHomeDir()
 	if home != "" {

@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -105,21 +106,68 @@ func runExtenderStatus(w io.Writer, provs []Provider) error {
 
 const extenderLeafHelp = "{{.Long}}\n\nUsage:\n  {{.CommandPath}}\n\nExamples:\n{{.Example}}\n"
 
+const extenderSetupUsage = "usage: urnet-tools extender setup [-y|--yes] [-f|--force] [-n|--dry-run] [target]"
+
+// parseExtenderSetupArgs parses flags specific to `urnet-tools extender setup`.
+func parseExtenderSetupArgs(args []string) (yes, dryRun bool, target Target, err error) {
+	var filtered []string
+	for _, tok := range args {
+		switch tok {
+		case "-y", "--yes", "-f", "--force":
+			yes = true
+		case "-n", "--dry-run":
+			dryRun = true
+		default:
+			filtered = append(filtered, tok)
+		}
+	}
+	target, rest, err := parseTargetFlags(filtered)
+	if err != nil {
+		return false, false, Target{}, err
+	}
+	for _, tok := range rest {
+		if strings.EqualFold(strings.TrimSpace(tok), "setup") {
+			continue
+		}
+		return false, false, Target{}, fmt.Errorf("%s (unexpected %q)", extenderSetupUsage, tok)
+	}
+	return yes, dryRun, target, nil
+}
+
+var runExtenderSetupFn = RunExtenderSetup
+
+func cmdExtenderSetup(args []string) error {
+	yes, dryRun, target, err := parseExtenderSetupArgs(args)
+	if err != nil {
+		return err
+	}
+	argv := append([]string{"extender", "setup"}, args...)
+	if !yes {
+		argv = append(argv, "--yes")
+	}
+	return runExtenderSetupFn(ExtenderSetupOptions{
+		Yes:    yes,
+		Force:  yes,
+		DryRun: dryRun,
+		Target: target,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Argv:   argv,
+	})
+}
+
 func newExtenderSetupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                "setup",
+		Use:                "setup [-y|--yes] [-f|--force] [-n|--dry-run] [target]",
 		Short:              "one-time privileged configuration for extender role",
-		Long:               "Perform one-time privileged host configuration for the extender role. This command takes no flags.",
-		Example:            "  urnet-tools extender setup",
+		Long:               "Perform one-time privileged host configuration for the extender role. Inspects port 443 occupancy, binary bind capability and host firewall rules, prints the exact commands needed, and asks for confirmation before changing anything (use -y/--yes for non-interactive runs).",
+		Example:            "  urnet-tools extender setup\n  urnet-tools extender setup --yes\n  urnet-tools extender setup --dry-run",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
 				return cmd.Help()
 			}
-			if len(args) != 0 {
-				return fmt.Errorf("unknown argument: %s", args[0])
-			}
-			return RunExtenderSetup(ExtenderSetupOptions{Stdout: os.Stdout, Stderr: os.Stderr})
+			return cmdExtenderSetup(args)
 		},
 	}
 	cmd.SetHelpTemplate(extenderLeafHelp)
