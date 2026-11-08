@@ -144,6 +144,36 @@ func planSetupCommands(platform string, platformCfg PlatformConfigurer, needPlat
 	return plan
 }
 
+func computeExtenderSetupPlan(platform string, platformCfg PlatformConfigurer, fwMgr *FirewallManager, targets []Provider) ([]setupCommand, FirewallStatus, []Provider, bool, string, error) {
+	configured := true
+	var descs []string
+	var needPlatformTargets []Provider
+	for _, p := range targets {
+		ok, desc, err := platformCfg.CheckRequirement(p.Binary, p.User)
+		if err != nil {
+			return nil, FirewallStatus{}, nil, false, "", fmt.Errorf("checking platform requirement: %w", err)
+		}
+		if !ok {
+			configured = false
+			needPlatformTargets = append(needPlatformTargets, p)
+		}
+		descs = append(descs, desc)
+	}
+	desc := strings.Join(descs, "; ")
+	fwStatus := fwMgr.Detect()
+	plan := planSetupCommands(platform, platformCfg, needPlatformTargets, fwStatus)
+	return plan, fwStatus, needPlatformTargets, configured, desc, nil
+}
+
+func formatPlanText(plan []setupCommand) string {
+	var sb strings.Builder
+	for _, c := range plan {
+		sb.WriteString(c.String())
+		sb.WriteByte('\n')
+	}
+	return sb.String()
+}
+
 // ExtenderSetupOptions controls the behavior of `urnet-tools extender setup`.
 type ExtenderSetupOptions struct {
 	Yes            bool
@@ -271,24 +301,12 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		fmt.Fprintf(errOut, "warn: %s\n", w)
 	}
 
-	// STEP 2: Detect platform requirement
-	configured := true
-	var descs []string
-	var needPlatformTargets []Provider
-	for _, p := range targets {
-		ok, desc, err := platformCfg.CheckRequirement(p.Binary, p.User)
-		if err != nil {
-			return fmt.Errorf("checking platform requirement: %w", err)
-		}
-		if !ok {
-			configured = false
-			needPlatformTargets = append(needPlatformTargets, p)
-		}
-		descs = append(descs, desc)
+	// STEP 2: Detect platform requirement and build initial plan
+	plan, fwStatus, needPlatformTargets, configured, desc, err := computeExtenderSetupPlan(platform, platformCfg, fwMgr, targets)
+	if err != nil {
+		return err
 	}
-	desc := strings.Join(descs, "; ")
 
-	fwStatus := fwMgr.Detect()
 	// No firewall service detected means there is nothing for setup to open;
 	// it is reported as an advisory below, not treated as unconfigured, so a
 	// re-run can reach the "already configured" path and the bind check.
@@ -311,8 +329,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		return nil
 	}
 
-	// STEP 3: Build the exact command plan and explain which ports and why
-	plan := planSetupCommands(platform, platformCfg, needPlatformTargets, fwStatus)
+	// STEP 3: Explain which ports and why
 	fmt.Fprintln(out, "Extender ports: tcp 443 (required: TLS carrier), udp 443 (optional: QUIC carrier), udp 4053 (optional: DNS carrier)")
 
 	// STEP 4: Privilege check
@@ -394,6 +411,17 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		if err := executeExtenderSetupPlan(out, plan, yes, false, confirmFn, func(setupCommand) error { return nil }); err != nil {
 			return err
 		}
+
+		// Drift guard: recompute plan immediately before applying.
+		newPlan, newFwStatus, newNeedTargets, _, _, err := computeExtenderSetupPlan(platform, platformCfg, fwMgr, targets)
+		if err != nil {
+			return fmt.Errorf("recomputing plan before applying: %w", err)
+		}
+		if formatPlanText(newPlan) != formatPlanText(plan) {
+			return fmt.Errorf("host configuration changed after confirmation; setup aborted without applying changes")
+		}
+		fwStatus = newFwStatus
+		needPlatformTargets = newNeedTargets
 	}
 
 	// STEP 6: Apply platform requirement and firewall rules
