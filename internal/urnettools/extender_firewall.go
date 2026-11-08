@@ -29,6 +29,7 @@ type FirewallStatus struct {
 	SuggestedRules []string     `json:"suggested_rules"`
 	AppliedRules   []string     `json:"applied_rules,omitempty"`
 	Message        string       `json:"message"`
+	firewalldPlan  [][]string
 }
 
 // FirewallManager provides firewall detection and rule configuration.
@@ -68,25 +69,16 @@ func (fm *FirewallManager) detectLinux() FirewallStatus {
 	// 1. firewalld
 	if _, err := fm.LookPath("firewall-cmd"); err == nil {
 		if out, err := fm.ExecCmd("firewall-cmd", "--state"); err == nil && strings.TrimSpace(string(out)) == "running" {
-			tcpOpen := false
-			udp443Open := false
-			udp4053Open := false
-			if q, err := fm.ExecCmd("firewall-cmd", "--query-port=443/tcp"); err == nil && strings.TrimSpace(string(q)) == "yes" {
-				tcpOpen = true
-			}
-			if q, err := fm.ExecCmd("firewall-cmd", "--query-port=443/udp"); err == nil && strings.TrimSpace(string(q)) == "yes" {
-				udp443Open = true
-			}
-			if q, err := fm.ExecCmd("firewall-cmd", "--query-port=4053/udp"); err == nil && strings.TrimSpace(string(q)) == "yes" {
-				udp4053Open = true
-			}
-			open := tcpOpen && udp443Open && udp4053Open
-			rules := []string{
-				"firewall-cmd --permanent --add-port=443/tcp --add-port=443/udp --add-port=4053/udp",
-				"firewall-cmd --reload",
+			plan, planErr := firewalldPlan(fm.ExecCmd)
+			open := planErr == nil && len(plan) == 0
+			var rules []string
+			for _, args := range plan {
+				rules = append(rules, "firewall-cmd "+strings.Join(args, " "))
 			}
 			msg := "firewalld is active"
-			if open {
+			if planErr != nil {
+				msg = fmt.Sprintf("firewalld is active but its rules could not be inspected: %v; verify manually", planErr)
+			} else if open {
 				msg = "firewalld is active; ports 443/tcp, 443/udp, 4053/udp are open"
 			}
 			return FirewallStatus{
@@ -95,6 +87,7 @@ func (fm *FirewallManager) detectLinux() FirewallStatus {
 				PortsOpen:      open,
 				SuggestedRules: rules,
 				Message:        msg,
+				firewalldPlan:  plan,
 			}
 		}
 	}
@@ -370,6 +363,40 @@ func applyWindowsRules(run func(string, ...string) ([]byte, error)) (bool, error
 	return applied, nil
 }
 
+// firewalldPlan inspects both live and persistent rules before making a plan.
+func firewalldPlan(run func(string, ...string) ([]byte, error)) ([][]string, error) {
+	out, err := run("firewall-cmd", "--get-default-zone")
+	zone := strings.TrimSpace(string(out))
+	if err != nil || zone == "" || strings.IndexFunc(zone, func(r rune) bool {
+		return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '_' || r == '-')
+	}) >= 0 {
+		return nil, fmt.Errorf("cannot determine firewalld default zone: output %q, error %v", zone, err)
+	}
+	var plan [][]string
+	for _, port := range []string{"443/tcp", "443/udp", "4053/udp"} {
+		for _, permanent := range []bool{false, true} {
+			args := []string{"--zone=" + zone, "--query-port=" + port}
+			if permanent {
+				args = append([]string{"--permanent"}, args...)
+			}
+			out, err := run("firewall-cmd", args...)
+			answer := strings.TrimSpace(string(out))
+			if answer == "yes" && err == nil {
+				continue
+			}
+			if answer != "no" {
+				return nil, fmt.Errorf("cannot query firewalld port %s: output %q, error %v", port, answer, err)
+			}
+			args = []string{"--zone=" + zone, "--add-port=" + port}
+			if permanent {
+				args = append([]string{"--permanent"}, args...)
+			}
+			plan = append(plan, args)
+		}
+	}
+	return plan, nil
+}
+
 // Apply attempts to apply the firewall configuration if possible with root/admin privileges.
 // Returns (applied, alreadyOpen, error).
 func (fm *FirewallManager) Apply(status FirewallStatus) (applied bool, err error) {
@@ -378,13 +405,17 @@ func (fm *FirewallManager) Apply(status FirewallStatus) (applied bool, err error
 		if status.PortsOpen {
 			return false, nil
 		}
-		if _, err := fm.ExecCmd("firewall-cmd", "--permanent", "--add-port=443/tcp", "--add-port=443/udp", "--add-port=4053/udp"); err != nil {
-			return false, fmt.Errorf("firewall-cmd add-port failed: %w", err)
+		if len(status.firewalldPlan) == 0 {
+			return false, fmt.Errorf("firewalld rules are unverified; no safe plan available")
 		}
-		if _, err := fm.ExecCmd("firewall-cmd", "--reload"); err != nil {
-			return false, fmt.Errorf("firewall-cmd reload failed: %w", err)
+		applied := false
+		for _, args := range status.firewalldPlan {
+			if _, err := fm.ExecCmd("firewall-cmd", args...); err != nil {
+				return applied, fmt.Errorf("firewall-cmd add-port failed: %w", err)
+			}
+			applied = true
 		}
-		return true, nil
+		return applied, nil
 
 	case FirewallUFW:
 		if status.PortsOpen {
