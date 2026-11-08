@@ -6,6 +6,10 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 Merged to `main` after `v2026.11.6-1091584480-sn`, not yet in a tagged release.
 
+### Added
+
+- **The extender role has an explanation command.** `urnet-tools extender about` prints the role, its ports and how to prepare the host. It only prints text.
+
 ### Fixed
 
 - **`urnet-tools logs` keeps following a trimmed RAM log.** With RAM logs on, the log file is trimmed by rename. `urnet-tools logs` could stop showing new lines or replay the trimmed log. The command now follows the file across a trim, without repeating a fragment. In Docker it uses `tail -F`.

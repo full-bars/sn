@@ -40,7 +40,7 @@ Core Commands:
   autopilot log [limit]   Show the capacity decisions the provider made (OOM-aware cap, trim)
   enforcement [history N] Show what the governors enforced (counts per day; or the newest N events)
   baseline [show|mark|compare]  Show this box's recorded behaviour, and compare an upgrade
-  extender <status|setup> Extender role status and one-time privileged setup
+  extender <status|setup|about> Extender role status, setup and explanation
 
 Performance & Tuning:
   turbo <v4|v8|off>       RAISE throughput limits for RAM-rich boxes
