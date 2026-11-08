@@ -275,13 +275,16 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq dash
           rc=0
-          for f in scripts/Provider_Install_Linux.sh scripts/test_provider_install.sh; do
+          for f in scripts/Provider_Install_Linux.sh scripts/test_provider_install.sh scripts/test_installer_capabilities.sh; do
             echo "== $f =="
             dash -n  "$f" && echo "  dash OK"        || rc=1
             bash -n  "$f" && echo "  bash OK"        || rc=1
             shellcheck -S error "$f" && echo "  shellcheck OK" || rc=1
           done
           exit $rc
+
+      - name: Installer capability preservation regression test
+        run: dash scripts/test_installer_capabilities.sh
 
       - name: Installer shell rc symlink regression test
         # The falsification half of this suite replays the pre-fix installer

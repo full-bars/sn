@@ -686,6 +686,10 @@ test_sanitize_restart_dropins_effective_statuses() {
 }
 test_sanitize_restart_dropins_effective_statuses
 
+if ! sh scripts/test_installer_capabilities.sh; then
+    FAILS=$((FAILS + 1))
+fi
+
 echo "======================================"
 if [ $FAILS -eq 0 ]; then
     echo "🎉 All tests passed!"

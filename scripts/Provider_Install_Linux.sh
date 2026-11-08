@@ -112,11 +112,49 @@ ensure_extender_cap ()
     if cap_present; then
         return 0
     fi
-    if command -v setcap >/dev/null 2>&1 && $elevate setcap cap_net_bind_service=+ep "$cap_file" 2>/dev/null && cap_present; then
+    # setcap replaces the entire set. Fail closed if it cannot be read or parsed.
+    if ! command -v getcap >/dev/null 2>&1 || ! cap_output=$(getcap -n "$cap_file" 2>/dev/null); then
+        printf "WARNING: cannot read existing file capabilities; inspect them before running setcap\n" >&2
+        return 0
+    fi
+    cap_root=
+    cap_spec='cap_net_bind_service=+ep'
+    if [ -n "$cap_output" ]; then
+        case "$cap_output" in
+            "$cap_file "*) cap_fields=${cap_output#"$cap_file "} ;;
+            *) printf "WARNING: cannot parse existing file capabilities; inspect them before running setcap\n" >&2; return 0 ;;
+        esac
+        if ! cap_fields=$(printf '%s\n' "$cap_fields" | awk '
+            NR != 1 { bad=1 }
+            {
+                n=NF
+                if ($n ~ /^\[rootid=[0-9]+\]$/) { root=$n; n-- }
+                if (n < 1) bad=1
+                for (i=1; i<=n; i++) {
+                    if ($i != "=" && $i !~ /^cap_[a-z0-9_]+(,cap_[a-z0-9_]+)*[=+][eip]*$/) bad=1
+                    spec=spec (i == 1 ? "" : " ") $i
+                }
+            }
+            END { if (bad) exit 1; print spec; print root }'); then
+            printf "WARNING: cannot parse existing file capabilities; inspect them before running setcap\n" >&2
+            return 0
+        fi
+        cap_root=$(printf '%s\n' "$cap_fields" | awk 'NR == 2 { gsub(/[^0-9]/, ""); print }')
+        cap_spec=$(printf '%s\n' "$cap_fields" | awk 'NR == 1 { print }')
+        cap_spec="$cap_spec cap_net_bind_service+ep"
+    fi
+    if [ -n "$cap_root" ]; then
+        set -- -n "$cap_root" "$cap_spec" "$cap_file"
+        cap_root_arg="-n $cap_root "
+    else
+        set -- "$cap_spec" "$cap_file"
+        cap_root_arg=
+    fi
+    if command -v setcap >/dev/null 2>&1 && $elevate setcap "$@" 2>/dev/null && cap_present; then
         return 0
     fi
     quoted_file=$(printf '%s' "$cap_file" | sed "s/'/'\\\\''/g")
-    printf "WARNING: extender capability missing or unverified; run: sudo setcap cap_net_bind_service=+ep '%s'\n" "$quoted_file" >&2
+    printf "WARNING: extender capability missing or unverified; check existing capabilities, then run: sudo setcap %s'%s' '%s'\n" "$cap_root_arg" "$cap_spec" "$quoted_file" >&2
     return 0
 )
 
