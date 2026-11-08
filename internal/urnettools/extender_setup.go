@@ -65,18 +65,9 @@ func executeExtenderSetupPlan(out io.Writer, plan []setupCommand, yes, dryRun bo
 	return nil
 }
 
-// platformPlanner is an optional interface implemented by PlatformConfigurers
-// that can report the exact commands ApplyRequirement will run.
-type platformPlanner interface {
-	PlanRequirement(binary, user string) ([]setupCommand, error)
-}
-
 func fallbackPlatformPlan(platform string, p Provider) []setupCommand {
 	switch platform {
 	case "linux":
-		if p.User == "root" {
-			return nil
-		}
 		bin := p.Binary
 		if bin == "" {
 			bin = "/usr/local/bin/urnetwork"
@@ -97,8 +88,9 @@ func fallbackPlatformPlan(platform string, p Provider) []setupCommand {
 	}
 }
 
-func planSetupCommands(platform string, platformCfg PlatformConfigurer, needPlatformTargets []Provider, fwStatus FirewallStatus) []setupCommand {
+func planSetupCommands(platform string, platformCfg PlatformConfigurer, needPlatformTargets []Provider, fwStatus FirewallStatus) ([]setupCommand, []Provider, error) {
 	var plan []setupCommand
+	var plannedTargets []Provider
 	seenCmd := map[string]bool{}
 	addCmd := func(c setupCommand) {
 		key := c.String()
@@ -110,15 +102,23 @@ func planSetupCommands(platform string, platformCfg PlatformConfigurer, needPlat
 	for _, p := range needPlatformTargets {
 		if planner, ok := platformCfg.(platformPlanner); ok {
 			cmds, err := planner.PlanRequirement(p.Binary, p.User)
-			if err == nil && len(cmds) > 0 {
-				for _, c := range cmds {
-					addCmd(c)
-				}
-				continue
+			if err != nil {
+				return nil, nil, fmt.Errorf("planning platform requirement: %w", err)
 			}
+			for _, c := range cmds {
+				addCmd(c)
+			}
+			if len(cmds) > 0 {
+				plannedTargets = append(plannedTargets, p)
+			}
+			continue
 		}
-		for _, c := range fallbackPlatformPlan(platform, p) {
+		fallbackCmds := fallbackPlatformPlan(platform, p)
+		for _, c := range fallbackCmds {
 			addCmd(c)
+		}
+		if len(fallbackCmds) > 0 {
+			plannedTargets = append(plannedTargets, p)
 		}
 	}
 	if !fwStatus.PortsOpen {
@@ -141,7 +141,7 @@ func planSetupCommands(platform string, platformCfg PlatformConfigurer, needPlat
 			addCmd(setupCommand{name: "netsh", args: []string{"advfirewall", "firewall", "add", "rule", "name=URnetwork Extender UDP", "dir=in", "action=allow", "protocol=UDP", "localport=443,4053"}})
 		}
 	}
-	return plan
+	return plan, plannedTargets, nil
 }
 
 func computeExtenderSetupPlan(platform string, platformCfg PlatformConfigurer, fwMgr *FirewallManager, targets []Provider) ([]setupCommand, FirewallStatus, []Provider, bool, string, error) {
@@ -161,8 +161,11 @@ func computeExtenderSetupPlan(platform string, platformCfg PlatformConfigurer, f
 	}
 	desc := strings.Join(descs, "; ")
 	fwStatus := fwMgr.Detect()
-	plan := planSetupCommands(platform, platformCfg, needPlatformTargets, fwStatus)
-	return plan, fwStatus, needPlatformTargets, configured, desc, nil
+	plan, plannedTargets, err := planSetupCommands(platform, platformCfg, needPlatformTargets, fwStatus)
+	if err != nil {
+		return nil, FirewallStatus{}, nil, false, "", err
+	}
+	return plan, fwStatus, plannedTargets, configured, desc, nil
 }
 
 func formatPlanText(plan []setupCommand) string {
@@ -307,7 +310,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	}
 
 	// STEP 2: Detect platform requirement and build initial plan
-	plan, fwStatus, needPlatformTargets, configured, desc, err := computeExtenderSetupPlan(platform, platformCfg, fwMgr, targets)
+	plan, fwStatus, confirmedPlatformTargets, configured, desc, err := computeExtenderSetupPlan(platform, platformCfg, fwMgr, targets)
 	if err != nil {
 		return err
 	}
@@ -418,7 +421,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		}
 
 		// Drift guard: recompute plan immediately before applying.
-		newPlan, newFwStatus, newNeedTargets, _, _, err := computeExtenderSetupPlan(platform, platformCfg, fwMgr, targets)
+		newPlan, newFwStatus, newConfirmedTargets, _, _, err := computeExtenderSetupPlan(platform, platformCfg, fwMgr, targets)
 		if err != nil {
 			return fmt.Errorf("recomputing plan before applying: %w", err)
 		}
@@ -426,11 +429,11 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 			return fmt.Errorf("host configuration changed after confirmation; setup aborted without applying changes")
 		}
 		fwStatus = newFwStatus
-		needPlatformTargets = newNeedTargets
+		confirmedPlatformTargets = newConfirmedTargets
 	}
 
 	// STEP 6: Apply platform requirement and firewall rules
-	for _, p := range needPlatformTargets {
+	for _, p := range confirmedPlatformTargets {
 		applied, applyDesc, err := platformCfg.ApplyRequirement(p.Binary, p.User)
 		if err != nil {
 			return fmt.Errorf("applying platform requirement: %w", err)

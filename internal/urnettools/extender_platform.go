@@ -20,6 +20,12 @@ type PlatformConfigurer interface {
 	VerifyBind(binary, user string) (ok bool, err error)
 }
 
+// platformPlanner is an optional interface implemented by PlatformConfigurers
+// that can report the exact commands ApplyRequirement will run.
+type platformPlanner interface {
+	PlanRequirement(binary, user string) ([]setupCommand, error)
+}
+
 // SystemPlatformConfigurer is the default implementation that talks to OS binaries and kernel APIs.
 type SystemPlatformConfigurer struct {
 	PlatformName string
@@ -75,6 +81,47 @@ func (sp *SystemPlatformConfigurer) CheckRequirement(binary, user string) (bool,
 		return sp.checkDarwin()
 	default:
 		return false, fmt.Sprintf("unsupported platform %s", sp.PlatformName), nil
+	}
+}
+
+// PlanRequirement returns the exact commands that ApplyRequirement will run.
+func (sp *SystemPlatformConfigurer) PlanRequirement(binary, user string) ([]setupCommand, error) {
+	switch sp.PlatformName {
+	case "linux":
+		if binary == "" {
+			return nil, fmt.Errorf("cannot apply cap_net_bind_service: no provider binary path known")
+		}
+		if sp.Lstat != nil {
+			info, err := sp.Lstat(binary)
+			if err != nil {
+				return nil, fmt.Errorf("cannot apply cap_net_bind_service: %w", err)
+			}
+			if !info.Mode().IsRegular() {
+				return nil, fmt.Errorf("refusing to set cap_net_bind_service on %s: it is %s, not a regular file; point setup at the real provider binary", binary, info.Mode().Type())
+			}
+		}
+		if sp.ReadFile != nil {
+			if status, err := sp.ReadFile("/proc/self/status"); err == nil && bindCapabilityBlocked(status) {
+				return nil, fmt.Errorf("cap_net_bind_service is excluded from the process bounding set")
+			}
+		}
+		args, err := sp.linuxCapabilityArgs(binary)
+		if err != nil {
+			return nil, err
+		}
+		return []setupCommand{{name: "setcap", args: args}}, nil
+	case "freebsd":
+		return nil, nil
+	case "windows":
+		return []setupCommand{
+			{name: "netsh", args: []string{"advfirewall", "firewall", "add", "rule", "name=URnetwork Extender", "dir=in", "action=allow", "protocol=TCP", "localport=443"}},
+			{name: "netsh", args: []string{"advfirewall", "firewall", "add", "rule", "name=URnetwork Extender UDP", "dir=in", "action=allow", "protocol=UDP", "localport=443,4053"}},
+		}, nil
+	case "darwin":
+		_, _, err := sp.checkDarwin()
+		return nil, err
+	default:
+		return nil, fmt.Errorf("unsupported platform %s", sp.PlatformName)
 	}
 }
 
