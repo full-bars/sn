@@ -16,7 +16,7 @@ Changes after `v2026.11.6-1091565100-sn` through the pending release.
 - **Extender port inspection is more accurate.** FreeBSD uses `sockstat`, including dual-stack entries. macOS `lsof` inspection matches the exact local port.
 - **Diagnostic capture handles negative filesystem availability.** Negative available block counts are treated as zero rather than wrapping to a large value.
 - **`urnet-tools logs` keeps following a trimmed RAM log.** With RAM logs on, the log file is trimmed by rename. `urnet-tools logs` could stop showing new lines or replay the trimmed log. The command now follows the file across a trim, without repeating a fragment. In Docker it uses `tail -F`.
-- **Uninstall and capability checks fail safely.** The Windows PowerShell uninstaller refuses to remove data if another provider is running or process checks fail. Linux updates check the bounding set and preserve unrelated file capabilities. The miner image includes the capability tools. (#391)
+- **Uninstall and capability checks fail safely.** The Windows PowerShell uninstaller refuses to remove data if another provider is running or process checks fail. Linux updates check the bounding set. The installer refuses to remove a blocked bind capability when doing so would erase unrelated file capabilities. The miner image includes the capability tools.
 
 ### CI and documentation
 
