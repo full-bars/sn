@@ -499,7 +499,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        goos: [linux, darwin, windows]
+        goos: [linux, darwin, windows, freebsd]
         goarch: [amd64, arm64]
     steps:
       - name: Checkout repository
@@ -557,6 +557,42 @@ jobs:
                 ;;
             esac
           done
+
+      - name: Vet shippable binaries for ${{ matrix.goos }}/${{ matrix.goarch }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: '0'
+        run: go vet ./cli/miner ./cmd/urnet-tools ./cmd/urnet-docker
+
+  miner-makefile-cross-build:
+    # miner/Makefile also builds a tarball for these Linux architectures.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        goarch: [arm, '386', mips, mipsle, mips64, mips64le]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.3'
+          cache: true
+          cache-dependency-path: go.sum
+      - name: Build and vet miner for linux/${{ matrix.goarch }}
+        env:
+          GOOS: linux
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: '0'
+          GOEXPERIMENT: greenteagc
+          GOMIPS: softfloat
+          GOMIPS64: softfloat
+        run: |
+          set -e
+          go build -o /dev/null ./cli/miner
+          go vet ./cli/miner
 
   build-and-push:
     needs: [test, race, windows-test, lint]

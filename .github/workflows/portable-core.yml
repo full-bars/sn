@@ -75,16 +75,8 @@ jobs:
           GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
         run: |
           set -euo pipefail
-          if [ "${{ matrix.goos }}" = "freebsd" ]; then
-            # TODO(freebsd-urnettools): ./internal/urnettools has no FreeBSD
-            # port at this commit (no discover_freebsd.go), so urnet-tools does
-            # not build for freebsd yet. The miner does, and is built here.
-            # When the port lands, add the portable package list back for
-            # freebsd — the same way freebsd.yml already gates it.
-            go build ./cli/miner ./miner
-          else
-            go build ./miner $PORTABLE_PKGS
-          fi
+          read -r -a portable_pkgs <<< "$PORTABLE_PKGS"
+          go build ./miner "${portable_pkgs[@]}"
 
       - name: Vet (type-checks the test files too)
         env:
@@ -93,12 +85,8 @@ jobs:
           CGO_ENABLED: "0"
         run: |
           set -euo pipefail
-          if [ "${{ matrix.goos }}" = "freebsd" ]; then
-            echo "TODO(freebsd-urnettools): vet needs the FreeBSD port of ./internal/urnettools; not available at this commit"
-            echo "NOTE: ./miner's test files import a fixture package with no freebsd build, so vetting it is not yet possible either"
-            exit 0
-          fi
-          go vet $PORTABLE_PKGS
+          read -r -a portable_pkgs <<< "$PORTABLE_PKGS"
+          go vet "${portable_pkgs[@]}"
 
   native-tests:
     name: focused tests on ${{ matrix.os }}
