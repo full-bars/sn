@@ -141,10 +141,7 @@ func cmdExtenderSetup(args []string) error {
 	if err != nil {
 		return err
 	}
-	argv := append([]string{"extender", "setup"}, args...)
-	if !yes {
-		argv = append(argv, "--yes")
-	}
+	argv := append([]string{"extender"}, args...)
 	return runExtenderSetupFn(ExtenderSetupOptions{
 		Yes:    yes,
 		Force:  yes,
