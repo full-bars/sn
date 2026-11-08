@@ -40,7 +40,7 @@ func TestUpdateExtenderCapabilityAfterSwap(t *testing.T) {
 				switch name {
 				case "getcap":
 					checks++
-					if len(args) != 1 || args[0] != dst {
+					if !(len(args) == 1 && args[0] == dst || len(args) == 2 && args[0] == "-n" && args[1] == dst) {
 						t.Fatalf("getcap args: %q", args)
 					}
 					if present {
@@ -69,7 +69,7 @@ func TestUpdateExtenderCapabilityAfterSwap(t *testing.T) {
 			if checks == 0 || sets != tc.wantSetcap {
 				t.Fatalf("getcap=%d setcap=%d", checks, sets)
 			}
-			if tc.wantSetcap == 1 && !tc.applyFails && checks != 2 {
+			if tc.wantSetcap == 1 && !tc.applyFails && checks != 3 {
 				t.Fatalf("successful apply not verified: %d checks", checks)
 			}
 			if got := warnings.String(); tc.wantWarning != (strings.Contains(got, "WARNING:") && strings.Contains(got, "sudo setcap cap_net_bind_service=+ep '"+dst+"'")) {

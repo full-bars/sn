@@ -60,7 +60,7 @@ func TestApplyLinuxSetsCapabilityOnARegularFile(t *testing.T) {
 		},
 	}
 	ok, _, err := sp.applyLinux(bin)
-	if err != nil || !ok || len(calls) != 2 || calls[0] != "setcap" {
+	if err != nil || !ok || len(calls) != 3 || calls[0] != "getcap" || calls[1] != "setcap" || calls[2] != "getcap" {
 		t.Fatalf("ok=%v err=%v calls=%v", ok, err, calls)
 	}
 }
