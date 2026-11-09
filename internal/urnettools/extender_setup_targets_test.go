@@ -37,7 +37,7 @@ func TestExtenderSetupConfiguresEveryProviderWithoutFlags(t *testing.T) {
 	// The route is a flag setup was given; the command must not add any
 	// target flags of its own.
 	opts.Route = ""
-	if cmd := formatSetupSudoCommand(opts); strings.Contains(cmd, "--") {
+	if cmd := formatSetupSudoCommand(opts, ""); strings.Contains(cmd, "--") {
 		t.Fatalf("sudo command names flags the command does not have: %s", cmd)
 	}
 }

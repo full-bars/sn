@@ -98,14 +98,20 @@ func TestExtenderSetupReexecArgv(t *testing.T) {
 	old := stdinIsInteractiveOverride
 	stdinIsInteractiveOverride = func() bool { return true }
 	defer func() { stdinIsInteractiveOverride = old }()
+	oldDiscover := setupDiscoverFn
+	setupDiscoverFn = func() []Provider {
+		return []Provider{{Unit: "alpha.service", StateDir: "/state/alpha", User: "alice", Binary: "/opt/a/miner"}}
+	}
+	defer func() { setupDiscoverFn = oldDiscover }()
 	opts := setupRegressionOptions()
 	opts.Force = true
 	opts.LookPath = func(string) (string, error) { return "sudo", nil }
 	opts.Argv = []string{"extender", "setup", "--enable", "--force"}
 	var got []string
 	opts.ElevateFunc = func(args []string) error { got = args; return nil }
-	// The elevated run keeps the caller's arguments and carries the chosen route.
-	want := []string{"extender", "setup", "--enable", "--force", "--route=capability"}
+	// The elevated run keeps the caller's arguments, carries the chosen route
+	// and names the provider the parent resolved.
+	want := []string{"extender", "setup", "--enable", "--force", "--route=capability", "--unit", "alpha.service"}
 	if err := RunExtenderSetup(opts); err != nil || !reflect.DeepEqual(got, want) {
 		t.Fatalf("argv=%v want=%v err=%v", got, want, err)
 	}

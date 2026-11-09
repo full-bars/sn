@@ -1,6 +1,7 @@
 package urnettools
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -279,10 +280,19 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	opts.IsRoot = isRootFn
 
 	// Resolve the provider(s) this setup acts on: explicit target when set,
-	// otherwise every distinct provider is configured.
-	targets, err := setupTargets(setupDiscoverFn(), opts.Target)
+	// otherwise every distinct provider is configured. Under sudo the parent
+	// passes the identity it inspected; root re-resolves the set and refuses
+	// to act when it differs, because root can discover providers the caller
+	// could not see.
+	discovered := setupDiscoverFn()
+	targets, err := setupTargets(discovered, opts.Target)
 	if err != nil {
 		return fmt.Errorf("resolving target provider: %w", err)
+	}
+	if want := os.Getenv(urnetExtenderSetupTargetEnv); isRootFn() && want != "" {
+		if got := setupTargetIdentity(targets); got != want {
+			return fmt.Errorf("elevated extender setup target changed after discovery; refusing to configure any provider (expected %s, resolved %s)", want, got)
+		}
 	}
 
 	// STEP 1: Check ports first
@@ -448,7 +458,16 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 			fmt.Fprintf(errOut, "extender setup requires Administrator privileges. Re-run from an elevated PowerShell terminal (Run as administrator):\n  %s\n", cmd)
 			return fmt.Errorf("extender setup requires Administrator privileges; run from an elevated terminal: %s", cmd)
 		}
-		exactCommand := formatSetupSudoCommand(opts)
+		// Bind the elevated run to the provider inspected here. The manual
+		// command and the automatic one share this argv and identity.
+		args, bindErr := setupBoundArgs(opts, discovered, targets)
+		if bindErr != nil {
+			inventory := setupCommand{name: "sudo", args: []string{resolvedExecutablePath(), "providers", "--all"}}.String()
+			return fmt.Errorf("cannot safely elevate extender setup: %w; inspect providers with: %s; then run an explicit --unit or --state-dir setup command", bindErr, inventory)
+		}
+		opts.Argv = args
+		identity := setupTargetIdentity(targets)
+		exactCommand := formatSetupSudoCommand(opts, identity)
 		_, sudoErr := lookPathFn("sudo")
 		sudoAvailable := sudoErr == nil
 		if opts.NonInteractive || !stdinIsInteractive() || !sudoAvailable {
@@ -469,9 +488,9 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		// Re-exec under sudo
 		elevateFn := opts.ElevateFunc
 		if elevateFn == nil {
-			elevateFn = elevateSelf
+			elevateFn = func(args []string) error { return elevateExtenderSetup(args, identity) }
 		}
-		return elevateFn(setupManualArgs(opts))
+		return elevateFn(args)
 	}
 
 	// STEP 5: Dry-run or print-and-ask confirmation gate before mutating anything
@@ -629,9 +648,112 @@ func setupManualArgs(opts ExtenderSetupOptions) []string {
 	return base
 }
 
-// formatSetupSudoCommand is the exact command to run by hand.
-func formatSetupSudoCommand(opts ExtenderSetupOptions) string {
-	return setupCommand{name: "sudo", args: append([]string{resolvedExecutablePath()}, setupManualArgs(opts)...)}.String()
+// formatSetupSudoCommand is the exact command to run by hand. A non-empty
+// target pins the provider identity the parent resolved, exactly as the
+// automatic elevation does, so root refuses a same-named provider owned by
+// another user instead of configuring its binary.
+func formatSetupSudoCommand(opts ExtenderSetupOptions, target string) string {
+	args := setupManualArgs(opts)
+	if target == "" {
+		return setupCommand{name: "sudo", args: append([]string{resolvedExecutablePath()}, args...)}.String()
+	}
+	return setupCommand{name: "sudo", args: setupElevatedArgv(args, target, false)}.String()
+}
+
+// urnetExtenderSetupTargetEnv carries the provider identity the unprivileged
+// parent inspected to the elevated run.
+const urnetExtenderSetupTargetEnv = "URNET_TOOLS_EXTENDER_SETUP_TARGET"
+
+// setupElevatedArgv is the argument list after sudo. The identity travels as
+// an environment assignment run through env, which works under any sudoers
+// env_reset policy. marker also sets the elevated-child flag for the automatic
+// path; a hand-run root shell does not need it.
+func setupElevatedArgv(args []string, target string, marker bool) []string {
+	argv := []string{"--", "/usr/bin/env"}
+	if marker {
+		argv = append(argv, urnetElevatedEnv+"=1")
+	}
+	argv = append(argv, urnetExtenderSetupTargetEnv+"="+target, resolvedExecutablePath())
+	return append(argv, args...)
+}
+
+// setupTargetIdentity compares only stable, action-relevant fields, so newly
+// readable JWT claims under sudo cannot make a valid target look different.
+func setupTargetIdentity(providers []Provider) string {
+	type identity struct{ Unit, StateDir, User, Binary string }
+	values := make([]identity, 0, len(providers))
+	for _, p := range providers {
+		values = append(values, identity{p.Unit, p.StateDir, p.User, p.Binary})
+	}
+	encoded, _ := json.Marshal(values)
+	return string(encoded)
+}
+
+// setupBoundArgs rewrites the setup argv to one exact, unique selector for the
+// provider the parent resolved, so the elevated run cannot resolve a
+// different one.
+func setupBoundArgs(opts ExtenderSetupOptions, discovered, selected []Provider) ([]string, error) {
+	if len(selected) != 1 {
+		return nil, fmt.Errorf("resolved %d providers; setup accepts one exact selector per run", len(selected))
+	}
+	p := selected[0]
+	var flag, value string
+	for _, candidate := range []struct{ flag, value string }{{"--unit", p.Unit}, {"--state-dir", p.StateDir}} {
+		if candidate.value == "" {
+			continue
+		}
+		matches := 0
+		for _, other := range discovered {
+			if (candidate.flag == "--unit" && other.Unit == candidate.value) || (candidate.flag == "--state-dir" && other.StateDir == candidate.value) {
+				matches++
+			}
+		}
+		if matches == 1 {
+			flag, value = candidate.flag, candidate.value
+			break
+		}
+	}
+	if flag == "" {
+		return nil, fmt.Errorf("resolved provider has no unique --unit or --state-dir")
+	}
+	args := setupManualArgs(opts)
+	// A user/network/default selector was already resolved here; keeping it
+	// beside the bound selector would conflict or change the selection.
+	var clean []string
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		removed := false
+		for _, targetFlag := range []string{"--unit", "--user", "--network", "--network-id", "--state-dir", "--pid"} {
+			if a == targetFlag {
+				i++
+				removed = true
+				break
+			}
+			if strings.HasPrefix(a, targetFlag+"=") {
+				removed = true
+				break
+			}
+		}
+		if !removed {
+			clean = append(clean, a)
+		}
+	}
+	return append(clean, flag, value), nil
+}
+
+// elevateExtenderSetup runs the bound setup under sudo. The marker is set only
+// on the sudo child; this process's environment never changes.
+func elevateExtenderSetup(args []string, target string) error {
+	sudo, err := exec.LookPath("sudo")
+	if err != nil {
+		return fmt.Errorf("sudo unavailable; run: %s", setupCommand{name: "sudo", args: setupElevatedArgv(args, target, false)}.String())
+	}
+	cmd := exec.Command(sudo, setupElevatedArgv(args, target, true)...)
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("elevated extender setup failed: %w", err)
+	}
+	return nil
 }
 
 func promptExtenderRoute(w io.Writer) (string, error) {
