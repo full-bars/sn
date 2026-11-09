@@ -174,7 +174,10 @@ sudo() {
 
     def test_swap_sites_and_openrc_finalization(self):
         installer = (ROOT / SCRIPTS[0]).read_text()
-        self.assertEqual(installer.count('ensure_extender_cap "$install_path/bin/urnetwork"'), 5)
+        # Four distinct swap sites: the restart rollback, the OpenRC rollback,
+        # the OpenRC finalize path and the post-install check. A fifth copy was
+        # a repeated install pass, removed with the duplicate body.
+        self.assertEqual(installer.count('ensure_extender_cap "$install_path/bin/urnetwork"'), 4)
         self.assertIn('chmod 0755 "$install_path"', installer)
         for script in SCRIPTS[1:]:
             text = (ROOT / script).read_text()
