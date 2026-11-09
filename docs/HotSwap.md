@@ -24,6 +24,8 @@ urnet-tools update                          # latest release
 urnet-tools update --tag v2026.10.21-1077735390-meso   # a specific release (a downgrade works the same way)
 ```
 
+When a newer tool is available, `urnet-tools update` installs it first and runs it again before it touches the provider. If the install or the second run fails, the running tool continues. Verification asks the provider for its version over the control socket when the updater cannot read the running image. That happens for a provider with the port-443 file capability, and the updater says so once instead of printing the raw error. Under OpenRC, the updater reads the new version from build information and the release stamp only. It never runs the new image as root, and it fails closed when it cannot read a version.
+
 `urnet-tools update` decides for itself: it hands off to the new binary when the node is eligible and falls back to a normal restart when it is not, and it prints which one it did and why. `update -n` is a dry run, but it currently prints only the target version, not whether the update will hotswap or restart.
 
 > [!NOTE]
@@ -31,7 +33,7 @@ urnet-tools update --tag v2026.10.21-1077735390-meso   # a specific release (a d
 
 ### Which update hotswaps
 
-A node qualifies when the running provider and the new binary are both **v3.23.0-fix.31.0 or newer** and the provider was started by a systemd unit that is `Type=notify`. The installer writes a unit with no `Type=` line (systemd's default, `simple`), so a fresh or older node is not eligible yet. `urnet-tools update` fixes that for you:
+A node qualifies when the running provider and the new binary are both **v3.23.0-fix.31.0 or newer** and the provider was started by a systemd unit that is `Type=notify`. The current installer writes `Type=notify` with `NotifyAccess=all`, so a fresh install is eligible. An older installer wrote a unit with no `Type=` line (systemd's default, `simple`), so a node installed that way is not eligible yet. `urnet-tools update` fixes that for you:
 
 | Update | What `urnet-tools update` does | Downtime |
 |---|---|---|

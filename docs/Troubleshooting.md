@@ -19,6 +19,8 @@
 | Installer stops with `has an invalid sha256 digest for provider asset` or `for tool asset` | The release lists a digest for the asset that is not 64 hex characters | Nothing on disk was changed and the service was not stopped: both digests are checked before the swap. The installer follows with `Refusing to install an unverified provider binary.` or `Refusing to install an unverified urnet-tools.`. The release metadata needs correcting, so wait for a fixed release. |
 | Installer reports `SHA-256 digest mismatch for provider asset` | The downloaded tarball does not match the digest the release lists | Nothing was extracted or replaced. Run the installer again; if it repeats, the download is being altered or truncated on the way, so do not install it. |
 | Installer reports it restored the previous binary | The service failed to start on the new binary | The previous binary is back and the service was restarted on it. Read the provider log for the start failure before updating again. |
+| `urnet-tools update` prints `verify: the updater cannot read the provider's image ...` | A provider with the port-443 file capability is non-dumpable, so the updater cannot read its image | A notice, not a failure. The updater asks the provider for its version on the control socket. See [Updater verification messages](#updater-verification-messages). |
+| `extender setup` says `elevated extender setup target changed after discovery` | Root resolved a different provider than the one you inspected | Nothing was changed. See [Extender setup refuses to elevate](#extender-setup-refuses-to-elevate). |
 | `urnet-tools set` seems not to apply | The change was rejected, queued, or applied only on restart | Check the provider log for `[control]` lines. See Confirming a settings change below. |
 | `status` shows a running process but no control socket | Startup failure, or a second provider for the same OS user | The socket is the liveness signal, not the PID. Check the log for a startup error and `urnet-tools providers --all` for a collision. |
 
@@ -128,11 +130,10 @@ The update prints `hotswap trigger unavailable (...); falling back to service re
 **Cause**: the systemd handoff requires a `Type=notify` unit. The retiring
 process aborts whenever systemd started it (`INVOCATION_ID` is set) but
 `NOTIFY_SOCKET` is empty, which is exactly what a `Type=simple` unit looks like.
-`Provider_Install_Linux.sh` deliberately writes a unit with **no `Type=` line**
-(systemd's default, `simple`), because `Type=notify` blocks `systemctl start`
-until the provider is ready and can wedge every start when the binary and the
-unit come from different releases. Instead, `urnet-tools update` migrates the
-unit to `Type=notify` when the binary it installs can signal readiness
+An older `Provider_Install_Linux.sh` wrote a unit with **no `Type=` line**
+(systemd's default, `simple`). The current installer writes `Type=notify` with
+`NotifyAccess=all`. For a unit that is still `simple`, `urnet-tools update`
+migrates it to `Type=notify` when the binary it installs can signal readiness
 (v3.23.0-fix.31.0 or newer). That first update is a normal restart; later ones
 hotswap.
 
@@ -163,6 +164,31 @@ has not restarted since; the update restarts it for you and later ones hotswap.
 > and the "hotswap triggered" path skipped the restart fallback entirely,
 > turning every update on a pre-existing node into a permanent no-op. Losing
 > zero-downtime is the safe failure; a bricked update is not.
+
+## Updater verification messages
+
+After a restart or a handoff, `urnet-tools update` waits for the provider to report the new version. It prints a line when the wait would otherwise look silent.
+
+| Line | Meaning | What to do |
+| :--- | :--- | :--- |
+| `verify: the updater cannot read the provider's image (normal for a provider with the port-443 permission); asking the provider for its own version` | A provider started with a file capability is non-dumpable. The updater asks it on the control socket and checks who answers. | Nothing. It prints once. An answer with the wrong version, or no answer, still fails the update. To avoid the notice, use the sysctl route in [Extender](/full-bars/sn/wiki/Extender). |
+| `verify: provider entry for state dir "<dir>" present but not ready (pid <n>, binaryDeleted=true) — restart has not landed` | Discovery sees the provider, but only the old process, whose binary was replaced. | Wait. It prints once. If the update later fails, check the unit with `urnet-tools status` and the provider log. |
+| `verify: no provider entry matches state dir "<dir>"; discovery sees: <dirs>` | Discovery lists no provider for that state directory, so the restart has not landed or the directory differs. | Check that the state directory in the line is the one you expect. It prints once. |
+| `verify: no matching provider yet (iteration <n>/<max>; discovery sees <k> provider(s))` | A heartbeat every fifth check while no entry is ready. | Wait, or read the earlier line for the reason. |
+
+Under OpenRC, the updater reads the new version from build information and the release stamp. It does not run the new image as root. If neither holds a version, verification fails and the update reports what it saw.
+
+## Extender setup refuses to elevate
+
+`urnet-tools extender setup` binds an elevated run to the one provider it inspected. The root run resolves the provider again and stops when the result differs:
+
+```text
+elevated extender setup target changed after discovery; refusing to configure any provider (expected ..., resolved ...)
+```
+
+Nothing was changed. Root can see providers that an unprivileged user cannot, for example another user's unit. List them with `sudo urnet-tools providers --all`, then run setup again with an explicit `--unit` or `--state-dir`. When setup cannot name one provider uniquely, it prints `cannot safely elevate extender setup` and the same inventory command instead.
+
+Without a terminal, setup stops and asks for `--route=sysctl`, `--route=capability` or `--route=skip`, even with `--yes`. See [Extender](/full-bars/sn/wiki/Extender#choose-a-route-for-tcp-443-on-linux).
 
 ## Confirming a settings change
 

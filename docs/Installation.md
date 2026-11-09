@@ -133,6 +133,10 @@ The installation includes the `urnet-tools` suite for management, a provider-awa
 | `urnet-tools update` | Upgrade to the latest version (prompts before restarting the provider). |
 | `urnet-tools update -f` | Non-interactive upgrade: stop, update, and restart the provider with no prompts. Use in scripts/automation. |
 
+When a newer tool is available, `urnet-tools update` installs it first and runs it again to update the provider, so the new release's own update logic does the work. The second run keeps the target and the approval you already gave. It also keeps the exact provider set the first run inspected, and it stops without a change if that set differs. If the tool install or the second run fails, the running tool carries on. The marker `URNET_TOOLS_UPDATE_REEXEC` stops a loop. The first update to this release still runs in the old tool. A provider with the port-443 file capability can make that old tool report a false failure once, because it cannot read the running image. Run `urnet-tools self-update` before the provider update to avoid it.
+
+For the Linux installer, restart confirmation reads the terminal even when the script arrives through a pipe. Without a terminal, the installer stops and tells you to pass `-y`, before or after the subcommand. Approval carries through `sudo`. OpenRC tree preparation must finish before the service is installed, and a failure stops the install. The installer writes a systemd unit with `Type=notify` and `NotifyAccess=all`. It prepares the new unit and keeps the old one as `<unit>.old` before it swaps the binary. If the restart fails, the installer restores the previous unit with the previous binary, and it prints the exact command when a step cannot finish. The optimizer lists the steps it finished, skipped and failed, with a retry command for each failure. On an interactive terminal, the installer offers to grant the extender's port-443 file capability, and it preserves any other file capabilities when it does. It prints the manual `setcap` command when you decline or no terminal exists.
+
 ## 🪟 Windows Installation
 
 Install via PowerShell (no admin required):
