@@ -943,6 +943,9 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 
 	pidChanged := false
 	imageFallbackReported := false
+	missReported := false
+	notReadyReported := false
+	var observedEntry bool
 	observation := "no matching provider entry was discovered"
 	for i := 0; i < maxIterations; i++ {
 		// Adaptive sleep: poll every 2s while waiting for the restart to
@@ -955,9 +958,15 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 		verifySleepFn(time.Duration(sleepSec) * time.Second)
 
 		providers := verifyDiscoverFn()
+		matched := false
 		for _, rp := range providers {
+			if rp.StateDir == p.StateDir && rp.StateDir != "" && !observedEntry {
+				observedEntry = true
+				observation = "a matching provider entry was found but was not ready for verification"
+			}
 			// Check matching state directory and verify running image
 			if rp.StateDir == p.StateDir && rp.StateDir != "" && rp.PID != 0 && !rp.BinaryDeleted {
+				matched = true
 				// Track whether the PID changed — a new PID means the
 				// restart landed — just waiting for version match.
 				if rp.PID != oldPID && !pidChanged {
@@ -979,7 +988,21 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 					// the running image of the unit we just restarted, and
 					// providerVersion's --version fallback is gated behind
 					// isRecognizedExecutable.
-					procVersion := verifyProviderVersionFn(procExe)
+					//
+					// EXCEPT under OpenRC: that fallback EXECS the image as
+					// root, and the running image there is a binary the
+					// service user may have influenced between the restart
+					// and this check. Running a file we do not own as root is
+					// the escalation the root-owned tree exists to prevent.
+					// The read-only variant (build info and a raw stamp scan,
+					// no exec) cannot escalate by construction. Fail closed
+					// on an unknown version rather than run the binary.
+					var procVersion string
+					if rp.Supervisor == "openrc" || providerSupervisedByOpenRCFn(rp) {
+						procVersion = providerVersionReadOnly(procExe)
+					} else {
+						procVersion = verifyProviderVersionFn(procExe)
+					}
 					observation = fmt.Sprintf("pid %d running image reported version %q", rp.PID, procVersion)
 					if procVersion == cfg.Tag {
 						// Report the image's real path, not the /proc
@@ -1022,6 +1045,42 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 						return nil
 					}
 				}
+			}
+		}
+
+		if !matched {
+			// No entry satisfies the full readiness predicate. Two cases
+			// would otherwise look the same and stay silent for the whole
+			// wait: the state dir is missing from discovery (a state-dir
+			// mismatch), or its entry is present but not ready (typically
+			// the stale pre-restart process, whose swapped-out binary reads
+			// as deleted). Report each case once, then a bounded heartbeat
+			// so a long wait stays visible.
+			notReady := make([]string, 0, 1)
+			for _, rp := range providers {
+				if rp.StateDir == p.StateDir && rp.StateDir != "" {
+					notReady = append(notReady, fmt.Sprintf("pid %d, binaryDeleted=%t", rp.PID, rp.BinaryDeleted))
+				}
+			}
+			if len(notReady) > 0 {
+				if !notReadyReported {
+					notReadyReported = true
+					fmt.Printf("verify: provider entry for state dir %q present but not ready (%s) — restart has not landed\n", p.StateDir, strings.Join(notReady, "; "))
+				}
+			} else if !missReported {
+				missReported = true
+				dirs := make([]string, 0, len(providers))
+				for _, rp := range providers {
+					dirs = append(dirs, fmt.Sprintf("%q", rp.StateDir))
+				}
+				seen := "(none)"
+				if len(dirs) > 0 {
+					seen = strings.Join(dirs, ", ")
+				}
+				fmt.Printf("verify: no provider entry matches state dir %q; discovery sees: %s\n", p.StateDir, seen)
+			}
+			if i > 0 && i%5 == 0 {
+				fmt.Printf("verify: no matching provider yet (iteration %d/%d; discovery sees %d provider(s))\n", i+1, maxIterations, len(providers))
 			}
 		}
 
