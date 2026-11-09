@@ -4,7 +4,27 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Changes after `v2026.11.6-1091584480-sn` through the pending release.
+Changes after `v2026.11.8-1093262540-sn` through the pending release. Notes: `releases/next-35-7.md`.
+
+### Added
+
+- **Extender setup offers a sysctl route for TCP 443.** On Linux, `urnet-tools extender setup` can set `net.ipv4.ip_unprivileged_port_start=443` in `/etc/sysctl.d/99-urnetwork-extender.conf` as an alternative to a file capability on the binary. Interactive setup asks which route to use; unattended setup needs `--route=sysctl|capability|skip`. A prior drop-in is kept with its mode as `99-urnetwork-extender.conf.pre-urnetwork`, a name sysctl never loads. The printed recovery restores it and the prior live value, and says so when the prior value is unknown. A live low value counts as configured only when a sysctl file keeps it, read in systemd order with the last assignment winning. A failed backup copy stops setup before it writes. The setting covers the whole host: any local user can bind ports 443 and above.
+- **Extender status reports the port route.** `urnet-tools extender status` and `urnet-tools status` print the sysctl route, a file capability on the binary, or neither. They warn when the sysctl route is active and the binary still carries a file capability, which keeps the process non-dumpable.
+
+### Fixed
+
+- **A sudo re-run of extender setup is bound to the provider the caller inspected.** The parent passes the identity it resolved through `sudo -- /usr/bin/env`. Root refuses to continue when it resolves a different provider. The printed manual sudo command carries the same identity. When setup cannot name one provider uniquely, it stops and prints the inventory command.
+- **Updates run the newer tool first.** `urnet-tools update` installs a newer tool and runs it again with the provider set pinned, so the new release's own update logic does the work. A different provider set stops the second run before any change. If the tool install or the second run fails, the running tool continues. Notify-reload units are demoted to simple when a rollback needs it.
+- **Update verification no longer runs the new image under OpenRC.** The version fallback ran the image as root, and the service user can influence that file. OpenRC verification now reads build information and the release stamp only, and fails closed when neither holds a version.
+- **Update verification confirms an unreadable image through the control socket.** A provider with the port-443 file capability is non-dumpable. The updater says so once, asks the provider for its version, checks the peer on Linux and accepts only a new process. The verify loop also says so once when an entry is present but not ready or the state directory is missing, then prints a short heartbeat.
+- **Updates and rollbacks respect the sysctl route.** While the live threshold is 443 or lower, the updater skips the capability check, the restore and the setcap warning. A configurer that cannot report the route keeps the old flow.
+- **The simple-unit decline message is accurate.** It names an older installer as the writer of a `Type=simple` unit; the current installer writes `Type=notify` with `NotifyAccess=all`.
+- **The Linux installer is safer to run and to recover from.** Restart confirmation reads the terminal through a pipe, and `-y` works before or after the subcommand and survives `sudo`. OpenRC tree preparation fails closed before the service is installed. The new systemd unit is prepared and the old one kept as `<unit>.old` before the binary swap, and a failed restart restores the unit with the binary. The optimizer lists completed, skipped and failed steps with a retry command for each failure. An interactive install offers the port-443 file capability and preserves other file capabilities. A second copy of the install body is removed.
+- **The important log follows a replaced file.** A handoff or rotation can leave a process writing to a removed or replaced important log. The provider reopens the active path, refuses a symlink, a non-regular file, another user's file or one with permissions beyond `0600`, and prints `[ramlogs] log file at <path> was replaced or removed; reopened`. A failed trim or reopen prints `[ramlogs] warning: cannot maintain <path>: <error>`.
+
+## [v2026.11.8-1093262540-sn] — 2026-11-08
+
+Changes after `v2026.11.6-1091584480-sn` through this tag.
 
 ### Added
 
