@@ -94,7 +94,7 @@ install_openrc_units
 	if _, serr := os.Stat(live + ".old"); serr == nil {
 		t.Error("the .old file must be consumed by the rollback")
 	}
-	if !strings.Contains(out, "Restored the previous provider binary") {
+	if !strings.Contains(out, "Restored previous binary") {
 		t.Errorf("expected the operator to be told the previous binary was restored:\n%s", out)
 	}
 

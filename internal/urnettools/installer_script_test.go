@@ -628,11 +628,13 @@ pr_err() { echo "[ERROR] $*"; }
 openrc_user_home() { echo %q; }
 openrc_restore_update_entry() { :; }
 openrc_resolve_parent() { echo %q; }
+openrc_service_running() { return 1; }
 openrc_finalize_root_paths() { return 0; }
 openrc_rollback_binary_swap() { echo rollback >> %q; }
 id() { if [ "$1" = "-u" ]; then echo 1000; fi; return 0; }
 sudo() {
     if [ "$1" = "-n" ] && [ "$2" = "true" ]; then return 0; fi
+    if [ "$1" = "-n" ]; then shift; fi
     if [ "$1" = "rc-service" ]; then echo start >> %q; return 1; fi
     return 0
 }

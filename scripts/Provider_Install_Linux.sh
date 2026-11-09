@@ -2267,7 +2267,7 @@ EOF
                 pr_err "The sudo service setup failed; rolling back the provider update."
                 SUDO=sudo openrc_rollback_binary_swap
             else
-                pr_err "The sudo service setup failed; the service may be stopped and was not started."
+                pr_err "The sudo service setup failed; the service may be stopped and did not start."
             fi
             rm -rf "$openrc_stage_dir"
             exit 1
@@ -3372,8 +3372,8 @@ do_install ()
                 printf "Start service:         \e[1msystemctl --user start urnetwork\e[0m\n"
                 printf "Disable service:       \e[1msystemctl --user disable urnetwork\e[0m\n"
                 printf "Disable auto-updates:  \e[1msystemctl --user disable urnetwork-update.timer\e[0m\n"
-                
-                
+
+
                 printf "\n"
                 printf "\e[1;33mNote:\e[0m Run \e[1murnet-tools optimize\e[0m to enable systemd lingering and apply OS-level optimizations.\n"
                 printf "This ensures the provider keeps running in the background after you log out.\n"

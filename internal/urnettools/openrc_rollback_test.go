@@ -200,12 +200,12 @@ openrc_rollback_binary_swap
 func TestOpenRCBinarySwapRollsBackOnFailure(t *testing.T) {
 	source := readInstaller(t)
 
-	// Exactly two swaps: one per install flow. A third copy is a change this
-	// test must see, so "at least" is not enough.
-	const wantSwaps = 2
+	// Exactly one swap: the install body appears once in do_install. A second
+	// copy is a change this test must see, so "at least" is not enough.
+	const wantSwaps = 1
 	swaps := strings.Count(source, `mv -f "$staged_bin" "$install_path/bin/urnetwork"`)
 	if swaps != wantSwaps {
-		t.Fatalf("expected exactly %d atomic binary swaps (one per install flow), found %d", wantSwaps, swaps)
+		t.Fatalf("expected exactly %d atomic binary swap, found %d", wantSwaps, swaps)
 	}
 
 	// Every swap failure invokes rollback, and so does the restart failure in
