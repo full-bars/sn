@@ -23,6 +23,7 @@ import (
 // override without touching production call sites.
 var (
 	verifyDiscoverFn           = Discover
+	updateDiscoverFn           = Discover
 	verifyRunningImageHandleFn = runningImageHandle
 	verifyRunningImagePathFn   = runningImagePath
 	verifyProviderVersionFn    = providerVersion
@@ -108,11 +109,15 @@ func cmdUpdate(args []string, force, dryRun bool) error {
 	var include, exclude []string
 	all := false
 	interactive := forceInteractive(force) // -f implies non-interactive: no pickers
+	reexecuted := os.Getenv(urnetUpdateReexecEnv) != ""
+	if reexecuted {
+		interactive = false
+	}
 	// Deliberately a separate question from `interactive`: whether anything
 	// is authorized to skip the confirmation prompts. Tying the two together
 	// would enable the numbered picker for a piped run, which cannot answer
 	// it; the picker must stay gated on a real terminal.
-	unattended := unattendedUpdate(force)
+	unattended := reexecuted || unattendedUpdate(force)
 	for i := 0; i < len(rest); i++ {
 		switch rest[i] {
 		case "--tag":
@@ -174,7 +179,18 @@ func cmdUpdate(args []string, force, dryRun bool) error {
 		}
 	}
 
-	providers := Discover()
+	providers := updateDiscoverFn()
+	if reexecuted && (t.Unit != "" || t.StateDir != "") {
+		matches := 0
+		for _, p := range providers {
+			if t.matchProvider(p) {
+				matches++
+			}
+		}
+		if matches != 1 {
+			return fmt.Errorf("re-exec provider selection changed or became ambiguous; nothing updated")
+		}
+	}
 	var chosen []Provider
 	if all {
 		// --all means every provider on the box, no ambiguity. It conflicts
@@ -191,6 +207,14 @@ func cmdUpdate(args []string, force, dryRun bool) error {
 		var err error
 		chosen, err = selectTargets(providers, t, include, exclude, interactive)
 		if err != nil {
+			if reexecuted {
+				return fmt.Errorf("re-exec provider selection changed: %v; nothing updated", err)
+			}
+			return err
+		}
+	}
+	if reexecuted {
+		if err := checkReexecSelection(providers, chosen, os.Getenv(urnetUpdatePinnedEnv)); err != nil {
 			return err
 		}
 	}
@@ -294,7 +318,40 @@ func cmdUpdate(args []string, force, dryRun bool) error {
 	// predates its own restart-flow fixes; retrying through the staged copy
 	// makes this release's fixes live during this very update. Best effort:
 	// unavailability only disables the escalation leg.
-	stagedTool := stageToolForEscalation(cfg)
+	stagedTool := stageToolForEscalationFn(cfg)
+
+	toolUpdatedFirst := false
+	if stagedTool != "" && !reexecuted && isToolNewerThanRunning(cfg.Tag, cfg.ToolDigest) {
+		if err := validateReexecSelection(providers, chosen); err != nil {
+			fmt.Printf("tool-first re-exec skipped (%v); continuing update with current tool\n", err)
+		} else if err := selfUpdateToolFn(cfg); err != nil {
+			fmt.Printf("tool-first self-update failed (%v); continuing update with current tool\n", err)
+		} else {
+			toolUpdatedFirst = true
+			argChosen := chosen
+			if len(chosen) == 1 {
+				target, _ := reexecSingleTarget(providers, chosen[0])
+				if target.Unit == "" {
+					p := chosen[0]
+					p.Unit = ""
+					argChosen = []Provider{p}
+				}
+			}
+			reexecArgs := buildReexecArgs(os.Args, argChosen, all, cfg.Tag)
+			reexecEnv := reexecEnvironment(os.Environ(), chosen)
+			exe := resolvedExecutablePath()
+			_ = os.RemoveAll(stageDir)
+			if err := reExecToolFn(exe, reexecArgs, reexecEnv); err != nil {
+				fmt.Printf("tool re-exec failed (%v); continuing update with current tool\n", err)
+				if newDir, nerr := newStageDir(); nerr == nil {
+					cfg.StageDir = newDir
+					stagedTool = stageToolForEscalationFn(cfg)
+				}
+			} else {
+				return nil
+			}
+		}
+	}
 
 	failures := 0
 	for _, p := range chosen {
@@ -359,8 +416,13 @@ func cmdUpdate(args []string, force, dryRun bool) error {
 	// reported but does NOT fail the command — providers were the primary
 	// job and may have succeeded; the tool can be retried (e.g.
 	// `urnet-tools self-update`) without touching providers.
-	if err := runToolSelfUpdate(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "tool self-update failed: %v\n", err)
+	//
+	// When tool-first update ran or this is the re-executed tool process,
+	// the tool was already updated at the start — do not run it twice.
+	if !toolUpdatedFirst && os.Getenv(urnetUpdateReexecEnv) == "" {
+		if err := runToolSelfUpdate(cfg); err != nil {
+			fmt.Fprintf(os.Stderr, "tool self-update failed: %v\n", err)
+		}
 	}
 
 	// Make the tool findable from non-interactive shells and from root.
@@ -557,7 +619,7 @@ func forceInteractive(force bool) bool {
 // interactive question is skipped, and the per-provider "already on <tag>"
 // check still short-circuits a run that has nothing to do.
 func unattendedUpdate(force bool) bool {
-	if force {
+	if force || os.Getenv(urnetUpdateReexecEnv) == "1" {
 		return true
 	}
 	if stdinIsInteractive() {
@@ -880,6 +942,7 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 	}
 
 	pidChanged := false
+	imageFallbackReported := false
 	observation := "no matching provider entry was discovered"
 	for i := 0; i < maxIterations; i++ {
 		// Adaptive sleep: poll every 2s while waiting for the restart to
@@ -941,13 +1004,17 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 						fmt.Printf("still waiting for %s (pid %d running %q, iteration %d/%d)...\n", cfg.Tag, rp.PID, procVersion, i+1, maxIterations)
 					}
 				} else {
-					version, ok := verifySocketVersionFn(rp, rp.PID)
-					observation = fmt.Sprintf("pid %d running image unreadable (%v); no verified socket answer", rp.PID, perr)
-					if ok {
-						observation = fmt.Sprintf("pid %d running image unreadable (%v); control socket reported %q", rp.PID, perr, version)
+					if !imageFallbackReported {
+						fmt.Println("verify: the updater cannot read the provider's image (normal for a provider with the port-443 permission); asking the provider for its own version")
+						imageFallbackReported = true
 					}
-					if ok && version == cfg.Tag && rp.PID != oldPID {
-						fmt.Printf("verified %s running %s (pid %d; control socket)\n", providerLabel(p), cfg.Tag, rp.PID)
+					sockVersion, ok := verifySocketVersionFn(rp, rp.PID)
+					observation = fmt.Sprintf("pid %d's running image was unreadable; no verified socket answer from that pid", rp.PID)
+					if ok {
+						observation = fmt.Sprintf("pid %d's running image was unreadable; its control socket reported version %q", rp.PID, sockVersion)
+					}
+					if ok && sockVersion == cfg.Tag && rp.PID != oldPID {
+						fmt.Printf("verified %s running %s (pid %d; the provider reported this version on its control socket)\n", providerLabel(p), cfg.Tag, rp.PID)
 						if hotSwapTriggered {
 							verifyRecordSuccessFn(p.StateDir)
 						}
@@ -1716,11 +1783,11 @@ func rewriteUnitContent(content string) (string, bool) {
 		}
 	}
 
-	// Provider_Install_Linux.sh (since #546) writes NO Type= line: the unit is
-	// Type=simple by systemd's default and only a comment says so. With no
-	// explicit Type= anywhere there is nothing to rewrite, so add the line
-	// under [Service]; without this the migration was a silent no-op on every
-	// node the current installer set up. A unit that does carry some other
+	// Legacy Provider_Install_Linux.sh (since #546) wrote NO Type= line: the unit was
+	// Type=simple by systemd's default and only a comment said so (the installer now
+	// writes Type=notify directly). With no explicit Type= anywhere there is nothing
+	// to rewrite, so add the line under [Service]; without this the migration was a
+	// silent no-op on nodes legacy installers set up. A unit that does carry some other
 	// Type= (oneshot, forking, ...) is left alone.
 	if !changed && !hasTypeKey && serviceIdx >= 0 {
 		insert := []string{"Type=notify"}
@@ -1827,7 +1894,7 @@ func demoteUnitToSimple(p Provider) (bool, error) {
 	}
 	newContent, changed := rewriteUnitContentToSimple(string(content))
 	if !changed {
-		return false, fmt.Errorf("unit %s is effectively Type=%s but %s cannot be demoted; check drop-ins", p.Unit, typ, unitPath)
+		return false, fmt.Errorf("unit %s is effectively Type=%s but %s has no matching notify type to demote; check its drop-ins", p.Unit, typ, unitPath)
 	}
 	if err := replaceUnitFileIn(p.StateHome, unitPath, []byte(newContent)); err != nil {
 		return false, fmt.Errorf("write unit file %s: %w", unitPath, err)
@@ -1838,8 +1905,10 @@ func demoteUnitToSimple(p Provider) (bool, error) {
 	}
 	if effective, err := unitTypeFunc(p); err != nil {
 		return true, fmt.Errorf("verify unit type for %s: %w", p.Unit, err)
-	} else if effective == "" || effective == "notify" || effective == "notify-reload" {
-		return true, fmt.Errorf("%s has unsafe effective Type=%q after reload; check drop-ins", p.Unit, effective)
+	} else if effective == "" {
+		return true, fmt.Errorf("verify unit type for %s returned an empty type", p.Unit)
+	} else if effective == "notify" || effective == "notify-reload" {
+		return true, fmt.Errorf("%s remains Type=%s after reload; check its drop-ins", p.Unit, effective)
 	}
 	return true, nil
 }
@@ -1926,7 +1995,7 @@ func rewriteUnitContentToSimple(content string) (string, bool) {
 		if !ok {
 			continue
 		}
-		if strings.EqualFold(strings.TrimSpace(key), "Type") && strings.EqualFold(strings.TrimSpace(val), "notify") {
+		if strings.EqualFold(strings.TrimSpace(key), "Type") && (strings.EqualFold(strings.TrimSpace(val), "notify") || strings.EqualFold(strings.TrimSpace(val), "notify-reload")) {
 			lines[i] = "Type=simple"
 			changed = true
 		}
