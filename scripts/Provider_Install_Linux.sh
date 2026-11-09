@@ -158,6 +158,49 @@ ensure_extender_cap ()
     return 0
 )
 
+# Offer the privileged extender permission only to an interactive operator.
+# sn's ensure_extender_cap preserves any other capabilities and verifies the result.
+offer_extender_capability ()
+(
+    [ "$(uname -s)" = Linux ] || return 0
+    provider_file=$1
+    [ "$(id -u 2>/dev/null)" != 0 ] || return 0
+    if command -v getcap >/dev/null 2>&1; then
+        case "$(getcap "$provider_file" 2>/dev/null)" in
+            *cap_net_bind_service*) return 0 ;;
+        esac
+    fi
+    quoted_file=$(printf '%s' "$provider_file" | sed "s/'/'\\\\''/g")
+    cmd="sudo setcap cap_net_bind_service=+ep '$quoted_file'"
+    ext_tty=${extender_tty:-/dev/tty}
+    pr_warn "Extender: not running yet. It needs TCP 443, and this user is not allowed to listen on that port. Only the extender needs this: the provider itself is not affected."
+    # Probe by OPENING the terminal: a readable /dev/tty node can still fail to open.
+    # A subshell, not a brace group: a failed redirect on the special builtin ":"
+    # makes a POSIX-mode shell (bash run as sh) exit instead of returning false.
+    if [ "${FORCE:-0}" = "1" ] || [ ! -t 0 ] || [ ! -t 1 ] || ! ( : < "$ext_tty" ) 2>/dev/null || ! command -v sudo >/dev/null 2>&1; then
+        pr_info "To allow it, run once: $cmd"
+        return 0
+    fi
+    printf '\n  I can allow it with one command:\n      %s\n  This asks for your sudo password once. Run it now? [y/N] ' "$cmd"
+    ans=""
+    read -r ans < "$ext_tty" || ans=""
+    printf '\n'
+    case "$ans" in
+        [Yy]*)
+            if SUDO=sudo ensure_extender_cap "$provider_file" && command -v getcap >/dev/null 2>&1 && case "$(getcap "$provider_file" 2>/dev/null)" in *cap_net_bind_service*) true;; *) false;; esac; then
+                pr_info "Extender: port 443 is allowed. It takes effect when the provider next starts."
+                pr_info "An update replaces the provider file and removes this permission. The installer and urnet-tools update try to restore it, and tell you if they cannot."
+            else
+                pr_warn "Extender: setcap did not succeed, so port 443 is still blocked. The provider is unaffected. To try again, run: $cmd"
+            fi
+            ;;
+        *)
+            pr_info "Skipped. The provider runs normally. To allow the extender later, run: $cmd"
+            ;;
+    esac
+    return 0
+)
+
 get_arch ()
 {
     if command -v arch > /dev/null; then
@@ -1190,27 +1233,10 @@ install_systemd_units ()
 Description=URnetwork Provider
 
 [Service]
-# Type=simple (the default), deliberately NOT Type=notify.
-#
-# Type=notify makes \`systemctl start\` block until the provider sends
-# sd_notify(READY=1), and provide() only sends it from provideWithProxy --
-# i.e. after a proxy (or the direct/native path) has brought up a transport.
-# That is unbounded: the per-proxy auth retry loop backs off legitimately for
-# hours on a rate-limited or unreachable API, and a provider with direct
-# disabled and no proxies configured never sends it at all.
-#
-# Worse, the unit file and the provider binary ship through different
-# channels (this script from git, the binary from a GitHub release), so any
-# skew -- a fresh install that lands an older release, or a rollback via
-# \`urnet-tools update --tag\` -- pairs a Type=notify unit with a binary that
-# has no sd_notify support whatsoever, and every start/restart hangs forever.
-# That is what wedged the pre-release shakedown for 2h until the CI watchdog
-# killed it (exit 124).
-#
-# HotSwap's MainPID transfer needs NOTIFY_SOCKET and is therefore unavailable
-# under Type=simple; internal/urnettools/hotswap.go already gates on the
-# unit's Type= and declines cleanly with an operator message, and
-# provider/hotswap.go aborts the handoff rather than corrupting MainPID.
+# HotSwap needs notify and NotifyAccess=all to transfer MainPID.
+# Current providers send READY=1 at the startup barrier.
+Type=notify
+NotifyAccess=all
 Environment="HOST_HOSTNAME=$(hostname)"
 ExecStart=$install_path/bin/urnetwork provide
 Restart=on-failure
@@ -1244,38 +1270,46 @@ Persistent=true
 WantedBy=default.target
 EOF
 
-    if ! systemctl --user enable urnetwork.service 2>/dev/null; then
+    if ! enable_out=$(systemctl --user enable urnetwork.service 2>&1); then
         if [ "$(id -u)" -eq 0 ]; then
             pr_warn "Running as root: user systemd service skipped (requires user session bus). Use Docker 'restart: unless-stopped' or manually run the provider binary."
         else
             pr_err "Could not enable the newly installed systemd service"
+            [ -z "$enable_out" ] || pr_err "systemctl said: %s" "$enable_out"
+            pr_info "The new binary and unit files are installed; service enable failed and this installer has not restarted it. Finish with: systemctl --user daemon-reload && systemctl --user enable --now urnetwork.service urnetwork-update.timer"
             exit 1
         fi
     fi
 
-    if ! systemctl --user enable --now urnetwork-update.timer 2>/dev/null; then
+    if ! enable_out=$(systemctl --user enable --now urnetwork-update.timer 2>&1); then
         if [ "$(id -u)" -ne 0 ]; then
             pr_err "Could not enable the newly installed update timer"
+            [ -z "$enable_out" ] || pr_err "systemctl said: %s" "$enable_out"
+            pr_info "The new binary and unit files are installed. Service enable succeeded, but this installer has not restarted it; timer enable/start did not complete. Finish with: systemctl --user daemon-reload && systemctl --user enable --now urnetwork.service urnetwork-update.timer"
             exit 1
         fi
     fi
 
     if [ "$start" -eq 1 ]; then
-        systemctl --user daemon-reload
+        if ! systemctl --user daemon-reload; then
+            pr_err "systemctl --user daemon-reload failed. New binary and units are installed, but this installer did not restart the service. Run: systemctl --user daemon-reload && systemctl --user start urnetwork.service"
+            exit 1
+        fi
         
         if ! systemctl --user start urnetwork.service; then
-            pr_err "Failed to restart urnetwork.service after update"
+            pr_err "Failed to start urnetwork.service after update. New binary and units are installed. Retry with: systemctl --user daemon-reload && systemctl --user start urnetwork.service"
             if [ -f "$install_path/bin/urnetwork.old" ]; then
                 # Check the restore before restarting: starting the service with
                 # the new binary still in place would only repeat the failure.
                 if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"; then
                     ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
                     pr_warn "Restored the previous provider binary; the update did not apply."
-                    systemctl --user daemon-reload 2>/dev/null || true
-                    if systemctl --user start urnetwork.service 2>/dev/null; then
+                    if ! systemctl --user daemon-reload; then
+                        pr_err "Reload after restoring the binary failed; the restored service was not restarted. Run: systemctl --user daemon-reload && systemctl --user start urnetwork.service"
+                    elif systemctl --user start urnetwork.service; then
                         pr_warn "Restarted the service on the previous binary."
                     else
-                        pr_err "The service did NOT restart on the previous binary and is stopped. Start it with: systemctl --user start urnetwork.service"
+                        pr_err "The service did NOT restart on the previous binary. Run: systemctl --user start urnetwork.service"
                     fi
                 else
                     pr_err "Could not restore the previous provider binary from $install_path/bin/urnetwork.old"
@@ -1594,14 +1628,30 @@ openrc_stage_root_owned_tool ()
 {
     [ "$(${SUDO:-} id -u)" -eq 0 ] || return 1
     [ -f "$install_path/bin/urnet-tools" ] || return 1
-    ${SUDO:-} mkdir -p "$openrc_root_tool_dir" 2>/dev/null || return 1
-    ${SUDO:-} chown root:root "$openrc_root_tool_dir" 2>/dev/null || true
-    ${SUDO:-} chmod 0755 "$openrc_root_tool_dir" 2>/dev/null || true
-    if ${SUDO:-} cp "$install_path/bin/urnet-tools" "$openrc_root_tool_path" 2>/dev/null; then
-        ${SUDO:-} chown root:root "$openrc_root_tool_path" 2>/dev/null || true
-        ${SUDO:-} chmod 0755 "$openrc_root_tool_path" 2>/dev/null || true
+    if ! ${SUDO:-} mkdir -p "$openrc_root_tool_dir"; then
+        pr_warn "Could not create auto-update tool directory; run: sudo mkdir -p '%s'" "$openrc_root_tool_dir"
+        return 1
+    fi
+    if ! ${SUDO:-} chown root:root "$openrc_root_tool_dir"; then
+        pr_warn "Could not secure auto-update tool directory; run: sudo chown root:root '%s'" "$openrc_root_tool_dir"
+        return 1
+    fi
+    if ! ${SUDO:-} chmod 0755 "$openrc_root_tool_dir"; then
+        pr_warn "Could not set auto-update tool directory mode; run: sudo chmod 0755 '%s'" "$openrc_root_tool_dir"
+        return 1
+    fi
+    if ${SUDO:-} cp "$install_path/bin/urnet-tools" "$openrc_root_tool_path"; then
+        if ! ${SUDO:-} chown root:root "$openrc_root_tool_path"; then
+            pr_warn "Could not secure auto-update tool; run: sudo chown root:root '%s'" "$openrc_root_tool_path"
+            return 1
+        fi
+        if ! ${SUDO:-} chmod 0755 "$openrc_root_tool_path"; then
+            pr_warn "Could not set auto-update tool mode; run: sudo chmod 0755 '%s'" "$openrc_root_tool_path"
+            return 1
+        fi
         return 0
     fi
+    pr_warn "Could not stage auto-update tool; run: sudo cp '%s' '%s'" "$install_path/bin/urnet-tools" "$openrc_root_tool_path"
     return 1
 }
 
@@ -1795,7 +1845,7 @@ openrc_finalize_root_paths ()
         case "$openrc_state_target" in
             "$openrc_home"/*)
                 ${SUDO:-} mkdir -p "$openrc_state_target" 2>/dev/null || true
-                ${SUDO:-} chown "$openrc_user" "$openrc_state_target" 2>/dev/null || true
+                ${SUDO:-} chown "$openrc_user" "$openrc_state_target" || pr_warn "Could not set state ownership; run: sudo chown '%s' '%s'" "$openrc_user" "$openrc_state_target"
                 ;;
             *)
                 if [ -z "$openrc_state_target" ]; then
@@ -1808,7 +1858,7 @@ openrc_finalize_root_paths ()
         esac
     else
         ${SUDO:-} mkdir -p "$openrc_home/.urnetwork" 2>/dev/null || true
-        ${SUDO:-} chown "$openrc_user" "$openrc_home/.urnetwork" 2>/dev/null || true
+        ${SUDO:-} chown "$openrc_user" "$openrc_home/.urnetwork" || pr_warn "Could not set state ownership; run: sudo chown '%s' '%s'" "$openrc_user" "$openrc_home/.urnetwork"
     fi
 
     # Create the log targets in /var/log, OWNED BY THE SERVICE USER.
@@ -1830,8 +1880,8 @@ openrc_finalize_root_paths ()
             ${SUDO:-} touch "$openrc_log" 2>/dev/null || pr_warn "could not create %s" "$openrc_log"
         fi
     done
-    ${SUDO:-} chown "$openrc_user" /var/log/urnetwork.log /var/log/urnetwork.err 2>/dev/null || true
-    ${SUDO:-} chmod 0644 /var/log/urnetwork.log /var/log/urnetwork.err 2>/dev/null || true
+    ${SUDO:-} chown "$openrc_user" /var/log/urnetwork.log /var/log/urnetwork.err || pr_warn "Could not set log ownership; run: sudo chown '%s' /var/log/urnetwork.log /var/log/urnetwork.err" "$openrc_user"
+    ${SUDO:-} chmod 0644 /var/log/urnetwork.log /var/log/urnetwork.err || pr_warn "Could not set log modes; run: sudo chmod 0644 /var/log/urnetwork.log /var/log/urnetwork.err"
 
     # Stage the root-owned tool the weekly cron will execute (see the function
     # comment: root must never exec anything reachable through a user-writable
@@ -2379,6 +2429,21 @@ func_run_as_user ()
     fi
 }
 
+# Enable lingering without suppressing errors or prompting for credentials.
+installer_enable_linger ()
+{
+    linger_user="$1"
+    if command -v loginctl >/dev/null 2>&1; then
+        if loginctl enable-linger "$linger_user"; then
+            return 0
+        fi
+        pr_warn "loginctl enable-linger failed; the service may stop on logout. Run: sudo loginctl enable-linger %s" "$linger_user"
+    else
+        pr_warn "loginctl not found; the service may stop on logout. Install it, then run: sudo loginctl enable-linger %s" "$linger_user"
+    fi
+    return 1
+}
+
 # Distro-agnostic creation of a dedicated unprivileged user, then finish the
 # install in that user's systemd context. Called only from the interactive
 # root path; exits the script.
@@ -2420,11 +2485,7 @@ func_assisted_user_setup ()
     runtime="/run/user/$uid"
 
     # Lingering starts the user's systemd + D-Bus without a login session.
-    if command -v loginctl >/dev/null 2>&1; then
-        loginctl enable-linger "$newuser" 2>/dev/null || pr_warn "enable-linger failed; the service may stop on logout."
-    else
-        pr_warn "'loginctl' not found; cannot enable lingering automatically."
-    fi
+    installer_enable_linger "$newuser" || :
 
     # Wait for the per-user bus socket to appear (logind creates it asynchronously).
     i=0
@@ -2528,6 +2589,32 @@ download_asset ()
     fi
 
     return 1
+}
+
+install_downloaded_tool ()
+{
+    tool_source="$1"
+    tool_target="$install_path/bin/urnet-tools"
+    trap 'rm -f "$tool_source"' EXIT
+    if [ -e "$tool_target" ]; then
+        if ! ${SUDO:-} mv -f "$tool_target" "$tool_target.old"; then
+            trap - EXIT
+            pr_err "Could not preserve previous urnet-tools binary before replacement. Download retained at %s. Run: sudo mv -f '%s' '%s'" "$tool_source" "$tool_target" "$tool_target.old"
+            return 1
+        fi
+    fi
+    if ! ${SUDO:-} cp "$tool_source" "$tool_target"; then
+        trap - EXIT
+        pr_err "Could not copy urnet-tools. The provider binary is installed; service setup has not finished and the service may be stopped. Previous tool, if any, is at %s. Download retained at %s. Run: sudo cp '%s' '%s'" "$tool_target.old" "$tool_source" "$tool_source" "$tool_target"
+        return 1
+    fi
+    if ! ${SUDO:-} chmod 755 "$tool_target"; then
+        pr_err "Could not make urnet-tools executable. The provider binary and tool are installed; service setup has not finished and the service may be stopped. Run: sudo chmod 755 '%s'" "$tool_target"
+        return 1
+    fi
+    if [ -e "$tool_target.old" ]; then
+        ${SUDO:-} rm -f "$tool_target.old" || pr_warn "Could not remove the old tool backup; run: sudo rm -f '%s'" "$tool_target.old"
+    fi
 }
 
 do_install ()
@@ -2960,6 +3047,7 @@ do_install ()
             exit 1
         fi
         ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
+        offer_extender_capability "$install_path/bin/urnetwork" || true
     fi
 
     cd "$script_rundir" || exit 1
@@ -2984,11 +3072,7 @@ do_install ()
             pr_info "Installing Go urnet-tools binary (%s)..." "$tool_asset"
             if download_asset "$tool_dl_url" "$workdir/$tool_asset"; then
                 if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
-                    # Bypass 'Text file busy' like the provider swap above.
-                    ${SUDO:-} mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
-                    ${SUDO:-} cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                    ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                    ${SUDO:-} rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                    install_downloaded_tool "$workdir/$tool_asset" || exit 1
                     tool_installed=1
                 else
                     pr_warn "urnet-tools sha256 mismatch, falling back to shell script"
@@ -2997,10 +3081,7 @@ do_install ()
                 pr_warn "Primary tool download failed, trying GitHub mirror..."
                 if download_asset "$tool_mirror_url" "$workdir/$tool_asset"; then
                     if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
-                        ${SUDO:-} mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
-                        ${SUDO:-} cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                        ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                        ${SUDO:-} rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                        install_downloaded_tool "$workdir/$tool_asset" || exit 1
                         tool_installed=1
                     else
                         pr_warn "urnet-tools sha256 mismatch (mirror), falling back to shell script"
@@ -3482,6 +3563,7 @@ do_install ()
             exit 1
         fi
         ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
+        offer_extender_capability "$install_path/bin/urnetwork" || true
     fi
 
     cd "$script_rundir" || exit 1
@@ -3506,11 +3588,7 @@ do_install ()
             pr_info "Installing Go urnet-tools binary (%s)..." "$tool_asset"
             if download_asset "$tool_dl_url" "$workdir/$tool_asset"; then
                 if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
-                    # Bypass 'Text file busy' like the provider swap above.
-                    ${SUDO:-} mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
-                    ${SUDO:-} cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                    ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                    ${SUDO:-} rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                    install_downloaded_tool "$workdir/$tool_asset" || exit 1
                     tool_installed=1
                 else
                     pr_warn "urnet-tools sha256 mismatch, falling back to shell script"
@@ -3519,10 +3597,7 @@ do_install ()
                 pr_warn "Primary tool download failed, trying GitHub mirror..."
                 if download_asset "$tool_mirror_url" "$workdir/$tool_asset"; then
                     if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
-                        ${SUDO:-} mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
-                        ${SUDO:-} cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                        ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                        ${SUDO:-} rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                        install_downloaded_tool "$workdir/$tool_asset" || exit 1
                         tool_installed=1
                     else
                         pr_warn "urnet-tools sha256 mismatch (mirror), falling back to shell script"
@@ -4266,9 +4341,15 @@ firewall_hint() {
     port="$1"
     proto="${2:-tcp}"
 
-    if command -v firewall-cmd > /dev/null && firewall-cmd --state 2>/dev/null | grep -q running; then
-        printf '  sudo firewall-cmd --add-port=%s/%s --permanent && sudo firewall-cmd --reload\n' "$port" "$proto"
-        return 0
+    if command -v firewall-cmd > /dev/null; then
+        if firewall_state=$(firewall-cmd --state); then
+            if [ "$firewall_state" = running ]; then
+                printf '  sudo firewall-cmd --add-port=%s/%s --permanent && sudo firewall-cmd --reload\n' "$port" "$proto"
+                return 0
+            fi
+        else
+            printf '  Firewall state check failed; inspect with: sudo firewall-cmd --state\n' >&2
+        fi
     fi
 
     if command -v ufw > /dev/null; then
@@ -4281,9 +4362,15 @@ firewall_hint() {
         return 0
     fi
 
-    if command -v nft > /dev/null && nft list tables 2>/dev/null | grep -q .; then
-        printf '  sudo nft add rule inet filter input %s dport %s accept\n' "$proto" "$port"
-        return 0
+    if command -v nft > /dev/null; then
+        if nft_tables=$(nft list tables); then
+            if [ -n "$nft_tables" ]; then
+                printf '  Inspect the active rules and add an appropriate rule for %s/%s: sudo nft list ruleset\n' "$port" "$proto"
+                return 0
+            fi
+        else
+            printf '  nftables query failed; inspect with: sudo nft list tables\n' >&2
+        fi
     fi
 
     return 1
@@ -4952,6 +5039,28 @@ do_auth ()
     exit "$exit_code"
 }
 
+installer_apply_sysctl_config ()
+{
+    sysctl_file="$1"
+    if sysctl -p "$sysctl_file" >/dev/null; then
+        pr_info "sysctl settings applied."
+    elif sysctl --system >/dev/null; then
+        pr_info "sysctl settings applied (system-wide)."
+    else
+        pr_warn "Some sysctl settings could not be applied. Check and retry: sudo sysctl -p '%s'" "$sysctl_file"
+        return 1
+    fi
+}
+
+installer_apply_immediate_sysctls ()
+{
+    for setting in fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512 fs.file-max=2097152; do
+        if ! sysctl -w "$setting" >/dev/null; then
+            pr_warn "Could not apply immediate kernel setting; run: sudo sysctl -w %s" "$setting"
+        fi
+    done
+}
+
 do_optimize ()
 {
     if [ "$(id -u)" -ne 0 ]; then
@@ -4968,9 +5077,7 @@ do_optimize ()
     # 0. Immediate Pre-Optimization (prevents failures during the optimization itself)
     # Increase ulimit and inotify limits immediately for the session to prevent "Too many open files"
     ulimit -n 1048576 2>/dev/null || true
-    sysctl -w fs.inotify.max_user_watches=524288 >/dev/null 2>&1 || true
-    sysctl -w fs.inotify.max_user_instances=512 >/dev/null 2>&1 || true
-    sysctl -w fs.file-max=2097152 >/dev/null 2>&1 || true
+    installer_apply_immediate_sysctls
 
     # When running via sudo, we need to find the original user's home
     actual_user=$(logname 2>/dev/null || echo "$SUDO_USER" || echo "$USER")
@@ -5140,7 +5247,7 @@ fs.file-max = 2097152
 fs.inotify.max_user_watches = 524288
 fs.inotify.max_user_instances = 512
 EOF
-        sysctl --system >/dev/null 2>&1 || pr_warn "Warning: some sysctl settings could not be applied."
+        installer_apply_sysctl_config "$sysctl_conf" || :
     fi
 
     # 4. Apply Ulimits (Systemd)
@@ -5273,8 +5380,8 @@ EOF
         sudo -u "$actual_user" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $actual_user)/bus" systemctl --user restart urnetwork.service || pr_info "Note: Service not running; ulimits will apply on next start."
 
         # Enable lingering for the user so services persist after logout
-        if command -v loginctl > /dev/null; then
-            loginctl enable-linger "$actual_user" 2>/dev/null && pr_info "✓ Systemd lingering enabled for '$actual_user' (provider will persist after logout)"
+        if installer_enable_linger "$actual_user"; then
+            pr_info "✓ Systemd lingering enabled for '$actual_user' (provider will persist after logout)"
         fi
     fi
 }
