@@ -187,7 +187,8 @@ offer_extender_capability ()
     printf '\n'
     case "$ans" in
         [Yy]*)
-            if SUDO=sudo ensure_extender_cap "$provider_file" && command -v getcap >/dev/null 2>&1 && case "$(getcap "$provider_file" 2>/dev/null)" in *cap_net_bind_service*) true;; *) false;; esac; then
+            SUDO=sudo ensure_extender_cap "$provider_file" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
+            if command -v getcap >/dev/null 2>&1 && case "$(getcap "$provider_file" 2>/dev/null)" in *cap_net_bind_service*) true;; *) false;; esac; then
                 pr_info "Extender: port 443 is allowed. It takes effect when the provider next starts."
                 pr_info "An update replaces the provider file and removes this permission. The installer and urnet-tools update try to restore it, and tell you if they cannot."
             else
@@ -3047,7 +3048,7 @@ do_install ()
             exit 1
         fi
         ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
-        offer_extender_capability "$install_path/bin/urnetwork" || true
+        offer_extender_capability "$install_path/bin/urnetwork" || exit 1
     fi
 
     cd "$script_rundir" || exit 1
@@ -3563,7 +3564,7 @@ do_install ()
             exit 1
         fi
         ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
-        offer_extender_capability "$install_path/bin/urnetwork" || true
+        offer_extender_capability "$install_path/bin/urnetwork" || exit 1
     fi
 
     cd "$script_rundir" || exit 1
