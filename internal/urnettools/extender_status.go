@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
 	"syscall"
 )
 
@@ -33,6 +37,56 @@ type ExtenderReading struct {
 	LastPeerPingTime      int64
 	LimitedBySubnetsCount int
 	LimitedBySourceCount  int
+
+	// BindRoute says how an unprivileged provider gets TCP 443 on this host.
+	// It is a host reading set by the printing commands, not by the provider.
+	BindRoute string
+}
+
+var (
+	portRoutePlatformFn = func() string { return runtime.GOOS }
+	portRouteReadFileFn = os.ReadFile
+	portRouteExecCmdFn  = func(name string, args ...string) ([]byte, error) {
+		return exec.Command(name, args...).CombinedOutput()
+	}
+)
+
+// detectBindRoute reports the active route for TCP 443 on Linux; empty
+// elsewhere.
+func detectBindRoute(binary, user string) string {
+	return detectBindRouteWith(portRoutePlatformFn(), binary, user, portRouteReadFileFn, portRouteExecCmdFn)
+}
+
+func detectBindRouteWith(platform, binary, user string, readFile func(string) ([]byte, error), execCmd func(string, ...string) ([]byte, error)) string {
+	if platform != "linux" {
+		return ""
+	}
+	if user == "root" {
+		return "root (no capability or sysctl needed)"
+	}
+	if readFile != nil {
+		if data, err := readFile(extenderSysctlPortStartPath); err == nil {
+			if val, err := strconv.Atoi(strings.TrimSpace(string(data))); err == nil && val >= 0 && val <= 443 {
+				route := fmt.Sprintf("sysctl: port is available without a file capability (ip_unprivileged_port_start=%d)", val)
+				if binary != "" && execCmd != nil {
+					if out, err := execCmd("getcap", binary); err == nil && linuxHasBindCapability(binary, string(out)) {
+						cmd := setupCommand{name: "sudo", args: []string{"setcap", "-r", binary}}.String()
+						route += "; warning: binary still has a file capability, so a provider started with it is non-dumpable and may be unreadable to the updater. You must restart or hand off the provider after removing it. " + cmd
+						if strings.TrimSpace(string(out)) != binary+" cap_net_bind_service=ep" {
+							route += " removes ALL file capabilities; inspect getcap -n first and preserve other capabilities"
+						}
+					}
+				}
+				return route
+			}
+		}
+	}
+	if binary != "" && execCmd != nil {
+		if out, err := execCmd("getcap", binary); err == nil && linuxHasBindCapability(binary, string(out)) {
+			return "capability on the binary (cap_net_bind_service)"
+		}
+	}
+	return "neither"
 }
 
 var socketExtenderFn = queryExtenderFromSocket
@@ -100,9 +154,15 @@ func ReadExtenderStatus(p Provider) ExtenderReading {
 func formatExtenderBlock(w io.Writer, reading ExtenderReading) {
 	if reading.Source != SourceControlSocket {
 		fmt.Fprintln(w, "\nExtender: unavailable")
+		if reading.BindRoute != "" {
+			fmt.Fprintf(w, "  Port route:        %s\n", reading.BindRoute)
+		}
 		return
 	}
 	fmt.Fprintf(w, "\nExtender:\n  Source:            %s\n  Role state:        %s\n", reading.Source, reading.RoleState)
+	if reading.BindRoute != "" {
+		fmt.Fprintf(w, "  Port route:        %s\n", reading.BindRoute)
+	}
 	fmt.Fprintf(w, "  Listening:         %t\n  IPv4 activated:    %t\n  IPv6 activated:    %t\n", reading.Bound, reading.ActivatedV4, reading.ActivatedV6)
 	if reading.Ipv4 != "" {
 		fmt.Fprintf(w, "  IPv4:              %s\n", reading.Ipv4)

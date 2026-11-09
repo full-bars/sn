@@ -88,10 +88,19 @@ func runExtenderStatus(w io.Writer, provs []Provider) error {
 			if len(provs) > 1 {
 				fmt.Fprintf(w, "\n%s: extender unavailable: %v\n", providerLabel(p), err)
 			}
+			if route := detectBindRoute(p.Binary, p.User); route != "" {
+				if len(provs) == 1 {
+					fmt.Fprintln(w, "\nExtender: unavailable")
+				}
+				fmt.Fprintf(w, "  Port route:        %s\n", route)
+			}
 			continue
 		}
 		if len(provs) > 1 {
 			fmt.Fprintf(w, "\n%s", providerLabel(p))
+		}
+		if reading.BindRoute == "" {
+			reading.BindRoute = detectBindRoute(p.Binary, p.User)
 		}
 		formatExtenderBlock(w, *reading)
 	}

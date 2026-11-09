@@ -538,6 +538,7 @@ func cmdStatus(args []string) error {
 // printExtenderBlock appends the extender status block to urnet-tools status output.
 func printExtenderBlock(p Provider) {
 	reading := ReadExtenderStatus(p)
+	reading.BindRoute = detectBindRoute(p.Binary, p.User)
 	formatExtenderBlock(os.Stdout, reading)
 }
 

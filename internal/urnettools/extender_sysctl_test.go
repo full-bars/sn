@@ -477,6 +477,10 @@ func TestExtenderSetupSysctlNonLinuxNoOp(t *testing.T) {
 			if platform == "freebsd" && (err != nil || len(cmds) != 0) {
 				t.Fatalf("freebsd plan requirement: cmds=%v err=%v", cmds, err)
 			}
+			route := detectBindRouteWith(platform, "/path/provider", "user", nil, nil)
+			if route != "" {
+				t.Fatalf("expected empty route for %s, got %q", platform, route)
+			}
 		})
 	}
 }
