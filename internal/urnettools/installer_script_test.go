@@ -1625,9 +1625,9 @@ func runLinuxInstaller(t *testing.T, opts installerHarnessOpts) installerHarness
 	}
 
 	harness := fmt.Sprintf(`
-pr_err() { printf "[ERROR] %%s\n" "$*" >&2; }
-pr_warn() { printf "[WARN] %%s\n" "$*" >&2; }
-pr_info() { printf "[INFO] %%s\n" "$*"; }
+pr_err() { if [ $# -gt 1 ]; then printf "[ERROR] " >&2; printf "$@" >&2; printf '\n' >&2; else printf "[ERROR] %%s\n" "$*" >&2; fi; }
+pr_warn() { if [ $# -gt 1 ]; then printf "[WARN] " >&2; printf "$@" >&2; printf '\n' >&2; else printf "[WARN] %%s\n" "$*" >&2; fi; }
+pr_info() { if [ $# -gt 1 ]; then printf "[INFO] "; printf "$@"; printf '\n'; else printf "[INFO] %%s\n" "$*"; fi; }
 sudo() { "$@"; }`+verifyHarness+`
 install_downloader() { return 0; }
 install_json_parser() { return 0; }
@@ -1637,6 +1637,7 @@ stop_openrc_units() { echo stop-openrc >> "$STOP_LOG"; return 0; }
 ensure_tools_on_path() { return 0; }
 add_path_blocks() { return 0; }
 func_root_guard() { return 0; }
+offer_extender_capability() { return 0; }
 network_fetch() {
     if [ "${METADATA_FAILS:-0}" = "1" ]; then
         return 1
@@ -1762,6 +1763,7 @@ FAIL_MV=%q
 METADATA_FAILS=%q
 VERIFY_LOG=%q
 SVC_LOG=%q
+STOP_LOG=%q
 FIRST_START_FLAG=%q
 systemd_service="%s/urnetwork.service"
 systemd_update_service="%s/urnetwork-update.service"
@@ -1770,7 +1772,6 @@ systemd_userdir="%s"
 systemd_units_stopped=1
 update_timer_oncalendar="Sun *-*-* 00:00:00 UTC"
 update_timer_randomized_delay="6h"
-STOP_LOG=%q
 do_install
 `, tag, op, installPath, tempDir, failRestartVal, failFirstStartVal, failRestoreVal, failCpVal, failMvVal, installerFlag(opts.metadataFails), verifyLog, svcLog, filepath.Join(tempDir, "stop.log"), firstStartFlag, tempDir, tempDir, tempDir, tempDir)
 
@@ -2993,4 +2994,25 @@ func TestLinuxToolDigestRefusedBeforeProviderMutation(t *testing.T) {
 			t.Fatalf("an absent tool digest must still extract the tarball (tar %v)", res.tarCalls)
 		}
 	})
+}
+
+// An installer run through the update path must not emit an unfilled format
+// string verb (%s) in any message helper output.
+func TestInstallerUpdateOutputHasNoUnfilledFormatVerbs(t *testing.T) {
+	tag := "v2026.10.27"
+	tarball := []byte("provider-tarball-payload")
+	res := runLinuxInstaller(t, installerHarnessOpts{
+		tag:         tag,
+		operation:   "update",
+		releaseJSON: installerRollbackRelease(tag, tarball),
+		tarballData: tarball,
+		existingBin: "previous-provider-binary",
+	})
+	if res.exitCode != 0 {
+		t.Fatalf("update install failed (exit %d): %s\n%s", res.exitCode, res.stdout, res.stderr)
+	}
+	combined := res.stdout + "\n" + res.stderr
+	if strings.Contains(combined, "%s") {
+		t.Errorf("installer output contains unfilled format verb '%%s':\n%s", combined)
+	}
 }

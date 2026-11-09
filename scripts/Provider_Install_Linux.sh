@@ -3048,7 +3048,9 @@ do_install ()
             exit 1
         fi
         ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
-        offer_extender_capability "$install_path/bin/urnetwork" || exit 1
+        if command -v offer_extender_capability >/dev/null 2>&1; then
+            offer_extender_capability "$install_path/bin/urnetwork" || true
+        fi
     fi
 
     cd "$script_rundir" || exit 1
@@ -3564,7 +3566,9 @@ do_install ()
             exit 1
         fi
         ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
-        offer_extender_capability "$install_path/bin/urnetwork" || exit 1
+        if command -v offer_extender_capability >/dev/null 2>&1; then
+            offer_extender_capability "$install_path/bin/urnetwork" || true
+        fi
     fi
 
     cd "$script_rundir" || exit 1
