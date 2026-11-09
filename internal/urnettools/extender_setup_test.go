@@ -148,6 +148,7 @@ To                         Action      From
 			var out, errOut bytes.Buffer
 			err := RunExtenderSetup(ExtenderSetupOptions{
 				Platform:       "linux",
+				Route:          "capability",
 				Yes:            tc.yes,
 				Force:          tc.force,
 				NonInteractive: tc.nonInteractive,
@@ -234,23 +235,29 @@ func parsePrintedSetupCommands(output string) []string {
 
 func TestExtenderSetupFlagsAndDispatch(t *testing.T) {
 	for _, flag := range []string{"-y", "--yes", "-f", "--force"} {
-		yes, dryRun, _, err := parseExtenderSetupArgs([]string{"setup", flag})
+		yes, dryRun, _, _, err := parseExtenderSetupArgs([]string{"setup", flag})
 		if err != nil || !yes || dryRun {
 			t.Fatalf("flag %s: yes=%v dryRun=%v err=%v", flag, yes, dryRun, err)
 		}
 	}
 	for _, flag := range []string{"-n", "--dry-run"} {
-		yes, dryRun, _, err := parseExtenderSetupArgs([]string{"setup", flag})
+		yes, dryRun, _, _, err := parseExtenderSetupArgs([]string{"setup", flag})
 		if err != nil || yes || !dryRun {
 			t.Fatalf("flag %s: yes=%v dryRun=%v err=%v", flag, yes, dryRun, err)
 		}
 	}
-	yes, dryRun, target, err := parseExtenderSetupArgs([]string{"setup", "--unit", "urnetwork.service", "--yes"})
+	yes, dryRun, _, target, err := parseExtenderSetupArgs([]string{"setup", "--unit", "urnetwork.service", "--yes"})
 	if err != nil || !yes || dryRun || target.Unit != "urnetwork.service" {
 		t.Fatalf("target parse: yes=%v dryRun=%v target=%+v err=%v", yes, dryRun, target, err)
 	}
-	for _, bad := range []string{"--enable", "-e", "--json", "--non-interactive", "positional"} {
-		if _, _, _, err := parseExtenderSetupArgs([]string{"setup", bad}); err == nil {
+	for _, route := range []string{"sysctl", "capability", "skip"} {
+		yes, dryRun, r, _, err := parseExtenderSetupArgs([]string{"setup", "--route=" + route})
+		if err != nil || yes || dryRun || r != route {
+			t.Fatalf("route flag %s: route=%q err=%v", route, r, err)
+		}
+	}
+	for _, bad := range []string{"--enable", "-e", "--json", "--non-interactive", "--route=invalid", "positional"} {
+		if _, _, _, _, err := parseExtenderSetupArgs([]string{"setup", bad}); err == nil {
 			t.Fatalf("setup accepted invalid argument %q", bad)
 		}
 	}

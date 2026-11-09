@@ -107,6 +107,7 @@ func TestExtenderSetupUnverifiedFirewalldFailsBeforeMutation(t *testing.T) {
 
 	var out bytes.Buffer
 	err := RunExtenderSetup(ExtenderSetupOptions{
+		Route:       "capability",
 		Platform:    "linux",
 		PlatformCfg: cfg,
 		FirewallMgr: fm,

@@ -82,7 +82,7 @@ func TestExtenderBindOutcomes(t *testing.T) {
 }
 
 func setupRegressionOptions() ExtenderSetupOptions {
-	return ExtenderSetupOptions{Platform: "linux", PlatformCfg: &mockPlatformConfigurer{platform: "linux"}, IsRoot: func() bool { return false }, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, PortChecker: &PortChecker{Platform: "linux", ExecCmd: func(string, ...string) ([]byte, error) { return nil, nil }}, FirewallMgr: &FirewallManager{Platform: "linux", LookPath: func(string) (string, error) { return "", errors.New("missing") }}}
+	return ExtenderSetupOptions{Platform: "linux", Route: "capability", PlatformCfg: &mockPlatformConfigurer{platform: "linux"}, IsRoot: func() bool { return false }, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, PortChecker: &PortChecker{Platform: "linux", ExecCmd: func(string, ...string) ([]byte, error) { return nil, nil }}, FirewallMgr: &FirewallManager{Platform: "linux", LookPath: func(string) (string, error) { return "", errors.New("missing") }}}
 }
 func TestExtenderSetupElevateDecision(t *testing.T) {
 	opts := setupRegressionOptions()
@@ -104,8 +104,10 @@ func TestExtenderSetupReexecArgv(t *testing.T) {
 	opts.Argv = []string{"extender", "setup", "--enable", "--force"}
 	var got []string
 	opts.ElevateFunc = func(args []string) error { got = args; return nil }
-	if err := RunExtenderSetup(opts); err != nil || !reflect.DeepEqual(got, opts.Argv) {
-		t.Fatalf("argv=%v err=%v", got, err)
+	// The elevated run keeps the caller's arguments and carries the chosen route.
+	want := []string{"extender", "setup", "--enable", "--force", "--route=capability"}
+	if err := RunExtenderSetup(opts); err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("argv=%v want=%v err=%v", got, want, err)
 	}
 }
 func TestExtenderSetupTargetResolutionError(t *testing.T) {

@@ -31,6 +31,7 @@ func TestUpdateExtenderCapabilityAfterSwap(t *testing.T) {
 				t.Fatal(err)
 			}
 			cfg := NewSystemPlatformConfigurer("linux")
+			cfg.ReadFile = procPortStartReader("1024\n", nil) // never read the host
 			present, sets, checks := false, 0, 0
 			cfg.ExecCmd = func(name string, args ...string) ([]byte, error) {
 				data, err := os.ReadFile(dst)

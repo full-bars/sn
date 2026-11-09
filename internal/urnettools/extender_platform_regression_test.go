@@ -60,6 +60,7 @@ func TestExtenderSetupUnknownFirewallStillVerifiesBind(t *testing.T) {
 	var output, errOut bytes.Buffer
 	cfg := &mockPlatformConfigurer{platform: "linux", configured: true}
 	err := RunExtenderSetup(ExtenderSetupOptions{
+		Route:    "capability",
 		Platform: "linux", PlatformCfg: cfg, IsRoot: func() bool { return true }, Stdout: &output, Stderr: &errOut,
 		PortChecker: &PortChecker{Platform: "linux", ExecCmd: func(string, ...string) ([]byte, error) { return nil, nil }},
 		FirewallMgr: &FirewallManager{Platform: "linux", LookPath: func(string) (string, error) { return "", errors.New("missing") }},
@@ -81,6 +82,7 @@ func TestExtenderSetupUnverifiableFirewallFinishesWithWarning(t *testing.T) {
 	var output bytes.Buffer
 	cfg := &mockPlatformConfigurer{platform: "linux"}
 	err := RunExtenderSetup(ExtenderSetupOptions{
+		Route:    "capability",
 		Platform: "linux", PlatformCfg: cfg, IsRoot: func() bool { return true }, Stdout: &output,
 		Yes:         true,
 		PortChecker: &PortChecker{Platform: "linux", ExecCmd: func(string, ...string) ([]byte, error) { return nil, nil }},

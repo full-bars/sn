@@ -106,38 +106,55 @@ func runExtenderStatus(w io.Writer, provs []Provider) error {
 
 const extenderLeafHelp = "{{.Long}}\n\nUsage:\n  {{.CommandPath}}\n\nExamples:\n{{.Example}}\n"
 
-const extenderSetupUsage = "usage: urnet-tools extender setup [-y|--yes] [-f|--force] [-n|--dry-run] [target]"
+const extenderSetupUsage = "usage: urnet-tools extender setup [-y|--yes] [-f|--force] [-n|--dry-run] [--route=sysctl|capability|skip] [target]"
 
 // parseExtenderSetupArgs parses flags specific to `urnet-tools extender setup`.
-func parseExtenderSetupArgs(args []string) (yes, dryRun bool, target Target, err error) {
+func parseExtenderSetupArgs(args []string) (yes, dryRun bool, route string, target Target, err error) {
 	var filtered []string
-	for _, tok := range args {
-		switch tok {
-		case "-y", "--yes", "-f", "--force":
+	setRoute := func(v string) error {
+		route = strings.ToLower(strings.TrimSpace(v))
+		if route != "sysctl" && route != "capability" && route != "skip" {
+			return fmt.Errorf("%s (invalid route %q; must be sysctl, capability, or skip)", extenderSetupUsage, route)
+		}
+		return nil
+	}
+	for i := 0; i < len(args); i++ {
+		tok := args[i]
+		switch {
+		case tok == "-y" || tok == "--yes" || tok == "-f" || tok == "--force":
 			yes = true
-		case "-n", "--dry-run":
+		case tok == "-n" || tok == "--dry-run":
 			dryRun = true
+		case tok == "--route" && i+1 < len(args):
+			i++
+			if err := setRoute(args[i]); err != nil {
+				return false, false, "", Target{}, err
+			}
+		case strings.HasPrefix(tok, "--route="):
+			if err := setRoute(strings.TrimPrefix(tok, "--route=")); err != nil {
+				return false, false, "", Target{}, err
+			}
 		default:
 			filtered = append(filtered, tok)
 		}
 	}
 	target, rest, err := parseTargetFlags(filtered)
 	if err != nil {
-		return false, false, Target{}, err
+		return false, false, "", Target{}, err
 	}
 	for _, tok := range rest {
 		if strings.EqualFold(strings.TrimSpace(tok), "setup") {
 			continue
 		}
-		return false, false, Target{}, fmt.Errorf("%s (unexpected %q)", extenderSetupUsage, tok)
+		return false, false, "", Target{}, fmt.Errorf("%s (unexpected %q)", extenderSetupUsage, tok)
 	}
-	return yes, dryRun, target, nil
+	return yes, dryRun, route, target, nil
 }
 
 var runExtenderSetupFn = RunExtenderSetup
 
 func cmdExtenderSetup(args []string) error {
-	yes, dryRun, target, err := parseExtenderSetupArgs(args)
+	yes, dryRun, route, target, err := parseExtenderSetupArgs(args)
 	if err != nil {
 		return err
 	}
@@ -152,6 +169,7 @@ func cmdExtenderSetup(args []string) error {
 		Yes:    yes,
 		Force:  yes,
 		DryRun: dryRun,
+		Route:  route,
 		Target: target,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
@@ -161,10 +179,10 @@ func cmdExtenderSetup(args []string) error {
 
 func newExtenderSetupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                "setup [-y|--yes] [-f|--force] [-n|--dry-run] [target]",
+		Use:                "setup [-y|--yes] [-f|--force] [-n|--dry-run] [--route=sysctl|capability|skip] [target]",
 		Short:              "one-time privileged configuration for extender role",
-		Long:               "Perform one-time privileged host configuration for the extender role. Inspects port 443 occupancy, binary bind capability and host firewall rules, prints the exact commands needed, and asks for confirmation before changing anything (use -y/--yes for non-interactive runs). UDP 53 is optional and user-managed; setup does not open it. FreeBSD extender setup is untested and prints manual instructions only.",
-		Example:            "  urnet-tools extender setup\n  urnet-tools extender setup --yes\n  urnet-tools extender setup --dry-run",
+		Long:               "Perform one-time privileged host configuration for the extender role. Inspects port 443 occupancy, the route that lets an unprivileged provider bind it (a sysctl drop-in or a file capability on the binary; --route picks one, and a terminal is asked when it is missing) and host firewall rules, prints the exact commands needed, and asks for confirmation before changing anything (use -y/--yes for non-interactive runs). UDP 53 is optional and user-managed; setup does not open it. FreeBSD extender setup is untested and prints manual instructions only.",
+		Example:            "  urnet-tools extender setup\n  urnet-tools extender setup --yes\n  urnet-tools extender setup --dry-run\n  urnet-tools extender setup --route=sysctl --yes",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {

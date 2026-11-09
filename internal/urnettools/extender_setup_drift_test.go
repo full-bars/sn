@@ -43,6 +43,7 @@ func TestExtenderSetupDriftRefusesFirewallChange(t *testing.T) {
 
 	var out, errOut bytes.Buffer
 	err := RunExtenderSetup(ExtenderSetupOptions{
+		Route:       "capability",
 		Platform:    "linux",
 		PlatformCfg: cfg,
 		FirewallMgr: fwMgr,
@@ -96,6 +97,7 @@ func TestExtenderSetupDriftRefusesPlatformChange(t *testing.T) {
 
 	var out, errOut bytes.Buffer
 	err := RunExtenderSetup(ExtenderSetupOptions{
+		Route:       "capability",
 		Platform:    "linux",
 		PlatformCfg: fakeCfg,
 		FirewallMgr: fwMgr,

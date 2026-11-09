@@ -67,6 +67,7 @@ func TestExtenderSetup_TCP443Busy(t *testing.T) {
 
 	var stdout, stderr bytes.Buffer
 	opts := ExtenderSetupOptions{
+		Route:          "capability",
 		Platform:       "linux",
 		PortChecker:    checker,
 		PlatformCfg:    platformCfg,
@@ -137,6 +138,7 @@ func TestExtenderSetup_UDPBusyOnly(t *testing.T) {
 
 	var stdout, stderr bytes.Buffer
 	opts := ExtenderSetupOptions{
+		Route:       "capability",
 		Platform:    "linux",
 		PortChecker: checker,
 		PlatformCfg: platformCfg,
@@ -201,6 +203,7 @@ func TestExtenderSetup_AlreadyConfigured(t *testing.T) {
 
 	var stdout, stderr bytes.Buffer
 	opts := ExtenderSetupOptions{
+		Route:          "capability",
 		Platform:       "linux",
 		PortChecker:    checker,
 		PlatformCfg:    platformCfg,
@@ -247,6 +250,7 @@ func TestExtenderSetup_NonRootOrDeclinedSudo(t *testing.T) {
 
 	var stdout, stderr bytes.Buffer
 	opts := ExtenderSetupOptions{
+		Route:          "capability",
 		Platform:       "linux",
 		PortChecker:    checker,
 		PlatformCfg:    platformCfg,

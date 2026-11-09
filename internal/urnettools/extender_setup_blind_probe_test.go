@@ -14,6 +14,7 @@ func TestExtenderSetupHiddenPortHolderDefersToElevation(t *testing.T) {
 	run := func(root bool) (struct{}, error) {
 		cfg := &mockPlatformConfigurer{platform: "linux", configured: true}
 		err := RunExtenderSetup(ExtenderSetupOptions{
+			Route:    "capability",
 			Platform: "linux", PlatformCfg: cfg, IsRoot: func() bool { return root },
 			Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, Force: true,
 			LookPath: func(string) (string, error) { return "/usr/bin/sudo", nil },
@@ -120,6 +121,7 @@ func TestUnitNoNewPrivilegesParsesSystemctl(t *testing.T) {
 func TestExtenderSetupWindowsNonAdminDoesNotSuggestSudo(t *testing.T) {
 	var errOut bytes.Buffer
 	err := RunExtenderSetup(ExtenderSetupOptions{
+		Route:    "capability",
 		Platform: "windows", PlatformCfg: &mockPlatformConfigurer{platform: "windows"},
 		IsRoot: func() bool { return false }, Stdout: &bytes.Buffer{}, Stderr: &errOut,
 		LookPath:    func(string) (string, error) { return "C:\\sudo.exe", nil }, // even a sudo on PATH

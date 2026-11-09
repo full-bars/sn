@@ -121,6 +121,7 @@ func TestExtenderSetupOmittedPlatformActionNotAppliedByFirewallConfirmation(t *t
 
 	var out bytes.Buffer
 	err := RunExtenderSetup(ExtenderSetupOptions{
+		Route:       "capability",
 		Platform:    "linux",
 		PlatformCfg: mockCfg,
 		FirewallMgr: fwMgr,
@@ -184,6 +185,7 @@ func TestExtenderSetupPlatformPlanningFailureReportsError(t *testing.T) {
 
 	var out bytes.Buffer
 	err := RunExtenderSetup(ExtenderSetupOptions{
+		Route:       "capability",
 		Platform:    "linux",
 		PlatformCfg: cfg,
 		FirewallMgr: fwMgr,

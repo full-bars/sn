@@ -32,7 +32,7 @@ func testExtenderSetupRequiresConfirmationBeforeMutation(t *testing.T) {
 		fwWrites++
 		return nil, nil
 	}}
-	err := RunExtenderSetup(ExtenderSetupOptions{Platform: "linux", PlatformCfg: cfg, FirewallMgr: fw,
+	err := RunExtenderSetup(ExtenderSetupOptions{Platform: "linux", Route: "capability", PlatformCfg: cfg, FirewallMgr: fw,
 		PortChecker: &PortChecker{Platform: "linux", ExecCmd: func(string, ...string) ([]byte, error) { return nil, nil }},
 		IsRoot:      func() bool { return true }, NonInteractive: true, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}})
 	if err == nil || cfg.applyCalled || fwWrites != 0 {

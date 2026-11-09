@@ -34,6 +34,9 @@ func TestExtenderSetupConfiguresEveryProviderWithoutFlags(t *testing.T) {
 	if want := []string{"/opt/a/miner|alice", "/opt/b/miner|bob"}; !reflect.DeepEqual(cfg.applied, want) {
 		t.Fatalf("applied to %v, want %v (err=%v)", cfg.applied, want, err)
 	}
+	// The route is a flag setup was given; the command must not add any
+	// target flags of its own.
+	opts.Route = ""
 	if cmd := formatSetupSudoCommand(opts); strings.Contains(cmd, "--") {
 		t.Fatalf("sudo command names flags the command does not have: %s", cmd)
 	}

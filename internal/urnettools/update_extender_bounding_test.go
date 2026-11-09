@@ -31,6 +31,7 @@ func TestUpdateExtenderCapabilityBoundingSet(t *testing.T) {
 			checks := 0
 			var warn bytes.Buffer
 			cfg := NewSystemPlatformConfigurer("linux")
+			cfg.ReadFile = procPortStartReader("1024\n", nil) // never read the host
 			cfg.ExecCmd = func(name string, args ...string) ([]byte, error) {
 				if name == "setcap" {
 					set = true
