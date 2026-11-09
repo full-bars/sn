@@ -28,6 +28,7 @@ func TestUpdateExtenderCapabilityBoundingSet(t *testing.T) {
 				t.Fatal(err)
 			}
 			var set bool
+			checks := 0
 			var warn bytes.Buffer
 			cfg := NewSystemPlatformConfigurer("linux")
 			cfg.ExecCmd = func(name string, args ...string) ([]byte, error) {
@@ -35,7 +36,10 @@ func TestUpdateExtenderCapabilityBoundingSet(t *testing.T) {
 					set = true
 					return nil, nil
 				}
-				if set {
+				if name == "getcap" {
+					checks++
+				}
+				if set || checks == 1 {
 					return []byte(dst + " cap_net_bind_service=ep"), nil
 				}
 				return nil, nil

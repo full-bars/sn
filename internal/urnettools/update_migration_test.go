@@ -190,8 +190,8 @@ func TestMigrateUnitToNotify_TypeDeterminationFails(t *testing.T) {
 	})
 	p := Provider{Unit: "urnetwork.service", User: "testuser"}
 	migrated, err := migrateUnitToNotify(p)
-	if err != nil {
-		t.Errorf("expected nil when unit type cannot be determined, got %v", err)
+	if err == nil {
+		t.Error("expected an error when unit type cannot be determined")
 	}
 	if migrated {
 		t.Error("expected migrated=false when unit type cannot be determined")

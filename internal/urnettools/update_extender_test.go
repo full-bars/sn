@@ -17,9 +17,9 @@ func TestUpdateExtenderCapabilityAfterSwap(t *testing.T) {
 		wantSetcap  int
 		wantWarning bool
 	}{
-		{name: "missing", wantSetcap: 1},
-		{name: "present", present: true},
-		{name: "apply failure", applyFails: true, wantSetcap: 1, wantWarning: true},
+		{name: "missing", wantWarning: true},
+		{name: "present", present: true, wantSetcap: 1},
+		{name: "apply failure", present: true, applyFails: true, wantSetcap: 1, wantWarning: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := t.TempDir()
@@ -31,11 +31,18 @@ func TestUpdateExtenderCapabilityAfterSwap(t *testing.T) {
 				t.Fatal(err)
 			}
 			cfg := NewSystemPlatformConfigurer("linux")
-			present, sets, checks := tc.present, 0, 0
+			present, sets, checks := false, 0, 0
 			cfg.ExecCmd = func(name string, args ...string) ([]byte, error) {
 				data, err := os.ReadFile(dst)
-				if err != nil || string(data) != "new" {
-					t.Fatalf("%s before swap: %q %v", name, data, err)
+				if err != nil || (string(data) != "new" && string(data) != "old") {
+					t.Fatalf("%s unexpected binary: %q %v", name, data, err)
+				}
+				if string(data) == "old" && name == "getcap" {
+					checks++
+					if tc.present {
+						return []byte(dst + " cap_net_bind_service=ep"), nil
+					}
+					return nil, nil
 				}
 				switch name {
 				case "getcap":
@@ -69,7 +76,7 @@ func TestUpdateExtenderCapabilityAfterSwap(t *testing.T) {
 			if checks == 0 || sets != tc.wantSetcap {
 				t.Fatalf("getcap=%d setcap=%d", checks, sets)
 			}
-			if tc.wantSetcap == 1 && !tc.applyFails && checks != 3 {
+			if tc.wantSetcap == 1 && !tc.applyFails && checks != 4 {
 				t.Fatalf("successful apply not verified: %d checks", checks)
 			}
 			if got := warnings.String(); tc.wantWarning != (strings.Contains(got, "WARNING:") && strings.Contains(got, "sudo setcap cap_net_bind_service=+ep '"+dst+"'")) {

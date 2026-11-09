@@ -358,6 +358,11 @@ func socketDeadline(start time.Time, timeout time.Duration) time.Time { return s
 // polling commands use a short one so a struggling provider is not also left
 // holding their sockets and goroutines.
 func sendSocketRequestTimeout(sockPath string, req controlRequest, timeout time.Duration) (controlResponse, error) {
+	return sendSocketRequestChecked(sockPath, req, timeout, nil)
+}
+
+// sendSocketRequestChecked verifies the connected peer before sending a request.
+func sendSocketRequestChecked(sockPath string, req controlRequest, timeout time.Duration, check func(net.Conn) error) (controlResponse, error) {
 	// One deadline for the whole exchange, fixed before dialing: what the dial
 	// uses comes out of the request's budget, it is not added to it.
 	deadline := socketDeadline(time.Now(), timeout)
@@ -367,6 +372,11 @@ func sendSocketRequestTimeout(sockPath string, req controlRequest, timeout time.
 	}
 	defer conn.Close()
 	_ = conn.SetDeadline(deadline)
+	if check != nil {
+		if err := check(conn); err != nil {
+			return controlResponse{}, err
+		}
+	}
 
 	if err := json.NewEncoder(conn).Encode(req); err != nil {
 		return controlResponse{}, err

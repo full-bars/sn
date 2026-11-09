@@ -33,14 +33,24 @@ func installProviderBinaryWithConfig(src, dst, user, platform string, cfg Platfo
 }
 
 func installProviderBinaryWithConfigAndStatus(src, dst, user, platform string, cfg PlatformConfigurer, warnings io.Writer, statusPath string) error {
+	hadCapability := false
+	if platform == "linux" {
+		configured, _, err := cfg.CheckRequirement(dst, user)
+		hadCapability = err == nil && configured
+	}
 	if err := installBinary(src, dst, user); err != nil {
 		return err
 	}
 	if platform != "linux" {
 		return nil
 	}
+	quoted := "'" + strings.ReplaceAll(dst, "'", "'\\''") + "'"
+	if !hadCapability {
+		fmt.Fprintf(warnings, "WARNING: previous extender capability absent or unverified; to enable it run: sudo setcap cap_net_bind_service=+ep %s\n", quoted)
+		return nil
+	}
 	if data, err := os.ReadFile(statusPath); err == nil && bindCapabilityBlocked(data) {
-		fmt.Fprintln(warnings, "WARNING: extender capability blocked by the process bounding set")
+		fmt.Fprintf(warnings, "WARNING: extender capability blocked by the process bounding set; after fixing that, run: sudo setcap cap_net_bind_service=+ep %s\n", quoted)
 		return nil
 	}
 	configured, _, err := cfg.CheckRequirement(dst, user)

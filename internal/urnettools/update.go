@@ -26,6 +26,7 @@ var (
 	verifyRunningImageHandleFn = runningImageHandle
 	verifyRunningImagePathFn   = runningImagePath
 	verifyProviderVersionFn    = providerVersion
+	verifySocketVersionFn      = providerVersionFromSocketForPID
 	verifyPidIsAliveFn         = pidIsAlive
 	verifyPruneBackupsFn       = pruneBackups
 	verifySleepFn              = time.Sleep
@@ -802,12 +803,8 @@ func updateProvider(p Provider, cfg updateConfig) error {
 	// unit, which DOES set NOTIFY_SOCKET, so the new process starts
 	// correctly.
 	migratedUnit := false
-	if migrated, err := reconcileUnitTypeForBinary(p, providerVersion(p.Binary)); err != nil {
-		// Migration failure is non-fatal: log and continue with the
-		// normal restart path. HotSwap will still decline on
-		// Type=simple, but the binary was already swapped so a
-		// restart will pick it up.
-		fmt.Printf("unit migration note: %v\n", err)
+	if migrated, err := reconcileUnitTypeForBinary(p, verifyProviderVersionFn(p.Binary)); err != nil {
+		return fmt.Errorf("update %s: binary %s was swapped but unit reconciliation failed: %w; no restart or HotSwap was attempted. Do not restart until the unit and binary are reconciled", providerLabel(p), p.Binary, err)
 	} else {
 		migratedUnit = migrated
 	}
@@ -883,6 +880,7 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 	}
 
 	pidChanged := false
+	observation := "no matching provider entry was discovered"
 	for i := 0; i < maxIterations; i++ {
 		// Adaptive sleep: poll every 2s while waiting for the restart to
 		// land (old PID still alive), then every 3s once a new PID appears
@@ -919,6 +917,7 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 					// providerVersion's --version fallback is gated behind
 					// isRecognizedExecutable.
 					procVersion := verifyProviderVersionFn(procExe)
+					observation = fmt.Sprintf("pid %d running image reported version %q", rp.PID, procVersion)
 					if procVersion == cfg.Tag {
 						// Report the image's real path, not the /proc
 						// handle the version was read through.
@@ -940,6 +939,20 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 					// operators can see progress instead of a black box.
 					if i > 0 && i%5 == 0 {
 						fmt.Printf("still waiting for %s (pid %d running %q, iteration %d/%d)...\n", cfg.Tag, rp.PID, procVersion, i+1, maxIterations)
+					}
+				} else {
+					version, ok := verifySocketVersionFn(rp, rp.PID)
+					observation = fmt.Sprintf("pid %d running image unreadable (%v); no verified socket answer", rp.PID, perr)
+					if ok {
+						observation = fmt.Sprintf("pid %d running image unreadable (%v); control socket reported %q", rp.PID, perr, version)
+					}
+					if ok && version == cfg.Tag && rp.PID != oldPID {
+						fmt.Printf("verified %s running %s (pid %d; control socket)\n", providerLabel(p), cfg.Tag, rp.PID)
+						if hotSwapTriggered {
+							verifyRecordSuccessFn(p.StateDir)
+						}
+						verifyPruneBackupsFn(p.Binary, 2)
+						return nil
 					}
 				}
 			}
@@ -963,46 +976,27 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 		}
 	}
 
-	// Verification failed:
+	// Verification did not establish which version is running.
 	if hotSwapTriggered {
-		// Verification timed out — record the decline with reason
-		// "takeover_failed" so operators can see it in Prometheus.
 		verifyRecordDeclineFn(p.StateDir, "takeover_failed")
-		fmt.Printf("❌ HotSwap candidate failed to take over within %ds.\n", maxIterations*3)
-		// oldPID's process exits (via its drain-timeout goroutine) only after
-		// the candidate confirmed active takeover — the same handoff gate
-		// hotswap.go's ACK-then-yield ordering guarantees. So oldPID being
-		// gone here means ownership already transferred to some process
-		// (the candidate, or its own successor), even though this loop
-		// couldn't confirm which one is on cfg.Tag in time. Rolling back the
-		// disk binary in that state doesn't touch the already-running
-		// process, but it does silently revert the image a future restart
-		// would use, and "live provider was never killed" would be false —
-		// so skip the rollback and report the real (unknown) state instead.
 		if !verifyPidIsAliveFn(oldPID) {
-			return fmt.Errorf("update %s: HotSwap candidate ACKed takeover and PID %d exited its drain, but verification could not confirm the new process is running %s within %ds; binary NOT rolled back (ownership already transferred) — check the provider's logs/dashboard to confirm which version is actually live", providerLabel(p), oldPID, cfg.Tag, maxIterations*3)
+			return fmt.Errorf("update %s: could not confirm HotSwap version %s: %s; previous PID %d failed its liveness check, so the binary was not rolled back; check provider status and logs", providerLabel(p), cfg.Tag, observation, oldPID)
 		}
+		rollback := "no backup was supplied; binary was not rolled back"
 		if backup != "" {
-			fmt.Printf("🔄 Restoring previous binary from backup %s...\n", backup)
-			// Route rollback through installBinary for atomic temp+rename, never in-place truncate (F-4)
-			if rerr := installProviderBinary(backup, p.Binary, p.User); rerr != nil {
-				fmt.Printf("warning: atomic rollback failed: %v\n", rerr)
-			} else {
-				fmt.Printf("✅ Previous binary restored. Live provider (PID %d) was never killed and remains active.\n", oldPID)
-				// The unit must not outlive the binary it was migrated for:
-				// if the restored binary cannot send READY=1 at startup, its
-				// next start under Type=notify would fail.
-				if !isHotSwapSupportedVersion(verifyProviderVersionFn(p.Binary)) {
-					if _, derr := demoteUnitToSimple(p); derr != nil {
-						fmt.Printf("warning: could not restore Type=simple for the rolled-back binary: %v\n", derr)
-					}
+			if err := installProviderBinary(backup, p.Binary, p.User); err != nil {
+				return fmt.Errorf("update %s: could not confirm HotSwap version %s: %s; rollback failed: %w; provider PID %d was not restarted", providerLabel(p), cfg.Tag, observation, err, oldPID)
+			}
+			rollback = "previous binary restored"
+			if !isHotSwapSupportedVersion(verifyProviderVersionFn(p.Binary)) {
+				if _, err := demoteUnitToSimple(p); err != nil {
+					return fmt.Errorf("update %s: could not confirm HotSwap version %s: %s; previous binary restored but unit demotion failed: %w; do not restart until the unit is repaired", providerLabel(p), cfg.Tag, observation, err)
 				}
 			}
 		}
-		return fmt.Errorf("update %s: HotSwap candidate failed to take over; binary rolled back; live provider PID %d was never killed and remains active", providerLabel(p), oldPID)
+		return fmt.Errorf("update %s: could not confirm HotSwap version %s: %s; %s; provider PID %d passed the liveness check and was not restarted", providerLabel(p), cfg.Tag, observation, rollback, oldPID)
 	}
-
-	return fmt.Errorf("update %s: binary swapped to %s but restart did not take effect — the running process is still the old version or the unit failed to start; check the provider's logs", providerLabel(p), cfg.Tag)
+	return fmt.Errorf("update %s: binary swapped to %s but restart did not take effect or could not be verified: %s; check provider status and logs", providerLabel(p), cfg.Tag, observation)
 }
 
 // restartGOOS and restartProviderWindowsFn are seams so the Windows routing
@@ -1585,8 +1579,7 @@ func fileSHA256(path string) (string, error) {
 // Returns (migrated, err): migrated is true when the unit file was rewritten
 // (meaning the caller must use a standard restart instead of HotSwap, because
 // the ALREADY-RUNNING process lacks NOTIFY_SOCKET in its environment — HotSwap
-// would fail with sd_notify timeout). Non-fatal by design: any error is
-// logged and the update continues with the normal restart path.
+// would fail with sd_notify timeout). Errors must abort before restart.
 func migrateUnitToNotify(p Provider) (bool, error) {
 	if p.Unit == "" {
 		return false, nil // no unit, nothing to migrate
@@ -1595,13 +1588,18 @@ func migrateUnitToNotify(p Provider) (bool, error) {
 	// Check current type: only migrate from Type=simple.
 	typ, err := unitTypeFunc(p)
 	if err != nil {
-		// Can't determine type — skip migration rather than block
-		// the update. The systemctl call can fail when the user bus
-		// is unreachable or systemctl is missing.
+		return false, fmt.Errorf("query unit type for %s: %w", p.Unit, err)
+	}
+	if typ == "" {
+		return false, fmt.Errorf("query unit type for %s returned an empty type", p.Unit)
+	}
+	if typ == "notify" {
+		fmt.Printf("HotSwap unit migration not needed: %s is already Type=notify\n", p.Unit)
 		return false, nil
 	}
 	if typ != "simple" {
-		return false, nil // already notify, oneshot, or other type
+		fmt.Printf("HotSwap unit migration skipped: %s is Type=%s, not simple\n", p.Unit, typ)
+		return false, nil
 	}
 
 	// Resolve the unit file's on-disk path via FragmentPath.
@@ -1644,14 +1642,10 @@ func migrateUnitToNotify(p Provider) (bool, error) {
 	}
 	fmt.Printf("migrated %s from Type=simple to Type=notify\n", unitPath)
 
-	// Daemon-reload so systemd picks up the rewritten unit. Best-effort:
-	// failure here means the running unit still has the old Type= but the
-	// file on disk is correct — the next restart or reboot will pick it up.
 	if err := daemonReloadFunc(p); err != nil {
-		fmt.Printf("warning: daemon-reload after unit migration failed: %v\n", err)
-	} else {
-		fmt.Println("daemon-reload completed after unit migration")
+		return true, fmt.Errorf("daemon-reload after unit migration: %w", err)
 	}
+	fmt.Println("daemon-reload completed after unit migration")
 
 	// CRITICAL: Return true so the caller knows migration happened. The
 	// already-running process does NOT have NOTIFY_SOCKET in its
@@ -1814,7 +1808,10 @@ func demoteUnitToSimple(p Provider) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("query unit type for %s: %w", p.Unit, err)
 	}
-	if typ != "notify" {
+	if typ == "" {
+		return false, fmt.Errorf("query unit type for %s returned an empty type", p.Unit)
+	}
+	if typ != "notify" && typ != "notify-reload" {
 		return false, nil
 	}
 	unitPath, err := unitFilePathFunc(p)
@@ -1830,7 +1827,7 @@ func demoteUnitToSimple(p Provider) (bool, error) {
 	}
 	newContent, changed := rewriteUnitContentToSimple(string(content))
 	if !changed {
-		return false, nil
+		return false, fmt.Errorf("unit %s is effectively Type=%s but %s cannot be demoted; check drop-ins", p.Unit, typ, unitPath)
 	}
 	if err := replaceUnitFileIn(p.StateHome, unitPath, []byte(newContent)); err != nil {
 		return false, fmt.Errorf("write unit file %s: %w", unitPath, err)
@@ -1838,6 +1835,11 @@ func demoteUnitToSimple(p Provider) (bool, error) {
 	fmt.Printf("restored %s to Type=simple\n", unitPath)
 	if err := daemonReloadFunc(p); err != nil {
 		return true, fmt.Errorf("daemon-reload after restoring Type=simple: %w", err)
+	}
+	if effective, err := unitTypeFunc(p); err != nil {
+		return true, fmt.Errorf("verify unit type for %s: %w", p.Unit, err)
+	} else if effective == "" || effective == "notify" || effective == "notify-reload" {
+		return true, fmt.Errorf("%s has unsafe effective Type=%q after reload; check drop-ins", p.Unit, effective)
 	}
 	return true, nil
 }

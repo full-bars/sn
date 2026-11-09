@@ -20,6 +20,7 @@ func stubVerifyLoop(t *testing.T) {
 	origHandle := verifyRunningImageHandleFn
 	origPath := verifyRunningImagePathFn
 	origVersion := verifyProviderVersionFn
+	origSocket := verifySocketVersionFn
 	origAlive := verifyPidIsAliveFn
 	origPrune := verifyPruneBackupsFn
 	origSleep := verifySleepFn
@@ -31,6 +32,7 @@ func stubVerifyLoop(t *testing.T) {
 		verifyRunningImageHandleFn = origHandle
 		verifyRunningImagePathFn = origPath
 		verifyProviderVersionFn = origVersion
+		verifySocketVersionFn = origSocket
 		verifyPidIsAliveFn = origAlive
 		verifyPruneBackupsFn = origPrune
 		verifySleepFn = origSleep
@@ -40,6 +42,7 @@ func stubVerifyLoop(t *testing.T) {
 
 	// Default stubs: no-op sleep, always-alive PID, no-op side effects.
 	verifySleepFn = func(d time.Duration) { /* no-op */ }
+	verifySocketVersionFn = func(Provider, int) (string, bool) { return "", false }
 	verifyPidIsAliveFn = func(pid int) bool { return true }
 	verifyPruneBackupsFn = func(string, int) {}
 	verifyRecordSuccessFn = func(string) {}
@@ -203,7 +206,7 @@ func TestUpdateVerification_HotSwapDecline(t *testing.T) {
 	if !declined {
 		t.Error("expected recordHotswapDecline to be called")
 	}
-	if !strings.Contains(err.Error(), "HotSwap candidate") {
+	if !strings.Contains(err.Error(), "could not confirm HotSwap") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
