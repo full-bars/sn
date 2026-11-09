@@ -180,7 +180,7 @@ pr_info() { fmt="$1"; shift; printf "$fmt\\n" "$@"; }
                 capture_output=True,
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("Restored the previous provider binary", result.stdout)
+            self.assertIn("Restored previous binary", result.stdout)
             self.assertIn("Could not restart the service; run: sudo rc-service urnetwork start", result.stdout)
             self.assertEqual((root / "bin/urnetwork").read_text(), "old_binary")
 

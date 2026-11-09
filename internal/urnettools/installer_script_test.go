@@ -12,15 +12,10 @@ import (
 	"testing"
 )
 
-// The do_install body was once pasted twice into Provider_Install_Linux.sh, so
-// every install downloaded and installed everything two times. These markers
-// each belong to exactly one step of do_install.
-//
-// sn's do_install keeps TWO genuine flows — a fresh install and the
-// update/reinstall path (separate `case "$operation" in` blocks) — so the
-// download and unit-install steps legitimately appear once per flow. The
-// count floor is therefore 2 for flow markers (a pasted third copy trips it)
-// and exactly 1 for markers of single-flow steps.
+// do_install is one flow. A second copy of its body was pasted in once, so
+// every install ran the download and unit steps twice (the second pass was
+// stale: it still had the old .bashrc block). Each marker must appear exactly
+// once in Provider_Install_Linux.sh.
 func TestInstallerScriptDoInstallBodyNotDuplicated(t *testing.T) {
 	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
 	if err != nil {
@@ -33,8 +28,8 @@ func TestInstallerScriptDoInstallBodyNotDuplicated(t *testing.T) {
 		`install_systemd_units
     fi`,
 	} {
-		if n := strings.Count(script, marker); n != 2 {
-			t.Errorf("marker %q appears %d times in Provider_Install_Linux.sh, want exactly 2 (one per flow)", marker, n)
+		if n := strings.Count(script, marker); n != 1 {
+			t.Errorf("marker %q appears %d times in Provider_Install_Linux.sh, want exactly 1", marker, n)
 		}
 	}
 	for _, marker := range []string{
@@ -2505,10 +2500,10 @@ func TestLinuxRollbackReportsRestartedRestoredBinary(t *testing.T) {
 	if len(res.svcCalls) != 2 || !strings.HasSuffix(res.svcCalls[1], "live="+existingPayload) {
 		t.Errorf("service calls %q: want a start on the new binary, then one on the restored binary %q", res.svcCalls, existingPayload)
 	}
-	if !strings.Contains(res.stdout, "Restored the previous provider binary") {
+	if !strings.Contains(res.stdout, "Restored previous binary") {
 		t.Errorf("expected the restore to be reported (out:\n%s)", res.stdout)
 	}
-	if !strings.Contains(res.stdout, "Restarted the service on the previous binary") {
+	if !strings.Contains(res.stdout, "The restored provider service started.") {
 		t.Errorf("expected the restarted restored binary to be reported (out:\n%s)", res.stdout)
 	}
 	if strings.Contains(res.stdout, "did NOT restart") {
@@ -2536,7 +2531,7 @@ func TestLinuxRollbackReportsFailedRestoredRestart(t *testing.T) {
 	if len(res.svcCalls) != 2 {
 		t.Errorf("service calls %q: want the restored binary started after the failed start", res.svcCalls)
 	}
-	if !strings.Contains(res.stdout, "did NOT restart on the previous binary") {
+	if !strings.Contains(res.stdout, "Starting the restored binary failed") {
 		t.Errorf("a restored binary that did not start must be reported as a failed restart (out:\n%s)", res.stdout)
 	}
 	if strings.Contains(res.stdout, "Restarted the service on the previous binary") {
@@ -2565,7 +2560,7 @@ func TestLinuxRollbackRestoreFailureSkipsRestart(t *testing.T) {
 	if len(res.svcCalls) != 1 {
 		t.Errorf("service calls %q: the service must not be restarted when the previous binary was not restored", res.svcCalls)
 	}
-	if !strings.Contains(res.stdout, "Could not restore the previous provider binary") {
+	if !strings.Contains(res.stdout, "Failed to restore previous binary") {
 		t.Errorf("a failed restore must be reported (out:\n%s)", res.stdout)
 	}
 	if strings.Contains(res.stdout, "Restored the previous provider binary") || strings.Contains(res.stdout, "Restarted the service") {

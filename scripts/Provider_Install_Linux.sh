@@ -1402,8 +1402,11 @@ EOF
                         pr_info "The restored provider service started."
                     fi
                 else
-                    pr_err "Could not restore the previous provider binary from $install_path/bin/urnetwork.old"
-                    pr_err "The new binary that did not start is still installed. Put the previous one back at $install_path/bin/urnetwork, then start the service with: systemctl --user start urnetwork.service"
+                    if [ -f "$install_path/bin/urnetwork.old" ] && [ -f "$install_path/bin/urnetwork" ]; then
+                        pr_err "Failed to restore previous binary; backup remains at %s and replacement at %s" "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"
+                    else
+                        pr_err "Failed to restore previous binary; check backup at %s and installed binary at %s" "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"
+                    fi
                 fi
             fi
             exit 1
@@ -1838,11 +1841,14 @@ openrc_rollback_binary_swap ()
     if [ -f "$install_path/bin/urnetwork.old" ]; then
         if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork" 2>/dev/null; then
             ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
-            pr_warn "Restored the previous provider binary; the update did not apply."
+            pr_err "Restored previous binary; the update did not apply."
         else
             restore_failed=1
-            pr_err "Could not restore the previous provider binary from %s" "$install_path/bin/urnetwork.old"
-            pr_err "The new binary may still be at %s; the previous one is kept at %s." "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old"
+            if [ -f "$install_path/bin/urnetwork" ]; then
+                pr_err "Failed to restore previous binary; backup remains at %s and replacement at %s" "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"
+            else
+                pr_err "Failed to restore previous binary; check backup at %s and installed binary at %s" "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"
+            fi
         fi
     fi
 
