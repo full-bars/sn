@@ -1,6 +1,6 @@
 # Next sn release
 
-I added a second way to let the extender use TCP 443. I also made updates verify the new version more safely, and I made installer failures easier to recover from.
+This release adds a second way to let the extender use TCP 443, makes updates verify the new version more safely and makes installer failures easier to recover from.
 
 ## Quick start
 
