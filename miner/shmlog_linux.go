@@ -281,8 +281,18 @@ func initSHMLogger() {
 
 		// Periodically sync to ensure tail -f sees updates quickly
 		go func() {
+			var impReopenNotice time.Time
 			for {
 				time.Sleep(500 * time.Millisecond)
+				if impEnabled && impPath != shmImportantLogPath {
+					changed, err := followImportantLogPath(impPath, &fImp, &fImpMu)
+					if err != nil {
+						reportTrimFailure(&impTrimWarned, &impTrimWarnTime, impPath, err)
+					} else if changed && (impReopenNotice.IsZero() || time.Since(impReopenNotice) >= 5*time.Minute) {
+						impReopenNotice = time.Now()
+						fmt.Fprintf(os.Stderr, "[ramlogs] log file at %s was replaced or removed; reopened\n", impPath)
+					}
+				}
 				// An fsync beside an append write on one descriptor is safe, so
 				// the sync does not take the writer's lock. Holding it across the
 				// fsync was the other half of the convoy.
@@ -290,6 +300,35 @@ func initSHMLogger() {
 			}
 		}()
 	})
+}
+
+// followImportantLogPath opens outside the writer lock, then verifies the
+// descriptor and path are still current before swapping them under the lock.
+func followImportantLogPath(path string, file **os.File, mu *sync.Mutex) (bool, error) {
+	mu.Lock()
+	observed := *file
+	mu.Unlock()
+	next, changed, err := reopenIfOrphaned(path, observed, 0600)
+	if err != nil || !changed {
+		return false, err
+	}
+	info, err := next.Stat()
+	if err != nil {
+		next.Close()
+		return false, err
+	}
+	mu.Lock()
+	// Lstat is under the mutex to keep the identity check and swap atomic.
+	pathInfo, pathErr := os.Lstat(path)
+	if *file != observed || pathErr != nil || !os.SameFile(info, pathInfo) {
+		mu.Unlock()
+		next.Close()
+		return false, fmt.Errorf("log path changed during reopen")
+	}
+	*file = next
+	mu.Unlock()
+	observed.Close()
+	return true, nil
 }
 
 func shmLogFatal(code int, format string, args ...any) {

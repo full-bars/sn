@@ -7,12 +7,17 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
+	"syscall"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 // mainTrimWarned and impTrimWarned track failure state so warnings repeat at
 // a bounded rate rather than being silenced permanently.
 var (
+	trimWarnMu       sync.Mutex
 	mainTrimWarned   bool
 	mainTrimWarnTime time.Time
 	impTrimWarned    bool
@@ -93,12 +98,43 @@ func trimRAMLog(f *os.File, maxSize int64, ratio int64) error {
 // does not permanently silence the warning.
 func reportTrimFailure(warned *bool, warnTime *time.Time, path string, err error) {
 	now := time.Now()
+	trimWarnMu.Lock()
 	if *warned && now.Sub(*warnTime) < 5*time.Minute {
+		trimWarnMu.Unlock()
 		return
 	}
 	*warned = true
 	*warnTime = now
-	fmt.Fprintf(os.Stderr, "[ramlogs] warning: cannot trim %s, leaving it oversized rather than losing history: %v\n", path, err)
+	trimWarnMu.Unlock()
+	fmt.Fprintf(os.Stderr, "[ramlogs] warning: cannot maintain %s: %v\n", path, err)
+}
+
+// reopenIfOrphaned follows a replacement without accepting unsafe paths.
+func reopenIfOrphaned(path string, cur *os.File, mode os.FileMode) (*os.File, bool, error) {
+	curInfo, err := cur.Stat()
+	if err != nil {
+		return nil, false, fmt.Errorf("stat open log: %w", err)
+	}
+	if pathInfo, err := os.Lstat(path); err == nil && os.SameFile(curInfo, pathInfo) {
+		return nil, false, nil
+	}
+	fd, err := unix.Open(path, unix.O_CREAT|unix.O_RDWR|unix.O_APPEND|unix.O_CLOEXEC|unix.O_NOFOLLOW|unix.O_NONBLOCK, uint32(mode.Perm()))
+	if err != nil {
+		return nil, false, fmt.Errorf("reopen orphaned log: %w", err)
+	}
+	next := os.NewFile(uintptr(fd), path)
+	info, err := next.Stat()
+	if err == nil {
+		stat, ok := info.Sys().(*syscall.Stat_t)
+		if !ok || !info.Mode().IsRegular() || stat.Uid != uint32(os.Geteuid()) || info.Mode()&(os.ModeSetuid|os.ModeSetgid|os.ModeSticky) != 0 || info.Mode().Perm() & ^mode.Perm() != 0 {
+			err = fmt.Errorf("unsafe log file ownership, type or permissions")
+		}
+	}
+	if err != nil {
+		next.Close()
+		return nil, false, err
+	}
+	return next, true, nil
 }
 
 // ramLogTail is the part of the log a trim keeps, read without the writer's
