@@ -74,6 +74,8 @@ ensure_extender_cap ()
 (
     [ "$(uname -s)" = Linux ] || return 0
     cap_file=$1
+    # Read the caller's "quiet" flag before any set -- below replaces $@.
+    cap_quiet=${2:-}
     cap_present() {
         command -v getcap >/dev/null 2>&1 || return 1
         getcap "$cap_file" 2>/dev/null | awk '
@@ -101,7 +103,14 @@ ensure_extender_cap ()
                 printf "WARNING: blocked file has other capabilities or unrecognized flags; refusing to remove them\n" >&2
                 return 1
             fi
-            if ! command -v setcap >/dev/null 2>&1 || ! $elevate setcap -r "$cap_file" 2>/dev/null || cap_present; then
+            if ! command -v setcap >/dev/null 2>&1; then
+                printf "WARNING: setcap tool not found; could not remove blocked file capability; provider may not start\n" >&2
+                return 1
+            fi
+            if ! setcap_out=$($elevate setcap -r "$cap_file" 2>&1) || cap_present; then
+                if [ -n "$setcap_out" ]; then
+                    printf "WARNING: setcap -r failed: %s\n" "$setcap_out" >&2
+                fi
                 printf "WARNING: could not remove blocked file capability; provider may not start\n" >&2
                 return 1
             fi
@@ -150,8 +159,13 @@ ensure_extender_cap ()
         set -- "$cap_spec" "$cap_file"
         cap_root_arg=
     fi
-    if command -v setcap >/dev/null 2>&1 && $elevate setcap "$@" 2>/dev/null && cap_present; then
-        return 0
+    if command -v setcap >/dev/null 2>&1; then
+        if setcap_err=$($elevate setcap "$@" 2>&1) && cap_present; then
+            return 0
+        fi
+        if [ -n "$setcap_err" ] && [ "$cap_quiet" != quiet ]; then
+            printf "WARNING: setcap failed: %s\n" "$setcap_err" >&2
+        fi
     fi
     quoted_file=$(printf '%s' "$cap_file" | sed "s/'/'\\\\''/g")
     printf "WARNING: extender capability missing or unverified; check existing capabilities, then run: sudo setcap %s'%s' '%s'\n" "$cap_root_arg" "$cap_spec" "$quoted_file" >&2
@@ -861,7 +875,7 @@ while [ $# -gt 0 ]; do
             shift 2
             ;;
 
-        -f|--force)
+        -y|--yes|-f|--force)
             FORCE=1
             shift
             ;;
@@ -1222,14 +1236,18 @@ remove_tool_links ()
 
 install_systemd_units ()
 {
-    start="$systemd_units_stopped"
-
-    sanitize_restart_dropins
-
-    pr_info "Installing urnetwork.service in %s" "$systemd_service"
-    mkdir -p "$systemd_userdir"
-    
-    cat > "$systemd_service" <<EOF
+    if [ "${1:-}" = prepare ]; then
+    mkdir -p "$systemd_userdir" || {
+        pr_err "Could not create the systemd user directory; the binary and unit remain unchanged. Run: mkdir -p '%s'" "$systemd_userdir"
+        exit 1
+    }
+    unit_backup_made=0
+    unit_changed=1
+    unit_candidate=$(mktemp "$systemd_service.new.XXXXXXXX") || {
+        pr_err "Could not create a temporary systemd unit; existing unit was not replaced. Check permissions with: ls -ld '%s'" "$systemd_userdir"
+        exit 1
+    }
+    cat > "$unit_candidate" <<EOF
 [Unit]
 Description=URnetwork Provider
 
@@ -1246,6 +1264,56 @@ RestartSec=5
 [Install]
 WantedBy=default.target
 EOF
+    if [ -f "$systemd_service" ] && cmp -s "$systemd_service" "$unit_candidate"; then
+        rm -f "$unit_candidate"
+        unit_changed=0
+    else
+        if [ -f "$systemd_service" ]; then
+            unit_backup_tmp=$(mktemp "$systemd_service.backup.XXXXXXXX") || {
+                pr_err "Could not create a temporary unit backup; the existing unit remains in place. Check permissions with: ls -ld '%s'" "$systemd_userdir"
+                rm -f "$unit_candidate"
+                exit 1
+            }
+            if ! cp -p "$systemd_service" "$unit_backup_tmp"; then
+                pr_err "Could not back up the previous systemd unit; it remains in place. Run: cp -p '%s' '%s'" "$systemd_service" "$systemd_service.old"
+                pr_err "The provider binary and systemd unit remain unchanged."
+                rm -f "$unit_candidate" "$unit_backup_tmp"
+                exit 1
+            fi
+            if ! mv -f "$unit_backup_tmp" "$systemd_service.old"; then
+                pr_err "Could not install the unit backup; the existing unit remains in place. Run: mv -f '%s' '%s'" "$unit_backup_tmp" "$systemd_service.old"
+                rm -f "$unit_candidate"
+                exit 1
+            fi
+            unit_backup_made=1
+        fi
+        if ! chmod 644 "$unit_candidate"; then
+            pr_err "Could not set the new systemd unit permissions. Run: chmod 644 '%s'" "$unit_candidate"
+            exit 1
+        fi
+    fi
+    return
+    fi
+
+    start="$systemd_units_stopped"
+    sanitize_restart_dropins
+    pr_info "Installing urnetwork.service in %s" "$systemd_service"
+    # The unit must be prepared (candidate and backup) before the binary swap.
+    [ -n "${unit_changed:-}" ] || { pr_err "Internal error: the systemd unit was not prepared; re-run the installer."; exit 1; }
+    if [ "$unit_changed" -eq 1 ]; then
+        if [ -e "$systemd_service" ]; then
+            if ! mv -f "$unit_candidate" "$systemd_service"; then
+                pr_err "Could not install the new systemd unit. Run: mv -f '%s' '%s'" "$unit_candidate" "$systemd_service"
+                exit 1
+            fi
+        else
+            if ! cp "$unit_candidate" "$systemd_service"; then
+                pr_err "Could not install the new systemd unit. Run: cp '%s' '%s'" "$unit_candidate" "$systemd_service"
+                exit 1
+            fi
+            rm -f "$unit_candidate"
+        fi
+    fi
     
     pr_info "Installing urnetwork-update.service in %s" "$systemd_update_service"
     cat > "$systemd_update_service" <<EOF
@@ -1302,15 +1370,36 @@ EOF
             if [ -f "$install_path/bin/urnetwork.old" ]; then
                 # Check the restore before restarting: starting the service with
                 # the new binary still in place would only repeat the failure.
-                if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"; then
-                    ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
-                    pr_warn "Restored the previous provider binary; the update did not apply."
-                    if ! systemctl --user daemon-reload; then
-                        pr_err "Reload after restoring the binary failed; the restored service was not restarted. Run: systemctl --user daemon-reload && systemctl --user start urnetwork.service"
-                    elif systemctl --user start urnetwork.service; then
-                        pr_warn "Restarted the service on the previous binary."
+                restored_unit=0
+                if [ "$unit_backup_made" -eq 1 ] && [ -f "$systemd_service.old" ]; then
+                    if mv -f "$systemd_service.old" "$systemd_service"; then
+                        restored_unit=1
                     else
-                        pr_err "The service did NOT restart on the previous binary. Run: systemctl --user start urnetwork.service"
+                        pr_err "Could not restore this run's unit backup. Run: mv -f '%s' '%s'" "$systemd_service.old" "$systemd_service"
+                    fi
+                else
+                    pr_err "No usable systemd unit backup was made by this run; the new Type=notify unit remains in place. Edit it to restore the previous settings with: systemctl --user edit --full urnetwork.service"
+                fi
+                if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"; then
+                    ensure_extender_cap "$install_path/bin/urnetwork" || {
+                        if [ "$restored_unit" -eq 1 ]; then
+                            pr_err "Could not verify provider file capabilities; update stopped. Previous binary and systemd unit were restored but service is stopped."
+                        else
+                            pr_err "Could not verify provider file capabilities; update stopped. Previous binary was restored (new unit remains in place) but service is stopped."
+                        fi
+                        exit 1
+                    }
+                    if [ "$restored_unit" -eq 1 ]; then
+                        pr_err "Restored previous binary and systemd unit after service restart failure"
+                    else
+                        pr_err "Restored previous binary after service restart failure; previous systemd unit was not restored and the new unit remains in place"
+                    fi
+                    if ! systemctl --user daemon-reload; then
+                        pr_err "Reload after restoring the binary failed; the previous binary is installed but its service has not been restarted. Run: systemctl --user daemon-reload && systemctl --user start urnetwork.service"
+                    elif ! systemctl --user start urnetwork.service; then
+                        pr_err "Starting the restored binary failed; run: systemctl --user start urnetwork.service"
+                    else
+                        pr_info "The restored provider service started."
                     fi
                 else
                     pr_err "Could not restore the previous provider binary from $install_path/bin/urnetwork.old"
@@ -1320,6 +1409,11 @@ EOF
             exit 1
         fi
         ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
+        if [ "$unit_backup_made" -eq 1 ]; then
+            rm -f "$systemd_service.old" 2>/dev/null || true
+        fi
+    elif [ "$unit_backup_made" -eq 1 ]; then
+        rm -f "$systemd_service.old" 2>/dev/null || true
     fi
 }
 
@@ -1785,7 +1879,7 @@ openrc_rollback_binary_swap ()
         if ${SUDO:-} rc-service urnetwork start > /dev/null 2>&1; then
             pr_warn "Restarted the service on the previous binary."
         else
-            pr_warn "Could not restart the service; run: rc-service urnetwork start"
+            pr_warn "Could not restart the service; run: sudo rc-service urnetwork start"
         fi
     fi
 }
@@ -1805,16 +1899,15 @@ openrc_finalize_root_paths ()
     # host files — e.g. chmod -R a+rX on a link pointing at /etc/shadow.
     # The install tree is built by this installer and must contain no
     # symlinks by construction, so deleting any that appear is fail-closed.
-    if ${SUDO:-} find "$install_path" -type l -delete 2>/dev/null; then
-        :
-    else
-        pr_warn "could not strip symlinks from %s" "$install_path"
+    if ! ${SUDO:-} find "$install_path" -type l -delete; then
+        pr_err "Could not strip symlinks; inspect the tree and retry: sudo find '%s' -type l -delete" "$install_path"
+        return 1
     fi
     # These two are the security property of the whole layout; a failure must
     # stop the install, not warn-and-continue into a service whose tree the
     # service user can modify.
-    if ! ${SUDO:-} chown -R "root:root" "$install_path" 2>/dev/null; then
-        pr_err "could not set root ownership on %s; refusing to install the service" "$install_path"
+    if ! ${SUDO:-} chown -R "root:root" "$install_path"; then
+        pr_err "Could not set root ownership; retry: sudo chown -R root:root '%s'" "$install_path"
         return 1
     fi
     # go-w: mkdir -p inherits the caller's umask, which on a 002 system
@@ -1822,8 +1915,14 @@ openrc_finalize_root_paths ()
     # service user can rename entries inside a o+w directory. a+rX keeps
     # everything readable/executable so the service user can still run the
     # provider. The root dir is pinned 0755, not mode-dependent.
-    ${SUDO:-} chmod -R go-w,a+rX "$install_path" 2>/dev/null || pr_warn "could not relax permissions on %s" "$install_path"
-    ${SUDO:-} chmod 0755 "$install_path" 2>/dev/null || pr_warn "could not set mode on %s" "$install_path"
+    if ! ${SUDO:-} chmod -R go-w,a+rX "$install_path"; then
+        pr_err "Could not secure install tree permissions; retry: sudo chmod -R go-w,a+rX '%s'" "$install_path"
+        return 1
+    fi
+    if ! ${SUDO:-} chmod 0755 "$install_path"; then
+        pr_err "Could not set install directory mode; retry: sudo chmod 0755 '%s'" "$install_path"
+        return 1
+    fi
     # Recursive chown clears file capabilities, even if ownership is unchanged.
     [ ! -f "$install_path/bin/urnetwork" ] || ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
 
@@ -1845,21 +1944,34 @@ openrc_finalize_root_paths ()
         openrc_state_target="$(readlink -f "$openrc_home/.urnetwork" 2>/dev/null || true)"
         case "$openrc_state_target" in
             "$openrc_home"/*)
-                ${SUDO:-} mkdir -p "$openrc_state_target" 2>/dev/null || true
-                ${SUDO:-} chown "$openrc_user" "$openrc_state_target" || pr_warn "Could not set state ownership; run: sudo chown '%s' '%s'" "$openrc_user" "$openrc_state_target"
+                if ! ${SUDO:-} mkdir -p "$openrc_state_target"; then
+                    pr_err "Could not create state directory; run: sudo mkdir -p '%s'" "$openrc_state_target"
+                    return 1
+                fi
+                if ! ${SUDO:-} chown "$openrc_user" "$openrc_state_target"; then
+                    pr_err "Could not set state ownership; run: sudo chown '%s' '%s'" "$openrc_user" "$openrc_state_target"
+                    return 1
+                fi
                 ;;
             *)
                 if [ -z "$openrc_state_target" ]; then
-                    pr_warn "%s/.urnetwork is a DANGEROUS symlink (unresolvable); refusing to change ownership through it" "$openrc_home"
+                    pr_err "%s/.urnetwork is a DANGEROUS symlink (unresolvable); refusing to change ownership through it" "$openrc_home"
                 else
-                    pr_warn "%s/.urnetwork points OUTSIDE the home (%s) — refusing to change ownership through it" "$openrc_home" "$openrc_state_target"
+                    pr_err "%s/.urnetwork points OUTSIDE the home (%s) — refusing to change ownership through it" "$openrc_home" "$openrc_state_target"
                 fi
-                pr_warn "remove the symlink and re-run the installer, or chown the target yourself"
+                pr_err "remove the symlink and re-run the installer, or chown the target yourself"
+                return 1
                 ;;
         esac
     else
-        ${SUDO:-} mkdir -p "$openrc_home/.urnetwork" 2>/dev/null || true
-        ${SUDO:-} chown "$openrc_user" "$openrc_home/.urnetwork" || pr_warn "Could not set state ownership; run: sudo chown '%s' '%s'" "$openrc_user" "$openrc_home/.urnetwork"
+        if ! ${SUDO:-} mkdir -p "$openrc_home/.urnetwork"; then
+            pr_err "Could not create state directory; run: sudo mkdir -p '%s/.urnetwork'" "$openrc_home"
+            return 1
+        fi
+        if ! ${SUDO:-} chown "$openrc_user" "$openrc_home/.urnetwork"; then
+            pr_err "Could not set state ownership; run: sudo chown '%s' '%s/.urnetwork'" "$openrc_user" "$openrc_home"
+            return 1
+        fi
     fi
 
     # Create the log targets in /var/log, OWNED BY THE SERVICE USER.
@@ -1875,14 +1987,26 @@ openrc_finalize_root_paths ()
     # service user, so they cannot create, rename or replace a name in it - a
     # symlink planted there is impossible. All they can do is write the log file
     # they were given, which is what a log is for.
-    ${SUDO:-} mkdir -p /var/log 2>/dev/null || true
+    if ! ${SUDO:-} mkdir -p /var/log; then
+        pr_err "Could not create /var/log directory; run: sudo mkdir -p /var/log"
+        return 1
+    fi
     for openrc_log in /var/log/urnetwork.log /var/log/urnetwork.err; do
         if [ ! -e "$openrc_log" ]; then
-            ${SUDO:-} touch "$openrc_log" 2>/dev/null || pr_warn "could not create %s" "$openrc_log"
+            if ! ${SUDO:-} touch "$openrc_log"; then
+                pr_err "Could not create %s; run: sudo touch '%s'" "$openrc_log" "$openrc_log"
+                return 1
+            fi
         fi
     done
-    ${SUDO:-} chown "$openrc_user" /var/log/urnetwork.log /var/log/urnetwork.err || pr_warn "Could not set log ownership; run: sudo chown '%s' /var/log/urnetwork.log /var/log/urnetwork.err" "$openrc_user"
-    ${SUDO:-} chmod 0644 /var/log/urnetwork.log /var/log/urnetwork.err || pr_warn "Could not set log modes; run: sudo chmod 0644 /var/log/urnetwork.log /var/log/urnetwork.err"
+    if ! ${SUDO:-} chown "$openrc_user" /var/log/urnetwork.log /var/log/urnetwork.err; then
+        pr_err "Could not set log ownership; run: sudo chown '%s' /var/log/urnetwork.log /var/log/urnetwork.err" "$openrc_user"
+        return 1
+    fi
+    if ! ${SUDO:-} chmod 0644 /var/log/urnetwork.log /var/log/urnetwork.err; then
+        pr_err "Could not set log modes; run: sudo chmod 0644 /var/log/urnetwork.log /var/log/urnetwork.err"
+        return 1
+    fi
 
     # Stage the root-owned tool the weekly cron will execute (see the function
     # comment: root must never exec anything reachable through a user-writable
@@ -1898,7 +2022,7 @@ openrc_finalize_root_paths ()
     # package, but the rule is harmless to install even before that package
     # exists, so write it unconditionally.
     if [ -d /etc/logrotate.d ]; then
-        ${SUDO:-} tee /etc/logrotate.d/urnetwork > /dev/null <<'ROTATE'
+        if ${SUDO:-} tee /etc/logrotate.d/urnetwork > /dev/null <<'ROTATE'
 /var/log/urnetwork.log /var/log/urnetwork.err {
     weekly
     rotate 4
@@ -1910,7 +2034,11 @@ openrc_finalize_root_paths ()
     delaycompress
 }
 ROTATE
-        ${SUDO:-} chmod 0644 /etc/logrotate.d/urnetwork 2>/dev/null || true
+        then
+            ${SUDO:-} chmod 0644 /etc/logrotate.d/urnetwork || pr_warn "Could not set mode on /etc/logrotate.d/urnetwork; run: sudo chmod 0644 /etc/logrotate.d/urnetwork"
+        else
+            pr_warn "Could not write /etc/logrotate.d/urnetwork"
+        fi
     fi
 }
 
@@ -2108,11 +2236,12 @@ EOF
             if [ "$openrc_units_stopped" -ne 1 ] && openrc_service_running; then
                 sudo_start=0
             fi
-            if sudo cp "$openrc_staged" "$openrc_initd_file" \
-               && sudo chmod 755 "$openrc_initd_file" \
-               && sudo rc-update add urnetwork default \
-               && SUDO=sudo openrc_finalize_root_paths \
-               && { [ "$sudo_start" -eq 0 ] || sudo rc-service urnetwork start; }; then
+            # sudo -n: never prompt. The check above proved passwordless sudo works.
+            if sudo -n cp "$openrc_staged" "$openrc_initd_file" \
+               && sudo -n chmod 755 "$openrc_initd_file" \
+               && sudo -n rc-update add urnetwork default \
+               && SUDO='sudo -n' openrc_finalize_root_paths \
+               && { [ "$sudo_start" -eq 0 ] || sudo -n rc-service urnetwork start; }; then
                 rm -rf "$openrc_stage_dir"
                 if [ "$sudo_start" -eq 0 ]; then
                     # Keep urnetwork.old and the pending state: the new binary
@@ -2132,7 +2261,7 @@ EOF
                 pr_err "The sudo service setup failed; rolling back the provider update."
                 SUDO=sudo openrc_rollback_binary_swap
             else
-                pr_err "The sudo service setup failed; the service did not start."
+                pr_err "The sudo service setup failed; the service may be stopped and was not started."
             fi
             rm -rf "$openrc_stage_dir"
             exit 1
@@ -2147,6 +2276,7 @@ EOF
     fi
 
     if ! openrc_finalize_root_paths; then
+        pr_err "OpenRC path preparation failed; service setup did not finish and the service may be stopped. Fix the error above and rerun the installer."
         openrc_rollback_binary_swap
         rm -rf "$openrc_stage_dir"
         exit 1
@@ -2983,6 +3113,7 @@ do_install ()
     fi
 	
     if [ "$has_systemd" -eq 1 ]; then
+        install_systemd_units prepare
         stop_systemd_units
     fi
 
@@ -3047,13 +3178,19 @@ do_install ()
             openrc_rollback_binary_swap
             exit 1
         fi
-        ensure_extender_cap "$install_path/bin/urnetwork" || { pr_err "Could not verify provider file capabilities; update stopped"; exit 1; }
+        ensure_extender_cap "$install_path/bin/urnetwork" quiet || {
+            pr_err "Could not verify provider file capabilities. The new provider binary is installed; service setup has not finished and the service may be stopped. Run: sudo setcap cap_net_bind_service=+ep '%s'" "$install_path/bin/urnetwork"
+            exit 1
+        }
         if command -v offer_extender_capability >/dev/null 2>&1; then
             offer_extender_capability "$install_path/bin/urnetwork" || true
         fi
     fi
 
-    cd "$script_rundir" || exit 1
+    cd "$script_rundir" || {
+        pr_err "Could not return to initial working directory. The new provider binary is installed; service setup has not finished and the service may be stopped."
+        exit 1
+    }
 
     # --- urnet-tools install ---
     # The tool is now a Go binary shipped as a standalone release asset
@@ -3123,7 +3260,10 @@ do_install ()
             fi
         fi
 
-        cd "$workdir" || exit 1
+        cd "$workdir" || {
+            pr_err "Could not enter temporary work directory. The new provider binary is installed; service setup has not finished and the service may be stopped."
+            exit 1
+        }
 
         if [ -f "urnet-tools" ]; then
             script_override="$(cat "urnet-tools" 2>/dev/null)"
@@ -3133,13 +3273,36 @@ do_install ()
         fi
 
         if [ -z "$script" ]; then
-            pr_err "Invalid script contents"
+            pr_err "Could not read urnet-tools script. The new provider binary is installed; service setup has not finished and the service may be stopped."
             exit 1
         fi
 
-        ${SUDO:-} rm -f "$install_path/bin/urnet-tools"
-        printf "%s\n" "$script" | ${SUDO:-} tee "$install_path/bin/urnet-tools" > /dev/null
-        ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools"; exit 1; }
+        # Stage, back up and move, so a failed step leaves the previous tool in place.
+        # Every write goes through ${SUDO:-}: the install tree is root-owned.
+        staged_tool="$install_path/bin/.urnet-tools.new.$$"
+        tool_target="$install_path/bin/urnet-tools"
+        if ! printf "%s\n" "$script" | ${SUDO:-} tee "$staged_tool" > /dev/null; then
+            pr_err "Could not write urnet-tools script. The new provider binary is installed; service setup has not finished and the service may be stopped."
+            ${SUDO:-} rm -f "$staged_tool" 2>/dev/null || true
+            exit 1
+        fi
+        if ! ${SUDO:-} chmod 755 "$staged_tool"; then
+            pr_err "Could not make urnet-tools executable. The new provider binary is installed; service setup has not finished and the service may be stopped. Run: sudo chmod 755 '%s'" "$tool_target"
+            ${SUDO:-} rm -f "$staged_tool" 2>/dev/null || true
+            exit 1
+        fi
+        if ${SUDO:-} test -e "$tool_target"; then
+            if ! ${SUDO:-} mv -f "$tool_target" "$tool_target.old"; then
+                pr_err "Could not back up urnet-tools. The new provider binary is installed; service setup has not finished and the service may be stopped. Run: sudo mv -f '%s' '%s'" "$tool_target" "$tool_target.old"
+                ${SUDO:-} rm -f "$staged_tool" 2>/dev/null || true
+                exit 1
+            fi
+        fi
+        if ! ${SUDO:-} mv -f "$staged_tool" "$tool_target"; then
+            pr_err "Could not install urnet-tools. The new provider binary is installed; service setup has not finished and the service may be stopped. Run: sudo mv -f '%s' '%s'" "$staged_tool" "$tool_target"
+            exit 1
+        fi
+        ${SUDO:-} rm -f "$tool_target.old" 2>/dev/null || true
 
         # Note: the GitHub-fetched script above (from main branch) is the canonical
         # version. The tarball copy is NOT used here to avoid overwriting with stale
@@ -3151,7 +3314,7 @@ do_install ()
     fi
 
     if [ "$has_systemd" -eq 0 ] && [ "$has_openrc" -eq 1 ]; then
-        install_openrc_units
+        install_openrc_units || exit 1
     fi
 
     # Written only after the unit install, which restarts the service and exits
@@ -3485,14 +3648,25 @@ confirm_restart ()
         return 0
     fi
 
-    # Check for an interactive terminal before prompting
+    # Prompt through the terminal. A piped stdin (curl | sh) still prompts via
+    # /dev/tty when one exists. With no terminal at all, refuse and say how to approve.
     interactive_tty=""
     if [ -c /dev/tty ] && { true < /dev/tty; } 2>/dev/null; then
         interactive_tty="/dev/tty"
     elif [ -t 0 ]; then
         interactive_tty="/dev/stdin"
     else
-        pr_err "Interactive terminal required for restart confirmation; re-run with -f or --force."
+        if [ "$operation" = "restart" ]; then
+            pr_err "Cannot ask for restart confirmation without a terminal; rerun interactively or pass -y before the subcommand (e.g. urnet-tools -y restart) or after restart (e.g. urnet-tools restart -y) to approve. The provider was not restarted."
+        elif [ "$operation" = "optimize" ]; then
+            pr_err "Cannot ask for restart confirmation without a terminal; rerun interactively or pass -y (e.g. urnet-tools -y optimize or urnet-tools optimize -y) to approve. The provider was not restarted."
+        elif [ "$operation" = "update" ]; then
+            pr_err "Cannot ask for restart confirmation without a terminal; rerun interactively or pass --force (e.g. urnet-tools update --force) to approve. The provider was not restarted."
+        elif [ -n "$operation" ]; then
+            pr_err "Cannot ask for restart confirmation without a terminal; rerun interactively or pass -y before the subcommand (e.g. urnet-tools -y %s) to approve. The provider was not restarted." "$operation"
+        else
+            pr_err "Cannot ask for restart confirmation without a terminal; rerun interactively or pass -y before the subcommand (e.g. urnet-tools -y ...) to approve. The provider was not restarted."
+        fi
         exit 1
     fi
 
@@ -4546,15 +4720,36 @@ installer_apply_immediate_sysctls ()
     for setting in fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512 fs.file-max=2097152; do
         if ! sysctl -w "$setting" >/dev/null; then
             pr_warn "Could not apply immediate kernel setting; run: sudo sysctl -w %s" "$setting"
+            if command -v record_opt_failure >/dev/null 2>&1; then
+                record_opt_failure "Immediate kernel setting ($setting)" "sudo sysctl -w $setting"
+            fi
         fi
     done
 }
 
 do_optimize ()
 {
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            -y|--yes|-f|--force) FORCE=1 ;;
+            *) pr_err "Unknown optimize option: %s" "$1"; return 1 ;;
+        esac
+        shift
+    done
     if [ "$(id -u)" -ne 0 ]; then
         pr_info "Elevation required. Re-running with sudo..."
-        exec sudo "$0" "$operation" "$@"
+        if [ "$FORCE" = "1" ]; then set -- -y; else set --; fi
+        if [ -t 0 ] && [ -t 1 ]; then
+            sudo "$0" "$@" "$operation"
+            return $?
+        fi
+        if sudo -n "$0" "$@" "$operation"; then return 0; fi
+        if [ "$FORCE" = "1" ]; then
+            pr_err "Non-interactive sudo failed. Run from a terminal: sudo '%s' -y %s" "$0" "$operation"
+        else
+            pr_err "Non-interactive sudo failed. Run from a terminal: sudo '%s' %s" "$0" "$operation"
+        fi
+        return 1
     fi
 
     # Detect if we are in a container
@@ -4562,11 +4757,6 @@ do_optimize ()
     if [ -f "/.dockerenv" ] || grep -qa container= /proc/1/environ 2>/dev/null; then
         is_container=1
     fi
-
-    # 0. Immediate Pre-Optimization (prevents failures during the optimization itself)
-    # Increase ulimit and inotify limits immediately for the session to prevent "Too many open files"
-    ulimit -n 1048576 2>/dev/null || true
-    installer_apply_immediate_sysctls
 
     # When running via sudo, we need to find the original user's home
     actual_user=$(logname 2>/dev/null || echo "$SUDO_USER" || echo "$USER")
@@ -4581,6 +4771,29 @@ do_optimize ()
         confirm_restart "Applying kernel limits and OS optimizations requires restarting the URNetwork provider to bind the new system ulimits."
     fi
 
+    opt_failed=0
+    opt_completed=""
+    opt_skipped=""
+    opt_failed_ops=""
+    opt_retry_cmds=""
+
+    record_opt_success () {
+        opt_completed="${opt_completed}\n  - $1"
+    }
+    record_opt_skipped () {
+        opt_skipped="${opt_skipped}\n  - $1: $2"
+    }
+    record_opt_failure () {
+        opt_failed=$((opt_failed + 1))
+        opt_failed_ops="${opt_failed_ops}\n  - $1"
+        if [ -n "$2" ]; then
+            opt_retry_cmds="${opt_retry_cmds}\n  $2"
+        fi
+    }
+
+    ulimit -n 1048576 2>/dev/null || true
+    installer_apply_immediate_sysctls
+
     pr_info "⚡ Starting System Optimizer..."
 
     if [ "$is_container" -eq 1 ]; then
@@ -4590,8 +4803,12 @@ do_optimize ()
     # Helper for interactive confirmation
     confirm () {
         if [ "$FORCE" = "1" ]; then return 0; fi
+        if [ ! -t 0 ] || [ ! -t 1 ]; then
+            pr_warn "Skipping confirmation without a terminal; rerun interactively or pass -y (e.g. urnet-tools -y optimize or urnet-tools optimize -y) to approve."
+            return 1
+        fi
         printf "  [?] " && printf '%s [y/N]: ' "$1"
-        read -r response
+        read -r response || return 1
         case "$response" in
             [yY][eE][sS]|[yY]) return 0 ;;
             *) return 1 ;;
@@ -4641,8 +4858,13 @@ do_optimize ()
 
     # Persistence for module (solves race condition on reboot)
     pr_info "Configuring early module loading..."
-    mkdir -p /etc/modules-load.d
-    echo "nf_conntrack" > /etc/modules-load.d/urnetwork.conf
+    modules_load_dir="${MODULES_LOAD_DIR:-/etc/modules-load.d}"
+    mkdir -p "$modules_load_dir" 2>/dev/null || true
+    if echo "nf_conntrack" > "$modules_load_dir/urnetwork.conf" 2>/dev/null; then
+        record_opt_success "Early module loading (nf_conntrack)"
+    else
+        record_opt_failure "Early module loading" "echo nf_conntrack | sudo tee /etc/modules-load.d/urnetwork.conf"
+    fi
 
     # 2. ZRAM Optimization
     pr_info "Checking for ZRAM (Compressed RAM Swap)..."
@@ -4652,11 +4874,13 @@ do_optimize ()
     if ! modprobe -n zram >/dev/null 2>&1; then
         pr_warn "Your kernel does not support ZRAM. Skipping compressed memory optimization."
         skip_zram=1
+        record_opt_skipped "ZRAM" "kernel does not support zram module"
     elif swapon --show | grep -q "zram"; then
         pr_info "ZRAM is already active."
         if ! confirm "ZRAM is already configured. Re-apply URNetwork's 80% zstd optimization?"; then
             pr_info "Skipping ZRAM configuration (respecting existing setup)."
             skip_zram=1
+            record_opt_skipped "ZRAM" "existing configuration retained"
         fi
     fi
 
@@ -4691,11 +4915,14 @@ do_optimize ()
         # Verify ZRAM activation, with manual fallback
         if swapon --show | grep -q "zram"; then
             pr_info "ZRAM enabled successfully."
+            record_opt_success "ZRAM compressed RAM swap (80% RAM, zstd)"
         else
             if setup_zram_manual; then
                 pr_info "ZRAM enabled via manual fallback."
+                record_opt_success "ZRAM compressed RAM swap (fallback)"
             else
                 pr_warn "ZRAM could not be auto-enabled. You may need to restart the zram service manually."
+                record_opt_failure "ZRAM auto-enable" "sudo systemctl restart zramswap 2>/dev/null || sudo modprobe zram"
             fi
         fi
     fi
@@ -4707,7 +4934,7 @@ do_optimize ()
     timeout=3600
     ulimit_val=1048576
 
-    sysctl_conf="/etc/sysctl.d/99-urnetwork.conf"
+    sysctl_conf="${SYSCTL_CONF:-/etc/sysctl.d/99-urnetwork.conf}"
     skip_sysctl=0
 
     # Check if a non-URNetwork file already has high conntrack settings
@@ -4717,6 +4944,7 @@ do_optimize ()
         if ! confirm "System already has high limits. Apply URNetwork's specific sysctl overrides anyway?"; then
             pr_info "Skipping sysctl configuration (respecting existing tuning)."
             skip_sysctl=1
+            record_opt_skipped "Sysctl tuning" "existing high limits retained"
         fi
     fi
 
@@ -4736,7 +4964,16 @@ fs.file-max = 2097152
 fs.inotify.max_user_watches = 524288
 fs.inotify.max_user_instances = 512
 EOF
-        installer_apply_sysctl_config "$sysctl_conf" || :
+        # BusyBox sysctl has no --system (that is a procps/GNU flag), so on
+        # Alpine --system failed silently and the settings only took effect at
+        # the next boot. Apply the file we just wrote instead: -p FILE is
+        # supported by both BusyBox and procps. Fall back to --system for the
+        # case where a host has procps and reads other drop-ins too.
+        if installer_apply_sysctl_config "$sysctl_conf"; then
+            record_opt_success "Persistent sysctl ($sysctl_conf)"
+        else
+            record_opt_failure "Persistent sysctl ($sysctl_conf)" "sudo sysctl -p '$sysctl_conf'"
+        fi
     fi
 
     # 4. Apply Ulimits (Systemd)
@@ -4753,13 +4990,14 @@ EOF
     # openrc-run sources automatically. Writing the systemd file on an OpenRC
     # host was silently useless — the service never saw the limit.
     if [ "$has_openrc" -eq 1 ] && [ -f /etc/init.d/urnetwork ]; then
-        conf_d="/etc/conf.d/urnetwork"
-        mkdir -p /etc/conf.d
+        conf_d="${OPENRC_CONF_DIR:-/etc/conf.d}/urnetwork"
+        mkdir -p "${OPENRC_CONF_DIR:-/etc/conf.d}"
         # rc_ulimit is sourced as shell by openrc at every boot: only a bare
         # number may be spliced in, or a stray value becomes code at boot.
         case "$ulimit_val" in
             ''|*[!0-9]*)
                 pr_warn "Skipping rc_ulimit: value %s is not numeric." "$ulimit_val"
+                record_opt_failure "File descriptor limit (rc_ulimit in $conf_d)" "echo 'rc_ulimit=\"-n $ulimit_val\"' | sudo tee -a '$conf_d'"
                 ;;
             *)
                 # Render through a temp file and rename: sed -i truncates in
@@ -4779,8 +5017,10 @@ EOF
                     chmod 0644 "$conf_tmp"
                     mv -f "$conf_tmp" "$conf_d"
                     pr_info "Ulimit %s written to %s (rc_ulimit)." "$ulimit_val" "$conf_d"
+                    record_opt_success "File descriptor limit ($ulimit_val in $conf_d)"
                 else
                     pr_warn "Could not create a temp file next to %s; rc_ulimit not written." "$conf_d"
+                    record_opt_failure "File descriptor limit (rc_ulimit in $conf_d)" "echo 'rc_ulimit=\"-n $ulimit_val\"' | sudo tee -a '$conf_d'"
                 fi
                 ;;
         esac
@@ -4792,8 +5032,6 @@ EOF
         fi
 
         override_dir="$actual_home/.config/systemd/user/urnetwork.service.d"
-        mkdir -p "$override_dir"
-        chown -R "$actual_user":"$actual_user" "$actual_home/.config/systemd" 2>/dev/null
         override_file="$override_dir/override.conf"
     fi
 
@@ -4818,19 +5056,51 @@ EOF
     # Update ulimits in the systemd drop-in (skipped when the OpenRC rc_ulimit
     # path above already handled it).
     if [ -n "$override_file" ]; then
-        if [ ! -f "$override_file" ]; then
-            printf "[Service]\n" > "$override_file"
+        dropin_ok=1
+        if ! mkdir -p "$override_dir"; then
+            pr_warn "Could not create systemd override directory: %s" "$override_dir"
+            record_opt_failure "File descriptor limit ($override_dir)" "sudo mkdir -p '$override_dir'"
+            dropin_ok=0
         fi
 
-        if ! grep -q "LimitNOFILE=" "$override_file"; then
-            sed -i "/\[Service\]/a LimitNOFILE=$ulimit_val" "$override_file"
-        else
-            sed -i "s|LimitNOFILE=.*|LimitNOFILE=$ulimit_val|" "$override_file"
+        if [ "$dropin_ok" -eq 1 ] && [ ! -f "$override_file" ]; then
+            if ! printf "[Service]\n" > "$override_file"; then
+                pr_warn "Could not initialize systemd override file: %s" "$override_file"
+                record_opt_failure "File descriptor limit ($override_file)" "printf '[Service]\\n' | sudo tee '$override_file'"
+                dropin_ok=0
+            fi
         fi
-        chown "$actual_user":"$actual_user" "$override_file"
+
+        if [ "$dropin_ok" -eq 1 ]; then
+            if ! grep -q "LimitNOFILE=" "$override_file"; then
+                if ! sed -i "/\[Service\]/a LimitNOFILE=$ulimit_val" "$override_file"; then
+                    pr_warn "Could not set LimitNOFILE in %s" "$override_file"
+                    record_opt_failure "File descriptor limit ($override_file)" "sudo sed -i '/\\[Service\\]/a LimitNOFILE=$ulimit_val' '$override_file'"
+                    dropin_ok=0
+                fi
+            else
+                if ! sed -i "s|LimitNOFILE=.*|LimitNOFILE=$ulimit_val|" "$override_file"; then
+                    pr_warn "Could not update LimitNOFILE in %s" "$override_file"
+                    record_opt_failure "File descriptor limit ($override_file)" "sudo sed -i 's|LimitNOFILE=.*|LimitNOFILE=$ulimit_val|' '$override_file'"
+                    dropin_ok=0
+                fi
+            fi
+        fi
+
+        if [ "$dropin_ok" -eq 1 ]; then
+            if ! chown "$actual_user":"$actual_user" "$override_file"; then
+                pr_warn "Could not set ownership of %s to %s" "$override_file" "$actual_user"
+                record_opt_failure "File descriptor limit ($override_file ownership)" "sudo chown '$actual_user':'$actual_user' '$override_file'"
+                dropin_ok=0
+            else
+                chown -R "$actual_user":"$actual_user" "$actual_home/.config/systemd" 2>/dev/null || true
+            fi
+        fi
+
+        if [ "$dropin_ok" -eq 1 ]; then
+            record_opt_success "File descriptor limit ($ulimit_val in $override_file)"
+        fi
     fi
-
-    pr_info "Optimization applied successfully."
 
     if [ "$has_openrc" -eq 1 ] && [ -f /etc/init.d/urnetwork ]; then
         # OpenRC: restart through rc-service as root. rc_ulimit is read by
@@ -4852,11 +5122,14 @@ EOF
             pr_info "Restarting the urnetwork service to apply ulimits..."
             if rc-service urnetwork restart >/dev/null 2>&1; then
                 pr_info "Service restarted with the new limits."
+                record_opt_success "Service restart (OpenRC)"
             else
                 pr_warn "Could not restart the service; run: rc-service urnetwork restart"
+                record_opt_failure "Service restart (OpenRC)" "sudo rc-service urnetwork restart"
             fi
         else
             pr_info "Service is not running; the new limits apply at its next start."
+            record_opt_skipped "Service restart (OpenRC)" "service not running; limits apply at next start"
         fi
         # No lingering equivalent exists (and none is needed): OpenRC has no
         # per-user service manager, and the service lives in the default
@@ -4865,14 +5138,50 @@ EOF
         pr_info "Restarting URnetwork service to apply ulimits..."
 
         # Run as the actual user to access their systemd bus
-        sudo -u "$actual_user" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $actual_user)/bus" systemctl --user daemon-reload
-        sudo -u "$actual_user" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $actual_user)/bus" systemctl --user restart urnetwork.service || pr_info "Note: Service not running; ulimits will apply on next start."
+        sudo -u "$actual_user" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $actual_user)/bus" systemctl --user daemon-reload 2>/dev/null || true
+        if sudo -u "$actual_user" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $actual_user)/bus" systemctl --user is-active --quiet urnetwork.service 2>/dev/null; then
+            if sudo -u "$actual_user" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $actual_user)/bus" systemctl --user restart urnetwork.service; then
+                pr_info "Service restarted with the new limits."
+                record_opt_success "Service restart (systemd)"
+            else
+                pr_warn "Could not restart urnetwork.service; run: sudo -u '%s' DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/\$(id -u '%s')/bus\" systemctl --user restart urnetwork.service" "$actual_user" "$actual_user"
+                record_opt_failure "Service restart (systemd)" "sudo -u '$actual_user' DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/\$(id -u '$actual_user')/bus\" systemctl --user restart urnetwork.service"
+            fi
+        else
+            pr_info "Note: Service not running; ulimits will apply on next start."
+            record_opt_skipped "Service restart" "service not running; ulimits will apply on next start"
+        fi
 
         # Enable lingering for the user so services persist after logout
         if installer_enable_linger "$actual_user"; then
             pr_info "✓ Systemd lingering enabled for '$actual_user' (provider will persist after logout)"
+            record_opt_success "Systemd lingering ($actual_user)"
+        else
+            record_opt_failure "Systemd lingering ($actual_user)" "sudo loginctl enable-linger '$actual_user'"
         fi
     fi
+
+    printf "\n"
+    if [ "$opt_failed" -eq 0 ]; then
+        pr_info "Optimization applied successfully."
+        if [ -n "$opt_skipped" ]; then
+            printf "Skipped operations:%b\n" "$opt_skipped"
+        fi
+        return 0
+    fi
+
+    pr_warn "Optimization completed with partial success (%d failed operation(s))." "$opt_failed"
+    if [ -n "$opt_completed" ]; then
+        printf "Completed operations:%b\n" "$opt_completed"
+    fi
+    if [ -n "$opt_skipped" ]; then
+        printf "Skipped operations:%b\n" "$opt_skipped"
+    fi
+    printf "Failed operations:%b\n" "$opt_failed_ops"
+    if [ -n "$opt_retry_cmds" ]; then
+        printf "\nTo retry failed operations, run:%b\n" "$opt_retry_cmds"
+    fi
+    return 1
 }
 
 do_session ()
@@ -5172,8 +5481,8 @@ case "$operation" in
         ;;
 
     optimize)
-        do_optimize
-        exit 0
+        do_optimize "$@"
+        exit $?
         ;;
 
     auth)
