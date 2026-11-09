@@ -236,7 +236,7 @@ func TestReportTrimFailureWarnsOnce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read pipe: %v", err)
 	}
-	if n := bytes.Count(out, []byte("cannot trim")); n != 1 {
+	if n := bytes.Count(out, []byte("cannot maintain")); n != 1 {
 		t.Errorf("warned %d times, want 1: %q", n, string(out))
 	}
 }

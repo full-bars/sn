@@ -231,6 +231,11 @@ func TestExtenderSetup_AlreadyConfigured(t *testing.T) {
 
 // 4. Non-root or declined sudo: prints the exact command, changes nothing, exit non-zero.
 func TestExtenderSetup_NonRootOrDeclinedSudo(t *testing.T) {
+	old := setupDiscoverFn
+	setupDiscoverFn = func() []Provider {
+		return []Provider{{Unit: "provider.service", StateDir: "/state/provider", Binary: "/provider", User: "provider"}}
+	}
+	defer func() { setupDiscoverFn = old }()
 	checker := &PortChecker{
 		Platform: "linux",
 		ExecCmd: func(name string, args ...string) ([]byte, error) {
