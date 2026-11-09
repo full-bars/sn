@@ -32,16 +32,39 @@ func installProviderBinaryWithConfig(src, dst, user, platform string, cfg Platfo
 	return installProviderBinaryWithConfigAndStatus(src, dst, user, platform, cfg, warnings, "/proc/self/status")
 }
 
+// unprivilegedPortRoute is implemented by configurers that can tell whether
+// the host lets any user bind TCP 443 (a sysctl route). It is optional so test
+// doubles of PlatformConfigurer need not grow a method.
+type unprivilegedPortRoute interface {
+	UnprivilegedPortRouteActive() bool
+}
+
+// UnprivilegedPortRouteActive reports whether net.ipv4.ip_unprivileged_port_start
+// is at most 443 on this Linux host, so no file capability is needed.
+func (sp *SystemPlatformConfigurer) UnprivilegedPortRouteActive() bool {
+	if sp.PlatformName != "linux" {
+		return false
+	}
+	v, ok := sp.liveUnprivilegedPortStart()
+	return ok && v <= 443
+}
+
 func installProviderBinaryWithConfigAndStatus(src, dst, user, platform string, cfg PlatformConfigurer, warnings io.Writer, statusPath string) error {
+	// With the sysctl route active the provider needs no file capability, so
+	// an update or rollback has nothing to restore and nothing to warn about.
+	sysctlActive := false
+	if r, ok := cfg.(unprivilegedPortRoute); ok && platform == "linux" {
+		sysctlActive = r.UnprivilegedPortRouteActive()
+	}
 	hadCapability := false
-	if platform == "linux" {
+	if platform == "linux" && !sysctlActive {
 		configured, _, err := cfg.CheckRequirement(dst, user)
 		hadCapability = err == nil && configured
 	}
 	if err := installBinary(src, dst, user); err != nil {
 		return err
 	}
-	if platform != "linux" {
+	if platform != "linux" || sysctlActive {
 		return nil
 	}
 	quoted := "'" + strings.ReplaceAll(dst, "'", "'\\''") + "'"
