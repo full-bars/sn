@@ -33,12 +33,20 @@ func discoverProcesses() []Provider {
 				var jwtErr error
 				p.Network, p.NetworkID, p.JWTExpires, jwtErr = decodeJWT(filepath.Join(p.StateDir, "jwt"))
 				p.IdentityRestricted = errors.Is(jwtErr, fs.ErrPermission)
-				p.Binary = installedOpenBSDProvider()
 			}
 		}
 		providers = append(providers, p)
 	}
 	return providers
+}
+
+func init() {
+	providerCommandFallback = func(p Provider) string {
+		if p.User == "" || p.StateDir == "" {
+			return ""
+		}
+		return installedOpenBSDProvider()
+	}
 }
 
 var openbsdLibexecProviderPath = "/usr/local/libexec/urnetwork-provider/bin/urnetwork"

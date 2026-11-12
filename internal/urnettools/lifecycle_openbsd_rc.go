@@ -2,8 +2,20 @@ package urnettools
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
+
+func openbsdCheckScript(path, binary string) error {
+	script, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("no rc.d script: %w", err)
+	}
+	if binary == "" || !openbsdScriptServesBinary(string(script), binary) {
+		return fmt.Errorf("script does not serve the selected binary")
+	}
+	return nil
+}
 
 // OpenBSD keeps third-party service scripts in /etc/rc.d.
 const openbsdRcScriptDir = "/etc/rc.d"

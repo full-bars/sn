@@ -53,8 +53,13 @@ for arch in amd64 arm64; do
   echo "  ok freebsd/$arch"
 done
 
-echo "== go vet ./internal/urnettools/ for openbsd (build.yml freebsd-vet job)"
+echo "== go vet ./miner/ ./internal/connectx/ ./internal/urnettools/ for openbsd"
 for arch in amd64 arm64; do
+  # miner's test-only durablefixture has no OpenBSD files, so vet its
+  # selected production files without loading the incompatible test package.
+  (cd miner && miner_files=$(GOOS=openbsd GOARCH=$arch go list -f '{{range .GoFiles}}{{.}} {{end}}' .) &&
+    GOOS=openbsd GOARCH=$arch go vet $miner_files >/dev/null)
+  GOOS=openbsd GOARCH=$arch go vet ./internal/connectx/ >/dev/null
   GOOS=openbsd GOARCH=$arch go vet ./internal/urnettools/ >/dev/null
   echo "  ok openbsd/$arch"
 done

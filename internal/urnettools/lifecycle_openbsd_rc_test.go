@@ -1,9 +1,31 @@
 package urnettools
 
 import (
+	"errors"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
+
+func TestOpenBSDCheckScript(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "urnetwork")
+	binary := "/usr/local/bin/urnetwork"
+	if err := openbsdCheckScript(path, binary); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("missing script: %v", err)
+	}
+	if err := os.WriteFile(path, []byte(`daemon="`+binary+` provide"`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := openbsdCheckScript(path, binary); err != nil {
+		t.Fatal(err)
+	}
+	for _, other := range []string{"", binary + "-other"} {
+		if err := openbsdCheckScript(path, other); err == nil {
+			t.Errorf("accepted mismatched binary %q", other)
+		}
+	}
+}
 
 func TestOpenBSDScriptServesBinary(t *testing.T) {
 	binary := "/usr/local/libexec/urnetwork-provider/bin/urnetwork"

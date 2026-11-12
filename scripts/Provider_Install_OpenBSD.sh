@@ -249,7 +249,15 @@ rc_script="/etc/rc.d/$service_name"
 # Paths: the install tree is root-owned at /usr/local/libexec/urnetwork-provider
 # (with chmod go-w), while the state directory (~/.urnetwork) lives in the
 # service user's home.
-service_user="$(resolve_service_user)"
+if [ -f "$rc_script" ]; then
+    service_user="$(awk -F'"' '/^[[:space:]]*daemon_user="[^"]+"[[:space:]]*$/ {print $2; exit}' "$rc_script")"
+    if [ -z "$service_user" ] || ! id -u "$service_user" >/dev/null 2>&1; then
+        pr_err "Cannot determine a valid daemon_user from %s" "$rc_script"
+        exit 1
+    fi
+else
+    service_user="$(resolve_service_user)"
+fi
 service_home="$(user_home "$service_user")"
 install_path="/usr/local/libexec/urnetwork-provider"
 provider_bin="$install_path/bin/urnetwork"
@@ -629,10 +637,8 @@ do_install() {
             install_wrapper_tool "$tmpdir" || true
         fi
     else
-        # Without jq or python3 the digest cannot be read, and the wrapper is
-        # fetched from the branch, not from $tag. Say so rather than installing
-        # an unpinned script as if it were the release asset.
-        pr_warn "no jq or python3 on this host: cannot verify the urnet-tools digest, falling back to the shell wrapper fetched from the branch (not from %s)" "$tag"
+        # A missing digest cannot authenticate the release asset.
+        pr_warn "release has no digest for %s; falling back to the shell wrapper fetched from the branch (not from %s)" "$tool_asset" "$tag"
         install_wrapper_tool "$tmpdir" || true
     fi
 
@@ -675,6 +681,14 @@ do_install() {
        ! priv chmod 755 "$rc_script"; then
         pr_warn "Could not write %s. Install the service manually as root:" "$rc_script"
         pr_warn "  %s install-service" "$me"
+        if [ "$had_old_binary" -eq 1 ] && [ -f "$provider_backup" ]; then
+            if ! priv mv -f "$provider_backup" "$provider_bin"; then
+                pr_err "Could not restore the previous binary from %s; restore it manually to %s" "$provider_backup" "$provider_bin"
+            else
+                pr_warn "Restored previous binary after rc.d write failure"
+            fi
+        fi
+        rm -rf "$tmpdir"
         exit 1
     fi
     if [ "${UPDATING:-0}" != "1" ]; then

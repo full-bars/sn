@@ -19,6 +19,36 @@ import (
 //   - confirm subcommand + interactive stdin: stdin wired (TTY)
 //   - confirm subcommand + non-interactive stdin: stdin NOT wired (cron/pipe
 //     must see EOF and refuse by default)
+func TestProviderSubcommandUsesFallbackWithoutChangingProvider(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell-script stub binary is POSIX-only")
+	}
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "provider")
+	if err := os.WriteFile(bin, []byte("#!/bin/sh\n[ \"$1\" = proxy ] && [ \"$2\" = summary ]\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	previous := providerCommandFallback
+	t.Cleanup(func() { providerCommandFallback = previous })
+	p := Provider{StateDir: filepath.Join(dir, ".urnetwork")}
+	providerCommandFallback = func(got Provider) string {
+		if got.Binary != "" || got.StateDir != p.StateDir {
+			t.Errorf("unexpected target: %+v", got)
+		}
+		return bin
+	}
+	if err := providerSubcommand(p, "proxy", "summary"); err != nil {
+		t.Fatal(err)
+	}
+	if p.Binary != "" {
+		t.Fatal("fallback attributed a binary to the discovered provider")
+	}
+	providerCommandFallback = func(Provider) string { return "" }
+	if err := providerSubcommand(p, "proxy", "summary"); err == nil {
+		t.Fatal("missing fallback should fail")
+	}
+}
+
 func TestProviderSubcommandStdinWiring(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("shell-script stub binary is POSIX-only")

@@ -1,6 +1,7 @@
 package urnettools
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,10 +11,14 @@ import (
 )
 
 func openbsdRcctl(args ...string) ([]byte, error) {
-	_, doasErr := exec.LookPath("doas")
-	_, configErr := os.Stat("/etc/doas.conf")
+	doas, doasErr := exec.LookPath("doas")
 	_, sudoErr := exec.LookPath("sudo")
-	name, argv, err := openbsdRcctlArgv(os.Geteuid(), doasErr == nil && configErr == nil, sudoErr == nil, args...)
+	permitted := false
+	if os.Geteuid() != 0 && doasErr == nil {
+		checkArgs := append([]string{"-C", "/etc/doas.conf", "rcctl"}, args...)
+		permitted = exec.Command(doas, checkArgs...).Run() == nil
+	}
+	name, argv, err := openbsdRcctlArgv(os.Geteuid(), permitted, sudoErr == nil, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -22,8 +27,9 @@ func openbsdRcctl(args ...string) ([]byte, error) {
 
 func openbsdRequireScript(p Provider) (string, error) {
 	service := bsdRcServiceName(p.Binary)
-	if _, err := os.Stat(openbsdRcScriptPath(service)); err != nil {
-		return "", fmt.Errorf("no rc.d script at %s for provider %s: %w", openbsdRcScriptPath(service), providerLabel(p), err)
+	path := openbsdRcScriptPath(service)
+	if err := openbsdCheckScript(path, p.Binary); err != nil {
+		return "", fmt.Errorf("rc.d script %s for provider %s: %w", path, providerLabel(p), err)
 	}
 	return service, nil
 }
@@ -148,26 +154,29 @@ func openbsdUpdateCron(p Provider, line string) error {
 	return nil
 }
 
-func cleanupLifecycle(p Provider) {
-	if err := openbsdUpdateCron(p, ""); err != nil {
-		fmt.Fprintf(os.Stderr, "uninstall: could not remove auto-update cron entry: %v\n", err)
-	}
+func cleanupLifecycle(p Provider) { _ = cleanupOpenBSDLifecycle(p) }
+
+func cleanupOpenBSDLifecycle(p Provider) error {
 	service, err := openbsdRequireScript(p)
-	if err != nil {
-		return
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
 	}
-	script, err := os.ReadFile(openbsdRcScriptPath(service))
-	if err != nil || !openbsdScriptServesBinary(string(script), p.Binary) {
-		return
+	if err != nil {
+		return err
 	}
 	for _, action := range []string{"stop", "disable"} {
 		if out, err := openbsdRcctl(action, service); err != nil {
-			fmt.Fprintf(os.Stderr, "uninstall: rcctl %s %s: %v (%s)\n", action, service, err, strings.TrimSpace(string(out)))
+			return fmt.Errorf("rcctl %s %s: %w (%s)", action, service, err, strings.TrimSpace(string(out)))
 		}
 	}
+	if err := openbsdUpdateCron(p, ""); err != nil {
+		return fmt.Errorf("remove auto-update cron entry: %w", err)
+	}
+	return nil
 }
 
 func init() {
+	cleanupLifecycleFn = cleanupOpenBSDLifecycle
 	renderSystemctlStatus = func(p Provider) error {
 		service, err := openbsdRequireScript(p)
 		if err != nil {
