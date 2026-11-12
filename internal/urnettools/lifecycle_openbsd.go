@@ -1,6 +1,7 @@
 package urnettools
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 )
 
 func openbsdRcctl(args ...string) ([]byte, error) {
@@ -34,7 +36,30 @@ func openbsdRequireScript(p Provider) (string, error) {
 	return service, nil
 }
 
+var openbsdServicePID = func() int {
+	data, err := os.ReadFile("/var/run/rc.d/urnetwork")
+	if err != nil {
+		return 0
+	}
+	return openbsdManagedPID(string(data), func(table, pattern string) ([]byte, error) {
+		return execWithTimeout(context.Background(), 5*time.Second, "pgrep", "-T", table, "-xf", pattern)
+	})
+}
+
+func openbsdRequireManaged(p Provider) error {
+	if p.Supervisor != "openbsd-rcd" || p.PID <= 0 || openbsdServicePID() != p.PID {
+		return fmt.Errorf("%s is not the uniquely matched rc.d-managed provider; refusing service action", providerLabel(p))
+	}
+	return nil
+}
+
 func bsdServiceControl(p Provider, action string) error {
+	if p.Binary == "" {
+		return fmt.Errorf("%s has no provider binary; refusing service action", providerLabel(p))
+	}
+	if err := openbsdRequireManaged(p); err != nil {
+		return err
+	}
 	service, err := openbsdRequireScript(p)
 	if err != nil {
 		return err
@@ -69,7 +94,7 @@ func openbsdRootOwnedPath(name string) bool {
 			return false
 		}
 		if current == name {
-			if !fi.Mode().IsRegular() {
+			if !fi.Mode().IsRegular() || fi.Mode().Perm()&0o111 == 0 {
 				return false
 			}
 		} else if !fi.IsDir() {
@@ -82,11 +107,11 @@ func openbsdRootOwnedPath(name string) bool {
 }
 
 func setAutoUpdateSchedule(p Provider, label, interval string) error {
-	if interval == "off" {
-		return openbsdUpdateCron(p, "")
-	}
 	if os.Geteuid() != 0 && bsdTreeOwnedByRoot(p.Binary) {
 		return fmt.Errorf("auto-update for %s must be scheduled as root", providerLabel(p))
+	}
+	if interval == "off" {
+		return openbsdUpdateCron(p, "")
 	}
 	tool := "urnet-tools"
 	if exe, err := os.Executable(); err == nil && exe != "" {
@@ -115,8 +140,7 @@ func setAutoUpdateSchedule(p Provider, label, interval string) error {
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return err
 	}
-	quote := func(s string) string { return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'" }
-	line := fmt.Sprintf("%s %s update -f >> %s 2>&1", spec, quote(tool), quote(filepath.Join(logDir, "auto-update.log")))
+	line := spec + " " + bsdCronCommand(tool, logDir)
 	return openbsdUpdateCron(p, line)
 }
 
@@ -162,6 +186,9 @@ func cleanupOpenBSDLifecycle(p Provider) error {
 		return nil
 	}
 	if err != nil {
+		return err
+	}
+	if err := openbsdRequireManaged(p); err != nil {
 		return err
 	}
 	for _, action := range []string{"stop", "disable"} {

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"path/filepath"
 	"strings"
 )
 
@@ -23,6 +24,13 @@ func randomBSDCronMinute() (int, error) {
 		return 0, fmt.Errorf("choose randomized cron minute: %w", err)
 	}
 	return int(minute.Int64()), nil
+}
+
+func bsdCronCommand(tool, logDir string) string {
+	quote := func(s string) string { return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'" }
+	command := fmt.Sprintf("%s update -f >> %s 2>&1", quote(tool), quote(filepath.Join(logDir, "auto-update.log")))
+	// Empty shell quotes separate a preceding backslash from cron's escape.
+	return strings.ReplaceAll(command, "%", `''\%`)
 }
 
 func bsdCronSchedule(interval string, weeklyMinute int) (string, error) {
