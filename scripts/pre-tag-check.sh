@@ -53,6 +53,12 @@ for arch in amd64 arm64; do
   echo "  ok freebsd/$arch"
 done
 
+echo "== go vet ./internal/urnettools/ for openbsd (build.yml freebsd-vet job)"
+for arch in amd64 arm64; do
+  GOOS=openbsd GOARCH=$arch go vet ./internal/urnettools/ >/dev/null
+  echo "  ok openbsd/$arch"
+done
+
 echo "== cross-build every shippable binary (build.yml cross-build job)"
 for goos in linux darwin windows; do
   for goarch in amd64 arm64; do

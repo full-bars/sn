@@ -5,6 +5,7 @@
 * **[Installation](Installation)**
 * **[Alpine Linux (OpenRC)](OpenRC)**
 * **[FreeBSD](FreeBSD)**
+* **[OpenBSD](OpenBSD)**
 * **[Configuration](Configuration)**
 * **[Docker Deployment](Docker-Deployment)**
 * **[Advanced Deployment](Advanced-Deployment)**

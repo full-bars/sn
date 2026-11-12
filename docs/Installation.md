@@ -1,6 +1,6 @@
 # 📦 Installation Guide
 
-This guide covers the Linux installer, user-level systemd service, post-install commands, and host optimization tools. Alpine with OpenRC and FreeBSD use a different service manager; both are covered under Other Platforms below.
+This guide covers the Linux installer, user-level systemd service, post-install commands, and host optimization tools. Alpine with OpenRC, FreeBSD and OpenBSD use a different service manager. They are covered under Other Platforms below.
 
 ## 🚀 Quick Start
 
@@ -50,6 +50,7 @@ The new binary is staged beside the installed one and renamed into place, so the
 
 - **Alpine Linux (OpenRC):** the same install command, run from a root shell, installs a system service under `supervise-daemon`. See the [Alpine Linux (OpenRC) guide](https://github.com/full-bars/sn/wiki/OpenRC).
 - **FreeBSD:** installs an `rc.d` service from the FreeBSD installer script. The base system is enough to download: the installer uses `curl` when it is installed, then `fetch`, then `wget`. From a root shell (`su -`) name a non-root account that already exists, because the installer refuses to run the service as root and will not create the account: `fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_FreeBSD.sh && SERVICE_USER_OVERRIDE=urnet sh urnet-install.sh install`. As a normal user, install `sudo` first (`pkg install -y sudo`) and prefix the second command with it. See the [FreeBSD guide](https://github.com/full-bars/sn/wiki/FreeBSD).
+- **OpenBSD:** installs an `rc.d` service managed with `rcctl` from the OpenBSD installer script. It downloads with `ftp` from the base system and needs `jq` or `python3` to read the release digests (`pkg_add jq`). Install `doas` or `sudo` access first, or run from a root shell with `SERVICE_USER_OVERRIDE=<user>`. See the [OpenBSD guide](https://github.com/full-bars/sn/wiki/OpenBSD).
 
 ## 🍎 macOS Installation
 

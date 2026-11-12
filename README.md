@@ -7,7 +7,7 @@ Besides the subnet code it inherits from upstream, this fork ships a provider th
 ## What you can run from here
 
 - **Container image:** `ghcr.io/full-bars/sn:latest`, with a Docker Hub mirror at `3cape/sn:latest`, built from `Dockerfile` for linux/amd64 and linux/arm64. It bakes in the subnet miner as `provider` and `urnet-tools`. `:miner` is kept as an alias of the same packaging and entrypoint for one release. The image has no vnStat dashboard. The legacy `BUILD=stable|jwt` variable still works (mapped to `AUTH=userpass|authcode`, with a deprecation warning). See [Miner Image](docs/Miner-Image.md) and [Docker Deployment](docs/Docker-Deployment.md).
-- **Provider binaries:** `urnetwork-provider-<tag>-<os>-<arch>.tar.gz` on the [releases page](https://github.com/full-bars/sn/releases), for Linux, macOS, Windows and FreeBSD on amd64 and arm64. The installer scripts in `scripts/` download these for you.
+- **Provider binaries:** `urnetwork-provider-<tag>-<os>-<arch>.tar.gz` on the [releases page](https://github.com/full-bars/sn/releases), for Linux, macOS, Windows, FreeBSD and OpenBSD on amd64 and arm64. The installer scripts in `scripts/` download these for you.
 - **`urnet-tools`:** the command line tool that starts, stops, checks and updates a provider on a host. Released as `urnet-tools-<os>-<arch>`.
 - **`urnet-docker`:** the same kind of tool for providers that run in Docker containers. It runs on the Docker host. Released as `urnet-docker-<os>-<arch>` for Linux, macOS and Windows.
 - **Monitoring bundle:** `urnetwork-monitoring-<tag>.tar.gz` on each release, with Prometheus and Grafana for watching a fleet. See [Monitoring](docs/Monitoring.md).
@@ -36,7 +36,7 @@ Windows (PowerShell):
 irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 | iex
 ```
 
-FreeBSD has its own installer, `scripts/Provider_Install_FreeBSD.sh`, described in [FreeBSD](docs/FreeBSD.md). Alpine with OpenRC uses the Linux command from a root shell, see [OpenRC](docs/OpenRC.md).
+FreeBSD has its own installer, `scripts/Provider_Install_FreeBSD.sh`, described in [FreeBSD](docs/FreeBSD.md). OpenBSD has `scripts/Provider_Install_OpenBSD.sh`, described in [OpenBSD](docs/OpenBSD.md). Alpine with OpenRC uses the Linux command from a root shell, see [OpenRC](docs/OpenRC.md).
 
 After installing, authenticate and load a proxy list:
 
@@ -104,7 +104,7 @@ Most operators only need to sign one wallet consent, once, from their own comput
 The pages in [`docs/`](docs/) are also published as the [project wiki](https://github.com/full-bars/sn/wiki). The index is [Home](docs/Home.md).
 
 - Setup: [Installation](docs/Installation.md), [Docker Deployment](docs/Docker-Deployment.md), [Miner Image](docs/Miner-Image.md), [Configuration](docs/Configuration.md), [Advanced Deployment](docs/Advanced-Deployment.md), [Multi-Container Scaling](docs/Multi-Container-Scaling.md).
-- Platforms: [OpenRC (Alpine)](docs/OpenRC.md), [FreeBSD](docs/FreeBSD.md).
+- Platforms: [OpenRC (Alpine)](docs/OpenRC.md), [FreeBSD](docs/FreeBSD.md), [OpenBSD](docs/OpenBSD.md).
 - Proxies: [Adding Proxies](docs/Adding-Proxies.md), [Proxy Management](docs/Proxy-Management.md), [Proxy URL Sources](docs/Proxy-URL-Sources.md).
 - Tools: [urnet-tools](docs/urnet-tools-go.md), [urnet-docker](docs/urnet-docker.md).
 - Operating: [Monitoring](docs/Monitoring.md), [Troubleshooting](docs/Troubleshooting.md), [Log Message Reference](docs/Log-Message-Reference.md), [Provider identity and flags](docs/Provider-Flags.md).

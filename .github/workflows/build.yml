@@ -486,6 +486,13 @@ jobs:
           GOOS=freebsd GOARCH=arm64 go vet ./internal/urnettools/
           echo "freebsd vet OK"
 
+      - name: Vet urnettools for openbsd
+        run: |
+          set -e
+          GOOS=openbsd GOARCH=amd64 go vet ./internal/urnettools/
+          GOOS=openbsd GOARCH=arm64 go vet ./internal/urnettools/
+          echo "openbsd vet OK"
+
   cross-build:
     # PR compile gate: a fork-adaptation stub our tests never hit (e.g. a
     # linux-only symbol referenced unconditionally from a portable file, like

@@ -21,7 +21,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 | `Dockerfile` | Builds the container image from `cli/miner/`, plus `urnet-tools` and `urnet-docker`. It is published as `:latest`. The `:miner` tag is an alias kept for one release (see [Miner Image](/full-bars/sn/wiki/Miner-Image)). |
 | `pelican/` | Egg file for the Pelican panel. |
 | `monitoring/` | Prometheus and Grafana bundle for watching a fleet (see [Monitoring](/full-bars/sn/wiki/Monitoring)). |
-| `scripts/` | Installers and uninstallers for Linux, macOS, Windows and FreeBSD, plus build and release check scripts. |
+| `scripts/` | Installers and uninstallers for Linux, macOS, Windows, FreeBSD and OpenBSD, plus build and release check scripts. |
 | `deploy/` | A systemd unit for the provider, and the policy files for the test and main networks. |
 | `fake-release-server/` | A built binary of the fake release server that the installer tests use. Its source is in `scripts/ci/fake-release-server/`. |
 | `releases/` | Release notes, one file per release. |

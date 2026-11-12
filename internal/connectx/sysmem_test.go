@@ -9,6 +9,15 @@ func TestHostMemoryReaders(t *testing.T) {
 	total, tok := HostMemoryTotalBytes()
 	avail, aok := HostMemoryAvailableBytes()
 	switch runtime.GOOS {
+	case "openbsd":
+		if aok {
+			t.Fatalf("available memory unexpectedly supported: %d", avail)
+		}
+		// hw.physmem width can vary; an unreadable total is reported unknown.
+		if tok && total <= 0 {
+			t.Fatalf("invalid total: %d", total)
+		}
+		return
 	case "linux", "darwin", "windows":
 	default:
 		if tok || aok {
