@@ -51,7 +51,7 @@ func bsdServiceControl(p Provider, action string) error {
 	if p.Binary == "" {
 		return fmt.Errorf("%s has no provider binary; refusing service action", providerLabel(p))
 	}
-	if action != "start" || p.Running {
+	if p.Running || (action != "start" && action != "enable" && action != "disable") {
 		if err := openbsdRequireManaged(p); err != nil {
 			return err
 		}

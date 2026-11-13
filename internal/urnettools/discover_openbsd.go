@@ -128,7 +128,18 @@ func discoverStopped(running []Provider) []Provider {
 	if dir == "" || stateDirIsSymlink(dir) {
 		return nil
 	}
-	return []Provider{{User: u.Username, StateDir: dir, StateHome: u.HomeDir, Binary: bin, Supervisor: "openbsd-rcd"}}
+	p := Provider{User: u.Username, StateDir: dir, StateHome: u.HomeDir, Binary: bin, Supervisor: "openbsd-rcd"}
+	h, err := openStateDirIn(p.StateHome, p.StateDir)
+	if err == nil {
+		var raw []byte
+		raw, err = h.readFile("jwt", maxJWTBytes)
+		h.Close()
+		if err == nil {
+			p.Network, p.NetworkID, p.JWTExpires, _ = decodeJWTFromBytes(raw)
+		}
+	}
+	p.IdentityRestricted = errors.Is(err, fs.ErrPermission)
+	return []Provider{p}
 }
 
 func currentUserName() string {

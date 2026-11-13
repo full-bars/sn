@@ -667,7 +667,16 @@ do_install() {
 
     if [ ! -e /usr/local/bin/urnet-tools ] || [ -L /usr/local/bin/urnet-tools ]; then
         priv ln -sf "$install_path/bin/urnet-tools" /usr/local/bin/urnet-tools || {
-            pr_err "Could not link urnet-tools into /usr/local/bin"; exit 1;
+            pr_err "Could not link urnet-tools into /usr/local/bin"
+            if [ "$had_old_binary" -eq 1 ] && [ -f "$provider_backup" ]; then
+                if ! priv mv -f "$provider_backup" "$provider_bin"; then
+                    pr_err "Could not restore the previous binary from %s; restore it manually to %s" "$provider_backup" "$provider_bin"
+                fi
+            else
+                priv rm -f "$provider_bin" || pr_err "Could not remove the newly installed binary %s" "$provider_bin"
+            fi
+            rm -rf "$tmpdir"
+            exit 1
         }
     else
         pr_warn "/usr/local/bin/urnet-tools already exists; leaving it unchanged"
