@@ -27,7 +27,7 @@ func stubStopService(t *testing.T, fn func(Provider) error) {
 func stubCleanup(t *testing.T) {
 	t.Helper()
 	prev, prevRunning := cleanupLifecycleFn, runningProviderProcessesFn
-	cleanupLifecycleFn = func(Provider) {}
+	cleanupLifecycleFn = func(Provider) error { return nil }
 	// nor read the machine's real process list
 	runningProviderProcessesFn = func() ([]Provider, error) { return nil, nil }
 	t.Cleanup(func() { cleanupLifecycleFn, runningProviderProcessesFn = prev, prevRunning })
@@ -61,6 +61,22 @@ func stubServiceOwned(t *testing.T) {
 		t.Error("an owned provider is stopped through its service, not by pid")
 		return nil
 	}, func() {})
+}
+
+func TestUninstallAbortsWhenLifecycleCleanupFails(t *testing.T) {
+	p := uninstallFixture(t)
+	stubCleanup(t)
+	stubServiceOwned(t)
+	stubStopService(t, func(Provider) error { return nil })
+	cleanupLifecycleFn = func(Provider) error { return errors.New("rcctl stop failed") }
+	if err := uninstallProvider(p); err == nil {
+		t.Fatal("uninstall succeeded after lifecycle cleanup failed")
+	}
+	for _, path := range []string{p.Binary, p.StateDir} {
+		if _, err := os.Stat(path); err != nil {
+			t.Errorf("%s was removed: %v", path, err)
+		}
+	}
 }
 
 func TestUninstallStopsServiceBeforeRemovingFiles(t *testing.T) {

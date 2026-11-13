@@ -172,7 +172,7 @@ func cmdStart(args []string, force, dryRun bool) error {
 	if runtime.GOOS == "windows" {
 		return startWindowsProvider(p, force, dryRun)
 	}
-	if runtime.GOOS == "freebsd" {
+	if runtime.GOOS == "freebsd" || runtime.GOOS == "openbsd" {
 		fmt.Printf("starting %s...\n", providerLabel(p))
 		if err := bsdServiceControl(p, "start"); err != nil {
 			fmt.Printf("FAILED to start %s: %v\n", providerLabel(p), err)
@@ -204,7 +204,7 @@ func cmdStop(args []string, force, dryRun bool) error {
 	if runtime.GOOS == "windows" {
 		return stopWindowsProvider(p, force, dryRun)
 	}
-	if runtime.GOOS == "freebsd" {
+	if runtime.GOOS == "freebsd" || (runtime.GOOS == "openbsd" && p.Supervisor == "openbsd-rcd") {
 		// rc.d, not systemd: go through the service so the provider drains
 		// under its own stop semantics rather than being signalled directly.
 		fmt.Printf("stopping %s...\n", providerLabel(p))
@@ -370,7 +370,7 @@ func cmdRestart(args []string, force, dryRun bool) error {
 	if runtime.GOOS == "windows" {
 		return restartWindowsProvider(p, force, dryRun)
 	}
-	if runtime.GOOS == "freebsd" {
+	if runtime.GOOS == "freebsd" || runtime.GOOS == "openbsd" {
 		fmt.Printf("restarting %s...\n", providerLabel(p))
 		if err := bsdServiceControl(p, "restart"); err != nil {
 			fmt.Printf("FAILED to restart %s: %v\n", providerLabel(p), err)
@@ -981,6 +981,9 @@ func tuneControlKeyValue(profile, mode string) (key, value string, err error) {
 // providers found" because Discover() runs as root and cannot see user-session
 // units owned by the ubuntu user.
 func cmdOptimize(args []string, force, dryRun bool) error {
+	if runtime.GOOS == "openbsd" {
+		return optimizeFor("openbsd")()
+	}
 	// Ignore provider target flags — optimize is host-wide. If unknown flags
 	// are present parseTargetFlags will still error on malformed input.
 	_, remaining, err := parseTargetFlags(args)
@@ -1024,6 +1027,12 @@ func cmdOptimize(args []string, force, dryRun bool) error {
 // Extracted so the dispatch itself is unit-testable without running the
 // (root-requiring, host-mutating) implementations.
 func optimizeFor(goos string) func() error {
+	if goos == "openbsd" {
+		// No tested OpenBSD tunables exist here, and falling through to
+		// optimizeLinux would write /etc/sysctl.d, which OpenBSD does not read,
+		// and report success.
+		return func() error { return fmt.Errorf("optimize is not supported on OpenBSD; tune sysctls manually") }
+	}
 	if goos == "windows" {
 		return optimizeWindows
 	}

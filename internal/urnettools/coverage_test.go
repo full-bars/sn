@@ -162,6 +162,12 @@ func TestTarRelPath(t *testing.T) {
 	if got, want := tarRelPath("windows", "amd64"), "windows/amd64/provider.exe"; got != want {
 		t.Errorf("tarRelPath(windows, amd64) = %q, want %q", got, want)
 	}
+	if got, want := tarRelPath("openbsd", "amd64"), "openbsd/amd64/provider"; got != want {
+		t.Errorf("tarRelPath(openbsd, amd64) = %q, want %q", got, want)
+	}
+	if got, want := tarRelPath("freebsd", "arm64"), "freebsd/arm64/provider"; got != want {
+		t.Errorf("tarRelPath(freebsd, arm64) = %q, want %q", got, want)
+	}
 	if strings.ContainsRune(tarRelPath("windows", "amd64"), '\\') {
 		t.Errorf("tarRelPath must never emit backslashes, got %q", tarRelPath("windows", "amd64"))
 	}

@@ -40,7 +40,7 @@ Core Commands:
   autopilot log [limit]   Show the capacity decisions the provider made (OOM-aware cap, trim)
   enforcement [history N] Show what the governors enforced (counts per day; or the newest N events)
   baseline [show|mark|compare]  Show this box's recorded behaviour, and compare an upgrade
-  extender <status|setup|about> Extender role status, setup and explanation
+  extender <status|setup> Extender role status and one-time privileged setup
 
 Performance & Tuning:
   turbo <v4|v8|off>       RAISE throughput limits for RAM-rich boxes
@@ -273,7 +273,7 @@ func newTopCmd() *cobra.Command {
 func newDiagCmd() *cobra.Command {
 	return withHelp(newCobraCmd("diag", "capture memory and CPU evidence from the running provider", nil, func(cmd *cobra.Command, args []string) error {
 		return cmdDiag(args)
-	}), "Ask the running provider to write a diagnostic bundle: a heap profile, every goroutine's stack, a 30 second CPU profile, and a plain-language summary.txt with the memory, goroutine and garbage-collector numbers. Use it when a provider is using a lot of memory or CPU and you want to know why, without restarting it (a restart resets the provider and destroys the state you wanted to see). The provider keeps serving traffic throughout and nothing is restarted. It takes no flags or arguments and opens no network port; the request goes over the owner-only control socket, so run it as the user the provider runs as, or with sudo. The files are written to <state dir>/diag/<UTC timestamp>/ with owner-only permissions; the five newest bundles are kept. It refuses to start when the filesystem holding the diag directory (<state dir>/diag) has less than 512 MiB of free space, and only one capture runs at a time. The bundle can contain session tokens, so do not post it publicly.", "  urnet-tools diag")
+	}), "Ask the running provider to write a diagnostic bundle: a heap profile, every goroutine's stack, a 30 second CPU profile, and a plain-language summary.txt with the memory, goroutine and garbage-collector numbers. Use it when a provider is using a lot of memory or CPU and you want to know why, without restarting it (a restart resets the provider and destroys the state you wanted to see). The provider keeps serving traffic throughout and nothing is restarted. It takes no flags or arguments and opens no network port; the request goes over the owner-only control socket, so run it as the user the provider runs as, or with sudo. The files are written to <state dir>/diag/<UTC timestamp>/ with owner-only permissions; the five newest bundles are kept. It refuses to start when the disk holding the state directory has less than 512 MiB of free space, and only one capture runs at a time. The bundle can contain session tokens, so do not post it publicly.", "  urnet-tools diag")
 }
 
 func newSnStatusCmd() *cobra.Command {

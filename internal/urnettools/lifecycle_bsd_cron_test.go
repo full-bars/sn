@@ -1,6 +1,22 @@
 package urnettools
 
-import "testing"
+import (
+	"os/exec"
+	"strings"
+	"testing"
+)
+
+func TestBSDCronCommandEscapesPercent(t *testing.T) {
+	command := bsdCronCommand(`/a\%b'c`, `/logs%here`)
+	if strings.Count(command, `''\%`) != 2 {
+		t.Fatalf("percent signs not escaped for cron: %q", command)
+	}
+	// Cron removes its percent escape before the shell parses the command.
+	shellCommand := strings.ReplaceAll(command, `\%`, `%`)
+	if out, err := exec.Command("sh", "-n", "-c", shellCommand).CombinedOutput(); err != nil {
+		t.Fatalf("invalid shell command %q: %s: %v", shellCommand, out, err)
+	}
+}
 
 // The cron marker must match the END of the line, not anywhere in it.
 //

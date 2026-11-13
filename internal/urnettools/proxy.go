@@ -61,7 +61,13 @@ func trimConfirmPrompt(p Provider, target string) string {
 	return fmt.Sprintf("trim %s to %s running proxies", providerLabel(p), target)
 }
 
+// A platform may supply a trusted command binary without identifying the live process.
+var providerCommandFallback = func(Provider) string { return "" }
+
 func providerSubcommand(p Provider, args ...string) error {
+	if p.Binary == "" {
+		p.Binary = providerCommandFallback(p)
+	}
 	if p.Binary == "" {
 		return fmt.Errorf("provider %s has no resolvable binary path", providerLabel(p))
 	}

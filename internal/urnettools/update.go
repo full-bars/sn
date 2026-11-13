@@ -1141,7 +1141,7 @@ func restartProvider(p Provider) error {
 		// be restarted as a whole (see restartProviderWindows).
 		return restartProviderWindowsFn(p)
 	}
-	if runtime.GOOS == "freebsd" {
+	if runtime.GOOS == "freebsd" || runtime.GOOS == "openbsd" {
 		// rc.d owns the service on FreeBSD; systemd never exists there. Without
 		// this branch an update swaps the binary and then fails to restart,
 		// leaving the old image running and the new one on disk.
@@ -1268,12 +1268,9 @@ func tarRelPath(goos, arch string) string {
 	if goos == "windows" {
 		return path.Join("windows", arch, "provider.exe")
 	}
-	if goos == "freebsd" {
-		// The universal tarball ships freebsd/<arch>/provider. Without this
-		// case the fallthrough installs the LINUX ELF on a FreeBSD box, where
-		// isRecognizedExecutable accepts it as a valid ELF and the wrong-asset
-		// guard never fires.
-		return path.Join("freebsd", arch, "provider")
+	if goos == "freebsd" || goos == "openbsd" {
+		// Never fall back to a Linux ELF on a BSD host.
+		return path.Join(goos, arch, "provider")
 	}
 	return path.Join("linux", arch, "provider")
 }

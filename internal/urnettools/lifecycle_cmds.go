@@ -154,7 +154,10 @@ var stopProviderServiceFn = stopProviderService
 // cleanupLifecycleFn is the seam for the platform lifecycle cleanup (timers on
 // Unix; scheduled tasks, the Startup shortcut and service config on Windows),
 // so tests never touch the real machine's artifacts.
-var cleanupLifecycleFn = cleanupLifecycle
+var cleanupLifecycleFn = func(p Provider) error {
+	cleanupLifecycle(p)
+	return nil
+}
 
 // providerOwnedByServiceFn, stopBareProviderFn and removeProviderServiceFilesFn
 // are the seams for the Windows supervisor ownership check. Uninstall only
@@ -220,7 +223,9 @@ func uninstallProvider(p Provider) error {
 	}
 	// Clean up platform lifecycle artifacts: on Unix the auto-update timer,
 	// on Windows the scheduled tasks (heavyweight review S7).
-	cleanupLifecycleFn(p)
+	if err := cleanupLifecycleFn(p); err != nil {
+		return fmt.Errorf("uninstall %s: lifecycle cleanup failed: %w. Nothing was removed", providerLabel(p), err)
+	}
 	if serviceOwned {
 		removeProviderServiceFilesFn()
 	}
