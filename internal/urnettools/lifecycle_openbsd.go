@@ -2,7 +2,6 @@ package urnettools
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,14 +12,9 @@ import (
 )
 
 func openbsdRcctl(args ...string) ([]byte, error) {
-	doas, doasErr := exec.LookPath("doas")
+	_, doasErr := exec.LookPath("doas")
 	_, sudoErr := exec.LookPath("sudo")
-	permitted := false
-	if os.Geteuid() != 0 && doasErr == nil {
-		checkArgs := append([]string{"-C", "/etc/doas.conf", "rcctl"}, args...)
-		permitted = exec.Command(doas, checkArgs...).Run() == nil
-	}
-	name, argv, err := openbsdRcctlArgv(os.Geteuid(), permitted, sudoErr == nil, args...)
+	name, argv, err := openbsdRcctlArgv(os.Geteuid(), doasErr == nil, sudoErr == nil, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -190,11 +184,8 @@ func cleanupLifecycle(p Provider) { _ = cleanupOpenBSDLifecycle(p) }
 
 func cleanupOpenBSDLifecycle(p Provider) error {
 	service, err := openbsdRequireScript(p)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-	if err != nil {
-		return err
+	if handled, cleanupErr := openbsdCleanupMissingScript(err, func() error { return openbsdUpdateCron(p, "") }); handled || cleanupErr != nil {
+		return cleanupErr
 	}
 	if err := openbsdRequireManaged(p); err != nil {
 		return err

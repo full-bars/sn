@@ -909,7 +909,7 @@ do_install_service() {
     # Running the provider as root because a bootstrap was run with sudo, or
     # because the box was logged into as root, would be a privilege
     # escalation the operator never asked for: refuse and say what to do.
-    service_user="$(resolve_service_user)"
+    [ -n "${service_user:-}" ] || service_user="$(resolve_service_user)"
     if [ "$service_user" = "root" ]; then
         pr_err "refusing to install a service that runs as root"
         pr_err "re-run as a normal user, or set SERVICE_USER_OVERRIDE=<user>"
@@ -1005,7 +1005,14 @@ write_state_flag() {
         pr_err "refusing to write %s: it is a symlink" "$_flag"
         return 1
     fi
-    mkdir -p "$state_dir"
+    if [ -L "$state_dir" ]; then
+        pr_err "refusing to write through symlink %s" "$state_dir"
+        return 1
+    fi
+    mkdir -p "$state_dir" || return 1
+    if [ "$(id -u)" = "0" ] && [ "$service_user" != "root" ]; then
+        chown -h "$service_user" "$state_dir" || return 1
+    fi
     _tmp=$(mktemp "$state_dir/.flag.XXXXXX") || {
         pr_err "cannot create temp file under %s" "$state_dir"
         return 1

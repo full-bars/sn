@@ -1,10 +1,21 @@
 package urnettools
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 )
+
+func openbsdCleanupMissingScript(err error, removeCron func() error) (bool, error) {
+	if !errors.Is(err, os.ErrNotExist) {
+		return false, err
+	}
+	if err := removeCron(); err != nil {
+		return true, fmt.Errorf("remove auto-update cron entry: %w", err)
+	}
+	return true, nil
+}
 
 func openbsdCheckScript(path, binary string) error {
 	script, err := os.ReadFile(path)

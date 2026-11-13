@@ -75,6 +75,8 @@ On an OpenBSD host:
 
 ```sh
 doas pkg_add go git
+git clone https://github.com/full-bars/sn.git
+cd sn
 CGO_ENABLED=0 go build -o urnetwork ./cli/miner
 CGO_ENABLED=0 go build -o urnet-tools-openbsd ./cmd/urnet-tools
 ```

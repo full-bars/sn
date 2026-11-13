@@ -8,6 +8,30 @@ import (
 	"testing"
 )
 
+func TestOpenBSDCleanupMissingScript(t *testing.T) {
+	cronErr := errors.New("cron failed")
+	for _, tc := range []struct {
+		name               string
+		scriptErr, cronErr error
+		handled            bool
+		wantErr            error
+		calls              int
+	}{
+		{"missing", os.ErrNotExist, nil, true, nil, 1},
+		{"missing cron failure", os.ErrNotExist, cronErr, true, cronErr, 1},
+		{"invalid script", os.ErrPermission, nil, false, os.ErrPermission, 0},
+		{"valid script", nil, nil, false, nil, 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := 0
+			handled, err := openbsdCleanupMissingScript(tc.scriptErr, func() error { calls++; return tc.cronErr })
+			if handled != tc.handled || !errors.Is(err, tc.wantErr) || calls != tc.calls {
+				t.Fatalf("got handled=%v err=%v calls=%d", handled, err, calls)
+			}
+		})
+	}
+}
+
 func TestOpenBSDCheckScript(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "urnetwork")
 	binary := "/usr/local/bin/urnetwork"
