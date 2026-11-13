@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"os/user"
-	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -23,20 +23,28 @@ func discoverProcesses() []Provider {
 	var providers []Provider
 	for _, row := range parseOpenBSDProcesses(string(out)) {
 		p := Provider{PID: row.pid, Running: true}
-		if managedPID > 0 && row.pid == managedPID {
+		managed := managedPID > 0 && row.pid == managedPID
+		if managed {
 			p.Supervisor = "openbsd-rcd"
+			p.Binary = installedOpenBSDProvider()
 		}
 		if u, err := user.LookupId(row.uid); err == nil {
 			p.User = u.Username
 			p.StateDir = resolveDiscoveredStateDir(u.HomeDir, "")
-			if stateDirIsSymlink(p.StateDir) {
-				p.StateDir = ""
-			}
 			if p.StateDir != "" {
 				p.StateHome = u.HomeDir
-				var jwtErr error
-				p.Network, p.NetworkID, p.JWTExpires, jwtErr = decodeJWT(filepath.Join(p.StateDir, "jwt"))
-				p.IdentityRestricted = errors.Is(jwtErr, fs.ErrPermission)
+				h, err := openStateDirIn(p.StateHome, p.StateDir)
+				if err != nil {
+					p.IdentityRestricted = errors.Is(err, fs.ErrPermission)
+					p.StateDir = ""
+				} else {
+					raw, err := h.readFile("jwt", maxJWTBytes)
+					h.Close()
+					p.IdentityRestricted = errors.Is(err, fs.ErrPermission)
+					if err == nil {
+						p.Network, p.NetworkID, p.JWTExpires, _ = decodeJWTFromBytes(raw)
+					}
+				}
 			}
 		}
 		providers = append(providers, p)
@@ -83,7 +91,45 @@ func stateDirIsSymlink(dir string) bool {
 	return err == nil && fi.Mode()&os.ModeSymlink != 0
 }
 
-func discoverStopped(_ []Provider) []Provider { return nil }
+func discoverStopped(running []Provider) []Provider {
+	for _, p := range running {
+		if p.Supervisor == "openbsd-rcd" {
+			return nil
+		}
+	}
+	bin := installedOpenBSDProvider()
+	if bin == "" || openbsdCheckScript(openbsdRcScriptPath("urnetwork"), bin) != nil {
+		return nil
+	}
+	data, err := os.ReadFile(openbsdRcScriptPath("urnetwork"))
+	if err != nil {
+		return nil
+	}
+	var name string
+	for _, line := range strings.Split(string(data), "\n") {
+		if v, ok := strings.CutPrefix(line, `daemon_user="`); ok {
+			name, _ = strings.CutSuffix(v, `"`)
+			break
+		}
+	}
+	if name == "" || name == "root" {
+		return nil
+	}
+	for i, r := range name {
+		if !(r >= 'a' && r <= 'z' || r == '_' || i > 0 && (r >= '0' && r <= '9' || r == '-')) {
+			return nil
+		}
+	}
+	u, err := user.Lookup(name)
+	if err != nil {
+		return nil
+	}
+	dir := resolveDiscoveredStateDir(u.HomeDir, "")
+	if dir == "" || stateDirIsSymlink(dir) {
+		return nil
+	}
+	return []Provider{{User: u.Username, StateDir: dir, StateHome: u.HomeDir, Binary: bin, Supervisor: "openbsd-rcd"}}
+}
 
 func currentUserName() string {
 	if u, err := user.Current(); err == nil {

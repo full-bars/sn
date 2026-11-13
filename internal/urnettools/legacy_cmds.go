@@ -204,7 +204,7 @@ func cmdStop(args []string, force, dryRun bool) error {
 	if runtime.GOOS == "windows" {
 		return stopWindowsProvider(p, force, dryRun)
 	}
-	if runtime.GOOS == "freebsd" || runtime.GOOS == "openbsd" {
+	if runtime.GOOS == "freebsd" || (runtime.GOOS == "openbsd" && p.Supervisor == "openbsd-rcd") {
 		// rc.d, not systemd: go through the service so the provider drains
 		// under its own stop semantics rather than being signalled directly.
 		fmt.Printf("stopping %s...\n", providerLabel(p))

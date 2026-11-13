@@ -16,6 +16,13 @@ func TestReadJWTFileOpenBSD(t *testing.T) {
 	if b, err := readJWTFile(path); err != nil || string(b) != "a.b.c" {
 		t.Fatalf("regular file: %q, %v", b, err)
 	}
+	jwtLink := filepath.Join(dir, "jwt-link")
+	if err := os.Symlink(path, jwtLink); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := readJWTFile(jwtLink); err == nil {
+		t.Fatal("symlinked JWT accepted")
+	}
 	link := filepath.Join(t.TempDir(), "state")
 	if err := os.Symlink(dir, link); err != nil {
 		t.Fatal(err)

@@ -57,8 +57,12 @@ func bsdServiceControl(p Provider, action string) error {
 	if p.Binary == "" {
 		return fmt.Errorf("%s has no provider binary; refusing service action", providerLabel(p))
 	}
-	if err := openbsdRequireManaged(p); err != nil {
-		return err
+	if action != "start" || p.Running {
+		if err := openbsdRequireManaged(p); err != nil {
+			return err
+		}
+	} else if p.Supervisor != "openbsd-rcd" || p.PID != 0 || openbsdServicePID() != 0 {
+		return fmt.Errorf("%s is not a stopped rc.d-managed provider", providerLabel(p))
 	}
 	service, err := openbsdRequireScript(p)
 	if err != nil {
@@ -140,7 +144,11 @@ func setAutoUpdateSchedule(p Provider, label, interval string) error {
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return err
 	}
-	line := spec + " " + bsdCronCommand(tool, logDir)
+	selector, err := bsdUpdateSelector(p)
+	if err != nil {
+		return err
+	}
+	line := spec + " " + bsdCronCommand(tool, logDir, selector...)
 	return openbsdUpdateCron(p, line)
 }
 

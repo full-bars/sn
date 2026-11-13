@@ -33,7 +33,7 @@ import (
 // silently installing a daily schedule for someone who asked for weekly is worse
 // than an error. Weekly's randomized minute is persisted in the crontab, so each
 // host keeps the same schedule until it is explicitly changed.
-func bsdUpdateCronLine(tool, logDir, interval string) (string, error) {
+func bsdUpdateCronLine(tool, logDir, interval string, selector ...string) (string, error) {
 	minute := 17
 	if interval == "weekly" {
 		var err error
@@ -46,7 +46,7 @@ func bsdUpdateCronLine(tool, logDir, interval string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return spec + " " + bsdCronCommand(tool, logDir), nil
+	return spec + " " + bsdCronCommand(tool, logDir, selector...), nil
 }
 
 // shellQuote wraps s in single quotes for inclusion in a crontab line, which is
@@ -191,7 +191,11 @@ func setAutoUpdateSchedule(p Provider, label, interval string) error {
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return fmt.Errorf("auto-update: create log dir %s: %w", logDir, err)
 	}
-	line, err := bsdUpdateCronLine(tool, logDir, interval)
+	selector, err := bsdUpdateSelector(p)
+	if err != nil {
+		return err
+	}
+	line, err := bsdUpdateCronLine(tool, logDir, interval, selector...)
 	if err != nil {
 		return err
 	}
