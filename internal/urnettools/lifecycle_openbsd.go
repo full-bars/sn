@@ -2,6 +2,7 @@ package urnettools
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -33,10 +34,18 @@ func openbsdRequireScript(p Provider) (string, error) {
 var openbsdServicePID = func() int {
 	data, err := os.ReadFile("/var/run/rc.d/urnetwork")
 	if err != nil {
-		return 0
+		if errors.Is(err, os.ErrNotExist) {
+			return 0
+		}
+		return -1
 	}
 	return openbsdManagedPID(string(data), func(table, pattern string) ([]byte, error) {
-		return execWithTimeout(context.Background(), 5*time.Second, "pgrep", "-T", table, "-xf", pattern)
+		out, err := execWithTimeout(context.Background(), 5*time.Second, "pgrep", "-T", table, "-xf", pattern)
+		var exit *exec.ExitError
+		if errors.As(err, &exit) && exit.ExitCode() == 1 {
+			return nil, nil
+		}
+		return out, err
 	})
 }
 
@@ -183,17 +192,30 @@ func openbsdUpdateCron(p Provider, line string) error {
 func cleanupLifecycle(p Provider) { _ = cleanupOpenBSDLifecycle(p) }
 
 func cleanupOpenBSDLifecycle(p Provider) error {
+	if p.Supervisor != "openbsd-rcd" {
+		if p.Running {
+			return stopUnitlessProvider(p, false)
+		}
+		return nil
+	}
 	service, err := openbsdRequireScript(p)
+	if errors.Is(err, os.ErrNotExist) && p.Running {
+		return fmt.Errorf("%s: service script is missing; refusing to remove a running provider", providerLabel(p))
+	}
 	if handled, cleanupErr := openbsdCleanupMissingScript(err, func() error { return openbsdUpdateCron(p, "") }); handled || cleanupErr != nil {
 		return cleanupErr
 	}
-	if err := openbsdRequireManaged(p); err != nil {
+	stop, err := openbsdCleanupNeedsStop(p, openbsdServicePID())
+	if err != nil {
 		return err
 	}
-	for _, action := range []string{"stop", "disable"} {
-		if out, err := openbsdRcctl(action, service); err != nil {
-			return fmt.Errorf("rcctl %s %s: %w (%s)", action, service, err, strings.TrimSpace(string(out)))
+	if stop {
+		if out, err := openbsdRcctl("stop", service); err != nil {
+			return fmt.Errorf("rcctl stop %s: %w (%s)", service, err, strings.TrimSpace(string(out)))
 		}
+	}
+	if out, err := openbsdRcctl("disable", service); err != nil {
+		return fmt.Errorf("rcctl disable %s: %w (%s)", service, err, strings.TrimSpace(string(out)))
 	}
 	if err := openbsdUpdateCron(p, ""); err != nil {
 		return fmt.Errorf("remove auto-update cron entry: %w", err)

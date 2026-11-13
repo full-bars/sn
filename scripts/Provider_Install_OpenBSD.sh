@@ -1063,7 +1063,8 @@ do_session() {
 do_proxy() {
     require_tool || return 1
     case "${1:-}" in
-        refresh|remove-dead|summary) "$tool_bin" proxy "$@" ;;
+        refresh|remove-dead) "$tool_bin" proxy "$@" ;;
+        summary) shift; "$tool_bin" summary "$@" ;;
         *) pr_err "Usage: urnet-tools proxy <refresh|remove-dead|summary>"; return 1 ;;
     esac
 }

@@ -92,6 +92,9 @@ func stateDirIsSymlink(dir string) bool {
 }
 
 func discoverStopped(running []Provider) []Provider {
+	if openbsdServicePID() != 0 {
+		return nil
+	}
 	for _, p := range running {
 		if p.Supervisor == "openbsd-rcd" {
 			return nil
