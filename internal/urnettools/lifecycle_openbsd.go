@@ -194,7 +194,12 @@ func cleanupLifecycle(p Provider) { _ = cleanupOpenBSDLifecycle(p) }
 func cleanupOpenBSDLifecycle(p Provider) error {
 	if p.Supervisor != "openbsd-rcd" {
 		if p.Running {
-			return stopUnitlessProvider(p, false)
+			if err := stopUnitlessProvider(p, false); err != nil {
+				return err
+			}
+		}
+		if err := openbsdUpdateCron(p, ""); err != nil {
+			return fmt.Errorf("remove auto-update cron entry: %w", err)
 		}
 		return nil
 	}
