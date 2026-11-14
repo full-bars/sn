@@ -97,6 +97,9 @@ func TestHotSwapStderrHelper(t *testing.T) {
 		signal.Notify(ch, syscall.SIGPIPE)
 		signal.Stop(ch)
 	}
+	if mode == "ignored" {
+		protectLogPipes()
+	}
 	if mode == "old" || mode == "ignored" || mode == "successor" {
 		if _, err := syscall.Write(3, []byte("r")); err != nil {
 			os.Exit(5)
@@ -172,7 +175,7 @@ func TestHotSwapOrphanedStderr(t *testing.T) {
 			cmd.Stdout, cmd.Stderr = w, w
 			cmd.Env = append(os.Environ(), "TEST_HOTSWAP_STDERR="+mode)
 			if mode == "successor" {
-				cmd.Env = append(cmd.Env, EnvHotSwap+"=1")
+				cmd.Env = append(cmd.Env, EnvHotSwap+"=1", "URNETWORK_RAMLOGS=1")
 			}
 			if err := cmd.Start(); err != nil {
 				child.Close()
@@ -240,7 +243,7 @@ func TestHotSwapSuccessorPreservesStdout(t *testing.T) {
 	}
 	cmd := exec.Command(exe, "-test.run=^TestHotSwapStderrHelper$")
 	cmd.Stdout, cmd.Stderr = w, w
-	cmd.Env = append(os.Environ(), "TEST_HOTSWAP_STDERR=successor-stdout", EnvHotSwap+"=1")
+	cmd.Env = append(os.Environ(), "TEST_HOTSWAP_STDERR=successor-stdout", EnvHotSwap+"=1", "URNETWORK_RAMLOGS=1")
 	err = cmd.Run()
 	w.Close()
 	if err != nil {
@@ -275,7 +278,7 @@ func TestHotSwapForwardsLiveStderrAndDrainsAfterClose(t *testing.T) {
 	cmd.Stdout = io.Discard
 	cmd.Stderr = w
 	cmd.ExtraFiles = []*os.File{child}
-	cmd.Env = append(os.Environ(), "TEST_HOTSWAP_STDERR=live-successor", EnvHotSwap+"=1")
+	cmd.Env = append(os.Environ(), "TEST_HOTSWAP_STDERR=live-successor", EnvHotSwap+"=1", "URNETWORK_RAMLOGS=1")
 	if err := cmd.Start(); err != nil {
 		child.Close()
 		t.Fatal(err)

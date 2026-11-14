@@ -45,7 +45,10 @@ const DefaultConnectUrl = "wss://connect.bringyour.com"
 var Version string
 
 func init() {
-	protectLogPipes()
+	if isLongRunningSubcommand(os.Args[1:]) {
+		// One-shot commands keep the default SIGPIPE behavior, so a pipe to head ends them.
+		protectLogPipes()
+	}
 	prepareHotswapStderr()
 	// debug.SetGCPercent(10)
 

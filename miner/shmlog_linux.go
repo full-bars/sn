@@ -52,7 +52,7 @@ var hotswapSafeStderr *os.File
 // Keep a successor-owned reader on stderr. Forward while the inherited pipe
 // works, then keep draining if the old parent and its reader have gone away.
 func prepareHotswapStderr() {
-	if os.Getenv(EnvHotSwap) != "1" {
+	if os.Getenv(EnvHotSwap) != "1" || !ramlogsRequested() {
 		return
 	}
 	var stderr, stdout unix.Stat_t
