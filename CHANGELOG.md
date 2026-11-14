@@ -11,6 +11,10 @@ Everything merged after `v2026.11.14-1098572730-sn`.
 - **ClamAV gates the release** (`.github/workflows/release.yml`, `.github/scripts/clamav-scan.sh`, `.github/scripts/test-clamav-scan.sh`). The `create-release` job scans the exact files it uploads before it publishes, with definitions fetched by `freshclam` just before the scan. A detection, a scanner failure, a stale database or a failed refresh stops the release. VirusTotal still runs after publication and never gates. [no redeploy]
 - **ClamAV gates the Docker images** (`.github/workflows/build.yml`, `.github/workflows/miner-image.yml`). Before a push, the job builds the image filesystem for each platform and scans it with `.github/scripts/clamav-scan.sh`, with definitions fetched just before the scan. A detection, a scanner failure or a failed refresh stops the push, so no tag moves. The push step reuses the layers from the build cache. [no redeploy]
 
+### Fixed
+
+- **A busy node no longer runs thousands of threads** (connect pin). Each UDP readiness shard waited in a blocking `epoll_wait`, which held one OS thread per shard, and the provider runs about two shards for every proxy. A node with a thousand proxies ended up with about 2,100 threads, 2,100 epoll descriptors and 2,100 eventfds, and a single core spent much of its time switching between them. The shards now wait through the Go network poller and park as goroutines. The pin moves to a connect commit that carries the fix.
+
 ## [v2026.11.14-1098572730-sn] - 2026-11-14
 
 Changes after `v2026.11.9-1094091330-sn`. Notes: `releases/v2026.11.14-1098572730-sn.md`.
