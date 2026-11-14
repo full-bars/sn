@@ -4,7 +4,11 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Everything merged after `v2026.11.9-1094091330-sn`.
+Everything merged after `v2026.11.14-1098572730-sn`.
+
+## [v2026.11.14-1098572730-sn] - 2026-11-14
+
+Changes after `v2026.11.9-1094091330-sn`. Notes: `releases/v2026.11.14-1098572730-sn.md`.
 
 This update brings OpenBSD support, moves the `sdk` pin to a commit on the fork main branch, and moves the build to Go 1.27.4. The `connect` pin does not move. Redeploy after the update.
 
