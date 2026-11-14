@@ -563,12 +563,12 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 
 **Status**: shipping in this release.
 
-## 42. Connect and sdk Pins on the Fork Main, Go 1.27.4
+## 42. The sdk Pin on the Fork Main and Go 1.27.4
 
-**Purpose**: Build against the merged fork main branches of connect and the sdk, so the pins are reachable from `main` and name one connect commit, and move the toolchain to Go 1.27.4.
+**Purpose**: Pin the sdk to a commit that is reachable from the fork `main`, with the extender activation pacing hook the miner uses, and move the toolchain to Go 1.27.4. The connect pin stays where it was.
 
 **Files Modified**: `go.mod`, `go.sum`, `Dockerfile`, `.github/workflows/*.yml`, `scripts/source-graph/source_graph_test.go`, `internal/urnettools/cobra.go`, `internal/urnettools/lifecycle_bsd_cron.go` and the docs that name the Go version.
 
-**How to Identify in New Upstream**: the two `replace` lines for `github.com/urnetwork/connect` and `github.com/urnetwork/sdk` point at `github.com/full-bars/connect` and `github.com/full-bars/sdk`. Upstream sn has no such lines. Bring upstream in with a merge into the fork `main` of connect and the sdk, then move both pins together (see the pin bump runbook in the workspace docs).
+**How to Identify in New Upstream**: the two `replace` lines for `github.com/urnetwork/connect` and `github.com/urnetwork/sdk` point at `github.com/full-bars/connect` and `github.com/full-bars/sdk`. Upstream sn has no such lines. Bring upstream in with a merge into the fork `main` of connect and the sdk, then move both pins together (see the pin bump runbook in the workspace docs). The merged connect main `cb9728fb5` was tried in this release and held back, because it failed the PR soak churn check.
 
 **Status**: shipping in this release.

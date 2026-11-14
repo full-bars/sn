@@ -6,7 +6,7 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 Everything merged after `v2026.11.9-1094091330-sn`.
 
-This update brings OpenBSD support, moves the `connect` and `sdk` pins forward to the merged fork main branches, and moves the build to Go 1.27.4. Redeploy after the update.
+This update brings OpenBSD support, moves the `sdk` pin to a commit on the fork main branch, and moves the build to Go 1.27.4. The `connect` pin does not move. Redeploy after the update.
 
 ### Added
 
@@ -14,9 +14,8 @@ This update brings OpenBSD support, moves the `connect` and `sdk` pins forward t
 
 ### Changed
 
-- **The `connect` pin moves to the fork main at `cb9728fb5`** (`go.mod`). It is the fork merged with upstream connect main `0d6d5d001`, 207 upstream commits past the previous pin. It carries upstream's FP2 provider selection code, the handshake generation fix and the extender and DNS resolver changes of that range. The miner does not run the multi client window, so the provider selection change reaches a miner through the network operator's server. This pin does not carry it.
-- **The `sdk` pin moves to the fork main at `c364d632`** (`go.mod`). The sdk names the same `connect` commit. It also puts the extender activation pacing hook back on the fork main. A force push had dropped it, and the previous pin pointed at a commit that was on no branch. The full upstream sdk sync follows in a later release.
-- **The build is Go 1.27.4** (`go.mod`, `Dockerfile`, the workflows). The new `connect` requires it, and upstream sn and server already use it.
+- **The `sdk` pin moves to the fork main at `5c905e84`** (`go.mod`). It has the same code as the previous pin, which was on no branch because a force push had dropped it, and it keeps the extender activation pacing hook that the miner uses. Only its `go.mod` differs.
+- **The build is Go 1.27.4** (`go.mod`, `Dockerfile`, the workflows). Upstream sn and server already use it.
 
 ### Fixed
 
@@ -26,6 +25,7 @@ This update brings OpenBSD support, moves the `connect` and `sdk` pins forward t
 
 ### Known limits
 
+- The `connect` pin stays at the fork main `8e078bbca`. The merged fork main `cb9728fb5` (upstream connect main `0d6d5d001`) is held back. With only that pin changed, the PR soak churn check failed, and goroutines grew by 27 percent over the churn windows against 4.7 percent on main. The pin moves when the growth is understood.
 - The source-graph tests for SCTP, gVisor and the substrate RPC fork need sibling checkouts and fail the same way on a clean main in a plain worktree. The `connect` and `sdk` pin tests pass.
 - `scripts/mainnet-release-build/pin.sh` is the network operator's release tooling. It still expects the upstream `sdk` module path, while this fork replaces the `sdk` with its own fork. The fork's workflows do not run it. The source-graph tests follow `go.mod`.
 - The upstream `sdk` features that need new sdk code, such as the extender WebRTC carrier and router port mapping, are not in this release. The sdk pin is the fork main without the upstream sdk sync.

@@ -6,7 +6,7 @@
 
 Previous release: `v2026.11.9-1094091330-sn`.
 
-This release adds OpenBSD provider and `urnet-tools` support, moves the `connect` and `sdk` pins to the merged fork main branches, and moves the build to Go 1.27.4. The `sdk` pin also puts the extender activation pacing hook back on the fork main. Update and restart.
+This release adds OpenBSD provider and `urnet-tools` support, moves the `sdk` pin to a commit on the fork main branch and moves the build to Go 1.27.4. The `connect` pin does not move. Update and restart.
 
 ## Quick start
 
@@ -59,9 +59,8 @@ Auth codes are single-use. Keep the state volume. If an existing identity is mis
 - **OpenBSD provider and `urnet-tools` support. [redeploy] [installer]** The provider and `urnet-tools` build for OpenBSD on amd64 and arm64. There is an installer, `rcctl` service setup, cron auto-update and release assets. `urnet-tools` tells an absent service from an ambiguous process match before it runs `rcctl`, keeps manually started providers on the direct stop path, and removes the cron entry of a bare provider.
 
 ### Build and dependencies
-- **The `connect` pin moves to the fork main at `cb9728fb5`. [redeploy]** It is the fork merged with upstream connect main `0d6d5d001`, 207 upstream commits past the previous pin. The miner does not run the multi client window, so the provider selection change reaches a miner through the network operator's server. This pin does not carry it.
-- **The `sdk` pin moves to the fork main at `c364d632`. [redeploy]** It names the same `connect` commit and brings the extender activation pacing hook back onto the fork main. The previous pin pointed at a commit that was on no branch.
-- **The build is Go 1.27.4. [redeploy]** The new `connect` requires it.
+- **The `sdk` pin moves to the fork main at `5c905e84`. [redeploy]** It has the same code as the previous pin, which was on no branch, and it keeps the extender activation pacing hook that the miner uses.
+- **The build is Go 1.27.4. [redeploy]**
 
 ### Fixes
 - **The `urnet-tools` root help lists `extender about`. [redeploy]**
@@ -74,4 +73,5 @@ Auth codes are single-use. Keep the state volume. If an existing identity is mis
 ## Known limits
 
 - The OpenBSD runtime was not run on a real OpenBSD host, and durable client registration is unavailable there.
+- The `connect` pin stays at the fork main `8e078bbca`. The merged fork main with upstream connect `0d6d5d001` is held back, because it failed the soak check for resource growth during proxy churn.
 - The upstream `sdk` features that need new sdk code, such as the extender WebRTC carrier and router port mapping, are not in this release. The sdk pin is the fork main without the upstream sdk sync.
