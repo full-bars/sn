@@ -132,7 +132,7 @@ The installation includes the `urnet-tools` suite for management, a provider-awa
 | `urnet-tools eco on/off` | Toggle Eco mode. |
 | `urnet-tools ramlogs on/off` | Toggle RAM-disk logging independently. |
 | `urnet-tools lowmode on/off` | Turn low-memory mode on or off. It reduces buffers to save RAM and restarts the provider, so it asks for a typed "yes". Add `-f` to skip the question. |
-| `urnet-tools autopilot log` | Show the newest capacity decisions of the provider. See [Monitoring](Monitoring.md#records-of-capacity-decisions-and-enforcement). |
+| `urnet-tools autopilot log` | Show the newest capacity decisions of the provider. See [Monitoring](Monitoring#records-of-capacity-decisions-and-enforcement). |
 | `urnet-tools enforcement` | Show what the governors did: a summary per day, or the newest events with `history N`. |
 | `urnet-tools update` | Upgrade to the latest version (prompts before restarting the provider). |
 | `urnet-tools update -f` | Non-interactive upgrade: stop, update, and restart the provider with no prompts. Use in scripts/automation. |

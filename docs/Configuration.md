@@ -175,7 +175,7 @@ These runtime keys apply through the control socket, like the other `urnet-tools
 | `gomemlimit` | bytes, for example `256MiB` or `1GiB` | The Go runtime memory limit. |
 | `metrics-listen` | `auto` or `ip:port` | The `/metrics` listen address. `auto` is the default. It binds loopback and every Tailscale IPv4, or `0.0.0.0` in a container. An explicit address is used as it is. `off` clears the value back to `auto`. A change rebinds a running listener with no restart. |
 
-The records that `oom-cap` writes are in [Monitoring](Monitoring.md#records-of-capacity-decisions-and-enforcement).
+The records that `oom-cap` writes are in [Monitoring](Monitoring#records-of-capacity-decisions-and-enforcement).
 
 ### Transport datagrams
 
