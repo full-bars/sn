@@ -32,11 +32,14 @@ Install on macOS:
 curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Mac.sh | sh -s -- install
 ```
 
-Install on Windows in PowerShell:
+Install on Windows in PowerShell. Windows Defender can flag the one-line form as a false positive, because the script downloads and unpacks a program. The safer way has two steps. Download the script, read it, then run it from disk:
 
 ```powershell
-irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 | iex
+irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 -OutFile "$env:TEMP\install-win.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:TEMP\install-win.ps1"
 ```
+
+The Installation guide lists the Defender labels you may see and what to do about them.
 
 On FreeBSD, download the installer and run it with a non-root service account selected:
 
@@ -100,7 +103,7 @@ Auth codes are single-use. Keep the state volume. If an existing identity is mis
 ## Known limits
 
 - The OpenBSD runtime was not run on a real OpenBSD host, and durable client registration is unavailable there.
-- The `connect` pin stays at the fork main `8e078bbca`. The merged fork main with upstream connect `0d6d5d001` is held back until more soak runs confirm its memory use. Two runs on the new soak check passed.
+- The `connect` pin stays at the fork main `8e078bbca`. A newer fork main, with upstream connect `0d6d5d001`, is held back. Two runs on the new soak check passed. More runs must confirm its memory use before the pin moves.
 - The source-graph tests for SCTP, gVisor and the substrate RPC fork need sibling checkouts. They fail in a plain worktree.
 - `scripts/mainnet-release-build/pin.sh` is the network operator's release tooling. It still expects the upstream `sdk` module path. The fork's workflows do not run it.
 - The upstream `sdk` features that need new sdk code, such as the extender WebRTC carrier and router port mapping, are not in this release. The sdk pin is the fork main without the upstream sdk sync.
