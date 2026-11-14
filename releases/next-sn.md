@@ -41,12 +41,15 @@ fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/h
 sudo sh urnet-install.sh install
 ```
 
-On OpenBSD, download the installer and run it with an existing non-root service account (replace `urnet` with its name):
+On OpenBSD, the installer needs `jq` or `python3` to read the release metadata. Install `jq`, download the installer and run it with an existing non-root service account (replace `urnet` with its name):
 
 ```sh
+doas pkg_add jq
 ftp -o urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_OpenBSD.sh
 doas env SERVICE_USER_OVERRIDE=urnet sh urnet-install.sh install
 ```
+
+The installer does not sign the provider in. Sign in as the service account with a single-use auth code from https://ur.io, then restart the service. The OpenBSD guide has the exact commands.
 
 Start a new provider container:
 
