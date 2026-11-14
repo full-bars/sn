@@ -86,13 +86,21 @@ def owned_goroutines(text):
 def settled(samples):
     """Minimum of each field. A leak stays in the minimum, a transient does not.
 
-    The slot count is the one from the last sample, because it is a level and
-    not a noisy count. It is None when the metrics page has no slot gauge.
+    The slot count is the one of the sample that holds the minimum count, so the
+    two always describe the same moment. It is None when the metrics page has no
+    slot gauge.
     """
     out = {k: min(s[k] for s in samples) for k in FIELDS}
-    out['slots'] = samples[-1].get('slots')
     owned = [s['owned'] for s in samples if s.get('owned') is not None]
     out['owned'] = min(owned) if len(owned) == len(samples) else None
+    # The slot count must come from the same sample as the goroutine count it
+    # explains. A slot that starts while the samples are taken would otherwise
+    # pair a low count from before it with a slot count from after it.
+    if out['owned'] is not None:
+        pick = min(samples, key=lambda s: s['owned'])
+    else:
+        pick = min(samples, key=lambda s: s['goroutines'])
+    out['slots'] = pick.get('slots')
     return out
 
 
@@ -106,12 +114,15 @@ def compare(base, now, goroutine_pct=5, rss_pct=10, fd_limit=1000):
     key = 'owned' if base.get('owned') and now.get('owned') is not None else 'goroutines'
     what = 'slot-owned goroutines' if key == 'owned' else 'goroutines'
     bs, ns = base.get('slots'), now.get('slots')
-    if bs and ns and bs != ns:
-        # Compare the cost of one slot. With a fixed overhead this is lenient when
-        # slots were added, which is the safe side for a bound on leaks.
+    if bs and ns and ns > bs:
+        # Slots were added. Compare the cost of one slot. A fixed overhead makes
+        # this lenient, which is the safe side for a bound on leaks.
         if now[key] * bs * 100 > base[key] * ns * (100 + goroutine_pct):
             failed.append(f'{what} per slot grew more than {goroutine_pct}% (slots {bs} -> {ns})')
     elif now[key] * 100 > base[key] * (100 + goroutine_pct):
+        # Same slots, or slots left. A slot that left takes its goroutines with
+        # it, so the total must not exceed the baseline. Dividing by the slot
+        # count would count the fixed overhead as growth.
         failed.append(f'{what} grew more than {goroutine_pct}%')
     return failed
 

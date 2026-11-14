@@ -93,9 +93,32 @@ class Slots(unittest.TestCase):
     def test_slot_count_ignores_a_malformed_value(self):
         self.assertIsNone(ss.slot_count("urnet_provider_client_ids_reused abc\n"))
 
-    def test_settled_keeps_the_last_slot_count(self):
-        rows = [slotted(300, 3), slotted(290, 3), slotted(310, 4)]
-        self.assertEqual(ss.settled(rows)['slots'], 4)
+    def test_settled_takes_the_slot_count_of_the_minimum_sample(self):
+        # 300 goroutines on three slots, then a slot starts and 400 on four.
+        rows = [slotted(300, 3), slotted(400, 4), slotted(405, 4)]
+        out = ss.settled(rows)
+        self.assertEqual((out['goroutines'], out['slots']), (300, 3))
+
+    def test_settled_pairs_owned_with_its_own_slot_count(self):
+        rows = [dict(slotted(320, 4), owned=300), dict(slotted(310, 3), owned=250), dict(slotted(330, 4), owned=310)]
+        out = ss.settled(rows)
+        self.assertEqual((out['owned'], out['slots']), (250, 3))
+
+    def test_a_slot_that_started_while_sampling_is_not_a_leak(self):
+        base = ss.settled([dict(slotted(300, 3), owned=250), dict(slotted(400, 4), owned=330)])
+        now = ss.settled([dict(slotted(400, 4), owned=330), dict(slotted(405, 4), owned=335)])
+        self.assertEqual(ss.compare(base, now), [])
+
+    def test_a_slot_that_left_is_not_a_leak(self):
+        # 100 fixed goroutines and 50 per slot: 300 on four slots, 250 on three.
+        base = dict(slotted(300, 4), owned=300)
+        now = dict(slotted(250, 3), owned=250)
+        self.assertEqual(ss.compare(base, now), [])
+
+    def test_growth_after_a_slot_left_still_fails(self):
+        base = dict(slotted(300, 4), owned=300)
+        now = dict(slotted(330, 3), owned=330)
+        self.assertEqual(ss.compare(base, now), ['slot-owned goroutines grew more than 5%'])
 
     def test_an_added_slot_is_not_a_leak(self):
         # 260 goroutines on 3 slots, 308 on 4: 87 against 77 per slot.
