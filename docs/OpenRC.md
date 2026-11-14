@@ -187,13 +187,13 @@ failure count and the next attempt.
 
 ## Uninstall
 
-As root:
+As root, find the provider with `urnet-tools providers`, then run:
 
 ```sh
-curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Linux.sh | sh
+urnet-tools uninstall --unit <name>
 ```
 
-This stops the service, removes `/etc/init.d/urnetwork`, its `default` runlevel entry and any auto-update entry, and deletes the install directory. It also deletes `/home/urnet/.urnetwork`, which holds the login token, so you would need a new auth code to install again. It leaves two things behind: the `urnet` user and the log files. Remove them if you want a clean slate:
+The command asks you to type `yes` before it acts. It stops and disables the service, removes the auto-update entry, and deletes the binary and the state directory. The state directory holds the login token, so you would need a new auth code to install again. Back it up first if you want to keep it. Check afterwards for two leftovers: the `urnet` user and the log files. Remove them if you want a clean slate:
 
 ```sh
 deluser urnet

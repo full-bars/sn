@@ -2,7 +2,7 @@
 
 If you have ever wondered what `--allow-client-registration` is for, this page
 is the answer. It is the least self-explanatory flag in the provider, and as of
-this release it does nothing at all.
+this release it does almost nothing. Its only remaining effect is to replace an unusable `.provider.key`.
 
 ## What a provider client is
 

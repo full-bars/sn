@@ -26,6 +26,9 @@ urnet-tools wallet challenge 5CvF...your-coldkey
 
 This signs nothing and changes nothing. It prints the exact statement, the epoch range it covers, and warns if the range cannot be undone. Read the range before you continue: a consent covers every provider client on the network, now and future, for the epochs it names.
 
+> [!WARNING]
+> In this build, `wallet challenge` prepares a consent for one provider client, using its saved provider credential. It does not prepare the network-wide statement. To sign the network-wide consent, skip step 2 and go to step 3. The signing page shows the statement before you sign.
+
 **3. Open the signing page.**
 
 ```sh

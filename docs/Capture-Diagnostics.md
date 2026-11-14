@@ -17,11 +17,13 @@ urnet-tools diag
 
 The bundle is under the provider's state directory in `diag/`. It includes a heap profile and goroutine stacks. The CPU profile can be omitted if capture or finalization fails. A capture needs at least 512 MiB free on the filesystem that holds the `diag/` directory. If `diag/` is a separate mount, that mount is the one checked.
 
+The provider keeps at most five complete bundles. Before each capture, it removes older complete bundles to make room, and it does this before it checks free space. Copy any bundle you need to keep to a private place before you capture again.
+
 The profiles can contain session tokens. Treat the entire bundle as a secret and do not post it publicly.
 
 ## If capture fails
 
-If the provider has stopped, start it and wait for the problem to recur before capturing. Restarting first loses the live evidence. If the control socket is unavailable, check status and retry after startup. If space is low, free space on the filesystem that holds the state directory. If another capture is running, wait for it to finish.
+If the provider has stopped, start it and wait for the problem to recur before capturing. Restarting first loses the live evidence. If the control socket is unavailable, check status and retry after startup. If space is low, free space on the filesystem that holds the `diag/` directory. If another capture is running, wait for it to finish.
 
 ## What you see and what to do when it fails
 

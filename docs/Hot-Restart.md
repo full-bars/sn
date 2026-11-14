@@ -160,6 +160,8 @@ mv ~/.urnetwork/.client_jwts.json ~/.urnetwork/.client_jwts.json.bak
 urnet-tools start
 ```
 
+The miner keeps one credential file per slot (`.provider.jwt` and `.provider-<hash>.jwt`), so moving `.client_jwts.json` does not reset it. Keep that file if you may roll back to the 3.23-fix provider. To get fresh identities on the miner, use the `hot-restart off` steps above, and back up the whole state directory first.
+
 ```bash
 # Miner: one run with fresh registration for every slot
 docker run -d --name urnet-miner -e URNETWORK_HOT_RESTART=0 ...

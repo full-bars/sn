@@ -233,10 +233,16 @@ Reads are deliberately not logged: `urnet-tools status` polls the socket on ever
 
 ## Getting the Tool
 
-Install the process/systemd tool or the Docker host tool via the install script:
+To install the Docker host tool, run:
 
 ```bash
 curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/install-urnet-docker.sh | sh
+```
+
+To install the process tool, pass its name to the script:
+
+```bash
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/install-urnet-docker.sh | sh -s -- urnet-tools
 ```
 
 For a full provider install (native or container), use the main installer:

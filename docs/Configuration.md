@@ -173,7 +173,7 @@ These runtime keys apply through the control socket, like the other `urnet-tools
 | :--- | :--- | :--- |
 | `oom-cap` | `on`, `off`, `shadow` | The OOM-aware start cap. `shadow` is the default. It logs what the cap would do and does not enforce it. `on` enforces the cap. `off` is the kill switch and forgets the standing cap. |
 | `gomemlimit` | bytes, for example `256MiB` or `1GiB` | The Go runtime memory limit. |
-| `metrics-listen` | `auto` or `ip:port` | The `/metrics` listen address. `auto` is the default. It binds loopback and every Tailscale IPv4, or `0.0.0.0` in a container. An explicit address is used as it is. `off` clears the value back to `auto`. A change rebinds a running listener with no restart. |
+| `metrics-listen` | `auto` or `ip:port` | The `/metrics` listen address. `auto` is the default. It binds loopback and every Tailscale IPv4. A container whose addresses are all private binds `0.0.0.0`. A container that shares a publicly addressed network uses loopback and Tailscale. An explicit address is used as it is. `off` clears the value back to `auto`. A change rebinds a running listener with no restart. |
 
 To set a key, run `urnet-tools set <key> <value>`. To read it back, run `urnet-tools get <key>`.
 

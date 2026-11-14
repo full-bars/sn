@@ -78,7 +78,7 @@ Use the Docker Hub mirror if GHCR returns `denied` errors or rate-limiting.
 
 ## 🔑 Persistent JWT
 
-The JWT is stored inside the container at `/root/.urnetwork/jwt`. Without a persistent volume, every container restart wipes it and forces re-authentication using the original auth code, which is single-use and will fail on the second attempt.
+The JWT is stored inside the container at `/root/.urnetwork/jwt`. Mount a named volume at `/root/.urnetwork` so the state survives when you recreate the container. Without a named volume, Docker creates an anonymous one, and a recreated container starts empty. It then needs re-authentication, and the original auth code is single-use, so it fails on the second attempt.
 
 All examples below mount a config volume at `/root/.urnetwork`. With this volume in place, the startup script detects the existing JWT and skips authentication on later starts. Auth codes are only consumed once: on first run or after manually removing the config volume.
 
@@ -309,7 +309,7 @@ Setting `URNETWORK_RAMLOGS=1` redirects provider logs to `/dev/shm/urnetwork.log
 > ```
 
 > [!NOTE]
-> `URNETWORK_RAMLOGS=1` and Docker `--log-opt` are mutually exclusive. When RAM logging is active, nothing is written to stdout, so Docker's log driver has nothing to capture. Remove `--log-driver` and `--log-opt` if you enable this.
+> With `URNETWORK_RAMLOGS=1` the miner writes its log to `/dev/shm/urnetwork.log` and not to stdout. The container supervisor can still write startup and failure messages to Docker logs, so keep a log rotation policy if you need to bound them.
 
 Example Docker Run:
 
@@ -372,7 +372,7 @@ docker run -d \
 ```
 
 > [!NOTE]
-> To opt out, set `-e URNETWORK_HOT_RESTART=0` at container creation. If you don't set anything, hot-restart is active by default.
+> To opt out, set `-e URNETWORK_HOT_RESTART=0` at container creation. A saved `hot_restart` control setting takes precedence over this variable, so check it with `urnet-tools set hot-restart` if the behavior does not match. If you set nothing, hot-restart is active by default.
 
 ## 💾 Session Save/Load
 

@@ -153,7 +153,7 @@ on top of whatever is in the mounted file.
 | :--- | :--- | :--- | :--- |
 | `--proxy_url=<url>` | `PROXY_URL` | none | The live source. Pass multiple times (or comma-separate the env var) for more than one source. |
 | `--proxy_url_refresh=<dur>` | `PROXY_URL_REFRESH` | `1h` | How often to fetch and add new entries. |
-| `--proxy_url_max=<n>` | `PROXY_URL_MAX` | `500` | Caps total URL-sourced proxies. `0` = unlimited. Once hit, new entries are skipped until cleanup or restart frees room. Existing proxies are never evicted to make space. |
+| `--proxy_url_max=<n>` | `PROXY_URL_MAX` | `500` | Caps total URL-sourced proxies. `0` = unlimited. Once hit, a new entry replaces the lowest-ranked cached entry only if it ranks higher. Other new entries are skipped until cleanup or restart frees room. |
 | `--proxy_dead_cleanup_scope=url\|all\|none` | `PROXY_DEAD_CLEANUP_SCOPE` | `url` | Which proxies the automatic cleanup may remove. `url` (default) means only URL-sourced dead proxies are cleaned. `none` disables it entirely. `all` treats every source the same. Manual `proxy remove-dead` always works regardless. |
 | `--proxy_dead_cleanup_interval=<dur>` | `PROXY_DEAD_CLEANUP_INTERVAL` | `6h` | How often the automatic cleanup runs, when scope is not `none`. |
 

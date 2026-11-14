@@ -26,7 +26,7 @@ urnet-tools proxy traffic
 urnet-tools proxy health
 ```
 
-If it has been under 8-12 hours since a provider restart, `proxy refresh` may
+If it has been under 8 hours since a provider restart, `proxy refresh` may
 refuse to load (a warmup lockout). Add `--force` to bypass it:
 
 ```text

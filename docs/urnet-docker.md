@@ -1,6 +1,6 @@
 # urnet-docker (Host-Side Tool)
 
-`urnet-docker` is the host-side CLI for managing provider Docker containers. It lives on the host, not inside a container. It identifies containers by the JWT inside them, runs commands through `docker exec`, and can update its own binary.
+`urnet-docker` is the host-side CLI for managing provider Docker containers. It is normally run on the host. The image also ships a copy. It identifies containers by the JWT inside them, runs commands through `docker exec`, and can update its own binary.
 
 Install with the one-line installer:
 
@@ -29,7 +29,7 @@ curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/script
 | `proxy traffic` | Real-time bandwidth and client session load. |
 | `proxy summary` | Per-proxy activity and performance summary. |
 | `restart [target]` | Restart the container. |
-| `update` (`self-update`) | Update the tool binary itself. Containers update by image pull, not by this command. Host-side only; never run inside a container. |
+| `update` | With no target, updates the host tool binary. With `--unit <container>` or another target, updates that container's provider in place without recreating it. `self-update` always updates the host tool. |
 | `logs [target] [N]` | Follow the container logs (last N lines, default 250). RAMLOGS-aware: streams `/dev/shm` when RAM logs are enabled, else `docker logs`. Uses an interactive picker when multiple providers exist. |
 | `version` | Print the tool version. |
 
@@ -40,7 +40,7 @@ Targeting flags are required when more than one provider container exists (both 
 - `--unit <name>`: container name (mapped to the unit).
 - `--user <user>`: container identity (docker discovery sets this to `docker:<containerName>`).
 - `--network <name>`: JWT network name.
-- `--n <id>`: JWT network id, the true unique identity. Use when two providers share the same network name.
+- `--network-id <id>`: JWT network id, the true unique identity. Use when two providers share the same network name.
 - `--state-dir <dir>`: provider state directory.
 
 One container needs no flag. Multiple containers with no target is refused, never silently guessed.
@@ -59,4 +59,4 @@ The same targeting concepts and safety model apply to both. See [urnet-tools (Go
 - `exec` refuses to run inside a container. It always operates from the host.
 - `proxy` subcommands use the same targeting as `exec`: one container = automatic; multiple containers = interactive picker (requires a TTY) or explicit target flags (`--unit`, `--network`, etc.). Without a TTY and with multiple containers, the command refuses rather than guessing.
 - Targeting is explicit. A multi-container host with no target is refused.
-- `update` is host-side only. It never touches containers.
+- `update` with no target updates the host tool. `update --unit <container>` updates the provider inside a running container.

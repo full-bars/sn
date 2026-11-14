@@ -78,7 +78,7 @@ All `fleet` commands below are in the sn `provider` program, which the release d
 
 0. **Keep the network consent signed.** It covers every node you do not bind, except a node with its own per-provider consent, which wins for that node.
 
-1. **Write the manifest.** This is the fleet file, and this fork has no `fleet init` command, so write it by hand. Upstream sn has one, but it is not in these builds. The fields are the schema `urnetwork-fleet-manifest-v1`, chain 964 (mainnet), subnet 25, the coordinator address, the fleet id, the hotkey, a nonzero generation, and the members (`client_id` plus `client_key`, each used once). Then check it:
+1. **Write the manifest.** This is the fleet file. Create it with `provider fleet init`, or write it by hand. The fields are the schema `urnetwork-fleet-manifest-v1`, chain 964 (mainnet), subnet 25, the coordinator address, the fleet id, the hotkey, a nonzero generation, and the members (`client_id` plus `client_key`, each used once). Then check it:
    ```bash
    provider fleet manifest --manifest=<path>
    ```

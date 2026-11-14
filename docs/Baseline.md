@@ -24,7 +24,7 @@ The miner writes the same file and the same start mark, but its sampler does not
 | `urnet-tools baseline compare [--from A] [--to B] [--skip-ramp 20m] [--json]` | Compare the box before and after an upgrade. With no arguments it splits at the most recent start whose version differs from the previous one. `A` and `B` are a mark label or a timestamp prefix. |
 | `urnet-tools set baseline on\|off` | Start or stop recording at once, without a restart. The existing file is kept, because it is the only copy of the box's pre-upgrade behaviour. Clearing the key restores `on`. |
 
-`URNETWORK_BASELINE_INTERVAL` changes the sample interval (default `15m`, floor one minute), for a faster canary or a shorter soak.
+`URNETWORK_BASELINE_INTERVAL` changes the sample interval (default `15m`, floor one minute). An unparseable value falls back to the default, not to the floor, for a faster canary or a shorter soak.
 
 ## What `baseline compare` computes
 

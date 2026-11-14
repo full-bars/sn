@@ -28,7 +28,7 @@ Once a node has started once you can delete its `URNETWORK_AUTH_CODE` line; the 
 | 5 nodes | Moderate single-host scaling. |
 | 10 nodes | Larger hosts where you want a ready fleet file. |
 
-Each service needs a unique service name, container name and config volume. No host port is needed: the miner dials out only, and the image serves no HTTP port. Replace each `AUTH_CODE_N` with that node's own auth code.
+Each service needs a unique service name, container name and config volume. No host port is needed for ordinary provider traffic, because the miner dials out only. The image serves Prometheus `/metrics` by default. Publish a separate host port for each container only if you need host access to metrics. Replace each `AUTH_CODE_N` with that node's own auth code.
 
 
 ## 🚶 3-Node Walkthrough

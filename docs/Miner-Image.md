@@ -10,8 +10,9 @@ in as `provider`, the binary whose CLI carries `provide --all-operators`,
 (`urnet-tools-go`) behind a dispatcher that sends `update`/`idle-update` to
 the verified shell update wrapper.
 
-The image publishes no ports and runs no status server. The miner dials
-outbound only.
+The image publishes no ports. The miner dials outbound only. It also serves
+Prometheus `/metrics` by default. Inside a container the listener binds all
+interfaces, and only a port you publish is reachable from the host.
 
 Published tags: `ghcr.io/full-bars/sn:latest` (and the Docker Hub mirror) is
 this image. `:miner` (built from main), `:miner-<tag>` and `:miner-<short-sha>`
@@ -27,23 +28,7 @@ are kept as aliases for one release.
 
 ## Quick start
 
-> **Name the container with `urnet` in it** (the examples below use
-> `urnet-miner`). The unmodified `urnet-docker` client discovers provider
-> containers whose image reference contains `urnetwork` or whose container name
-> contains `urnet`; a container named `sn-miner` is invisible to
-> `urnet-docker providers` and to `--unit` targeting. `docker start|stop|logs`
-> also work without discovery, but every `urnet-docker` command that resolves a
-> provider target needs one of those two spellings.
->
-> The published image refs (`ghcr.io/full-bars/sn:miner`, `:miner-<tag>`,
-> `:miner-<short-sha>`) do not contain `urnetwork` themselves, so with an
-> unmodified client the container name is the discovery hook. The sn client
-> also matches the `full-bars/sn` image ref. If tooling targets by image
-> reference instead, retag a pulled image under an `urnetwork`-bearing name:
->
-> ```bash
-> docker tag ghcr.io/full-bars/sn:miner urnetwork-miner:latest
-> ```
+> **Discovery uses the image repository.** The sn `urnet-docker` client finds provider containers by the repository of their image. The container name does not matter. `ghcr.io/full-bars/sn` and `docker.io/3cape/sn` are on the default list. For a locally built image, add its repository to `URNET_DOCKER_IMAGE_REPOS` (a comma-separated list) before you run the tool. `docker start|stop|logs` work without discovery.
 
 ```bash
 docker run -d --name urnet-miner \
@@ -156,14 +141,7 @@ The state directory is the same path (`/root/.urnetwork`, or
 `$URNETWORK_STATE_DIR`) but the credential files are not. 3.23-fix keeps
 `.provider.key` and `.client_jwts.json`; the sn miner keeps `.provider.jwt` and
 `.provider-<slot>.jwt` per slot. Mounting a 3.23-fix volume into this image
-does not reuse those identities today: treat a copied volume as unverified for
-identity reuse, because the import path is still being measured and no claim
-that a client id survives has been proven. A fresh volume mints a new identity.
-
-Do not point a production node at a copied 3.23-fix volume expecting the same
-client id until the automatic import lands and has been verified against the
-real server. Rolling back to 3.23-fix on the original files keeps working,
-because nothing in this image writes 3.23-fix state.
+has an automatic import path for those identities. The miner proves the retained key against the server before it writes the per-slot credentials. If the proof fails for a slot, the miner registers a new client for that slot. Treat a copied volume as unverified for identity reuse until you check the client ids after the first start. Rolling back to 3.23-fix on the original files keeps working, because nothing in this image writes 3.23-fix state.
 
 ## Building locally
 
@@ -172,9 +150,9 @@ docker build -t urnetwork-miner:local .
 docker run --rm --network none -e AUTH=userpass urnetwork-miner:local    # fails closed, exit 1
 ```
 
-A local tag can carry a compatible reference (`urnetwork`), so an image built
-this way is discovered by image reference as well as by container name. The
-published `ghcr.io/full-bars/sn:miner*` refs cannot (see Quick start).
+The sn `urnet-docker` client discovers a container by the repository of its
+image, so a local image such as `urnetwork-miner` is discovered only when you
+add its repository to `URNET_DOCKER_IMAGE_REPOS` (see Quick start).
 
 The entrypoint contract is covered by `docker/miner/test_miner_entrypoint.sh`
 (stub provider, offline).

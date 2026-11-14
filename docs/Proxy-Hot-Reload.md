@@ -70,14 +70,13 @@ urnet-tools proxy refresh
 
 ### Docker
 
-The `~/.urnetwork` directory must be mounted as a volume for the trigger file
-to be reachable from outside the container:
+Mount `~/.urnetwork` as a volume if you want the state to survive when you replace the container:
 
 ```bash
 docker run -v urnetwork_data:/root/.urnetwork ...
 ```
 
-Then trigger from the host:
+Then trigger the reload from the host. The command runs inside the container:
 
 ```bash
 docker exec urfix urnet-tools proxy refresh

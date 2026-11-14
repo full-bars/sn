@@ -29,7 +29,7 @@ docker exec -it <container_name> tail -f /dev/shm/urnetwork.log
 ```
 
 > [!NOTE]
-> `URNETWORK_RAMLOGS=1` and Docker `--log-opt` are **mutually exclusive**. When RAM logging is active, nothing is written to stdout, so Docker's log driver has nothing to capture: remove `--log-driver`/`--log-opt` if you enable it. See [Docker Deployment → RAM Logging](Docker-Deployment#-ram-logging) for the full section.
+> With `URNETWORK_RAMLOGS=1` the miner writes its log to `/dev/shm/urnetwork.log` and not to stdout. The container supervisor can still write startup and failure messages to Docker logs, so keep a log rotation policy if you need to bound them. See [Docker Deployment → RAM Logging](Docker-Deployment#-ram-logging) for the full section.
 
 ## 2. CPU Limiting
 
@@ -51,7 +51,7 @@ The `--cpus` flag caps the container's CPU quota so the provider can't monopoliz
 | `ENABLE_VNSTAT` | - | **Removed.** The image installs no vnStat and serves no port 8080, so this does nothing. |
 | `ENABLE_IP_CHECKER` | - | **Not in this image.** Nothing in the packaged scripts reads it. |
 
-The image has no status page and publishes no port: the miner dials out only, so do not add `-p` mappings for it.
+The miner dials out only, so ordinary provider traffic needs no published port. The image serves Prometheus `/metrics` by default. Inside a container the listener binds all interfaces, and only a port you publish is reachable from the host. Publish a port only when you need host access to metrics or when you run an extender. See the [Extender](Extender) guide for its port requirements.
 
 For the complete env-var reference, see [Docker Deployment](Docker-Deployment).
 

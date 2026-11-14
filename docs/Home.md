@@ -49,13 +49,12 @@ docker run -d \
   --cap-add=NET_ADMIN \
   --cap-add=NET_RAW \
   --sysctl net.ipv4.ip_forward=1 \
-  -e URNETWORK_NODE_NAME=my-provider \
   -v urnetwork_config:/root/.urnetwork \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
   ghcr.io/full-bars/sn:latest YOUR_AUTH_CODE_HERE
 ```
 
-`-e URNETWORK_NODE_NAME` is **not implemented in this line**: nothing reads it, so the label does not reach the dashboard. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity).
+This line does not read `URNETWORK_NODE_NAME`, so the example leaves it out and no label reaches the dashboard. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity).
 
 The Docker image is multi-arch (linux/amd64 and linux/arm64) and is published to GitHub Container Registry as `ghcr.io/full-bars/sn`, and to Docker Hub as `3cape/sn`.
 

@@ -20,13 +20,13 @@ This page is for regular operators. You run URnetwork nodes and you may have hea
 From release `v2026.10.21-1077735390-meso`, every sn build has `provider wallet sign` and `provider wallet status`: the release `provider` download, the `:latest` image and the `:miner` image. Older sn builds do not. Check yours:
 
 ```bash
-provider --help | grep 'wallet sign'
+provider help all | grep 'wallet sign'
 ```
 
 On Windows PowerShell, where `grep` does not exist:
 
 ```powershell
-provider.exe --help | Select-String 'wallet sign'
+provider.exe help all | Select-String 'wallet sign'
 ```
 
 If that prints a line, use that `provider` for Step 2. Its `wallet set <coldkey>` without a signature only works with `--legacy-network-wallet`, which sends an unsigned request that is **not paid** (see [the old commands](#the-old-commands-in-this-fork-that-do-not-get-you-paid) below).
@@ -50,7 +50,7 @@ What the answer means:
 
 | You see | What it means | What to do |
 |---|---|---|
-| `network consent for the network: coldkey 5..., epochs N through M (generation G), in effect now` | You are set up and being paid to that coldkey. | Nothing. You are done. |
+| `network consent for the network: coldkey 5..., epochs N through M (generation G), in effect now` | Your consent for this coldkey is in effect. Payouts also depend on your earnings and claims, which this command does not check. | Nothing. You are done. |
 | The same line ending in `starts in 1 epoch(s)` | You are set up. Payouts to this coldkey start at the next epoch. | Nothing. Wait for the epoch to turn. |
 | The same line ending in `ended` | The consent's epoch range is over. This only happens if a shorter range was chosen on purpose. | Sign again (Step 2). |
 | `provider consent for client <id>: ...` | A consent for one single node. For that node it wins over the network consent. | Nothing, unless you meant to pay that node to the network coldkey. See [Changing your wallet](#changing-your-wallet). |
