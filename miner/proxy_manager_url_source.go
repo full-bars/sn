@@ -687,9 +687,11 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 		// socks5-only lines with ProbeOK=false so the background reaper can
 		// retry them (they may have had a transient routing issue).
 		fetched[i] = append(append(qualified, belowBar...), socks5Only...)
-		if len(qualified) == 0 && len(belowBar) == 0 && len(socks5Only) == 0 && len(probeLines) > 0 {
+		if len(qualified) == 0 && len(belowBar) == 0 && len(socks5Only) == 0 && len(probeLines) > 0 && ctx.Err() == nil {
 			// The fetch itself succeeded but every NEW line was unparseable
-			// or dead - distinct from the fetch-failed case above.
+			// or dead - distinct from the fetch-failed case above. A cancelled
+			// cycle is excluded: the probe reports every line dead once its
+			// context is gone, and that is a shutdown, not a failing source.
 			tlog("[proxy][url] %s: fetched %d lines, %d new, all unparseable or dead\n", labels[i], len(lines), len(probeLines))
 			warnProxySourceFailure(labels[i], fmt.Sprintf("fetched %d lines, %d new, all unparseable or dead", len(lines), len(probeLines)))
 		}
