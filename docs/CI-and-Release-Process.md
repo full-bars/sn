@@ -58,9 +58,15 @@ Releases follow the `v<date>-<build>-sn` tag scheme, where the build number is t
 
 ### Scanning
 
-VirusTotal and ClamAV scan every binary in a parallel job: `provider`, `urnet-tools` and `urnet-docker`, and the `miner` binary from each `miner-*` artifact. The scan job never gates publication. It appends both verdicts to the release body, with the ClamAV report beside the VirusTotal one, and stages flagged files for submission to Microsoft Defender.
+ClamAV gates publication. The `create-release` job runs `.github/scripts/clamav-scan.sh` on the exact files that the release step uploads, before it publishes anything. A detection or a scanner failure fails the job, and the release is not created.
 
-The ClamAV verdict is computed by `.github/scripts/clamav-scan.sh`, which reports `clean` only when the EICAR self-test detected the sample first and the scan exited 0 with nothing found. A detection, a scanner error, an inconsistent exit code and an empty target each fail the step with their own line in the report. The same ten-case harness that `build.yml` runs on pull requests runs again in the scan job.
+VirusTotal runs afterwards in the `scan` job and never gates publication. It scans the `provider`, `urnet-tools` and `urnet-docker` binaries and the `miner` binary from each `miner-*` artifact. It appends its verdict to the release body and stages flagged files for submission to Microsoft Defender. The ClamAV report is appended to the release body by the `create-release` job.
+
+The script fetches fresh definitions with `freshclam` before every scan and tries three times. If the refresh fails, it fails closed and does not scan with old signatures. It reports `clean` only when the definitions were refreshed, the EICAR self-test detected the sample first, and the scan counted files and exited 0 with nothing found. A detection, a scanner error, a stale database, a file over the size limits, an inconsistent exit code and an empty target each fail the step with their own line in the report.
+
+The ten-case harness `.github/scripts/test-clamav-scan.sh` tests the script. `build.yml` runs it on pull requests, and the release job runs it again before the scan.
+
+If the gate fails, read the job log. A detection means you investigate, fix the cause and cut a new tag. A refresh or network failure means you re-run the failed job.
 
 ### Docker images
 
