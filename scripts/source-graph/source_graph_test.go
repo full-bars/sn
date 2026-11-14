@@ -70,13 +70,13 @@ func requireSiblingOrPin(t *testing.T, label, modulePath, sibling, pinPath, pinV
 // The registration and refresh API used by SN: the SDK sibling in a local
 // build, or the reviewed SDK pin in a pinned build.
 func TestClientauthSourceGraphSelectsSdkSiblingOrPin(t *testing.T) {
-	requireSiblingOrPin(t, "clientauth SDK", "github.com/urnetwork/sdk", "sdk", "github.com/urnetwork/sdk", "v0.0.0-20261001021058-5d37be3876e5")
+	requireSiblingOrPin(t, "clientauth SDK", "github.com/urnetwork/sdk", "sdk", "github.com/full-bars/sdk", "v0.0.0-20261114014058-c364d63212da")
 }
 
 // Redirect ownership and exhaustion causes require the matching Connect
 // source: the Connect sibling, or the reviewed Connect pin.
 func TestClientauthSourceGraphSelectsConnectSiblingOrPin(t *testing.T) {
-	requireSiblingOrPin(t, "clientauth Connect", "github.com/urnetwork/connect", "connect", "github.com/full-bars/connect", "v0.0.0-20261031120941-ca8b9020201a")
+	requireSiblingOrPin(t, "clientauth Connect", "github.com/urnetwork/connect", "connect", "github.com/full-bars/connect", "v0.0.0-20261114000458-cb9728fb5ebd")
 }
 
 // A dependency's fork replacement is not inherited. The SCTP source is the fork
