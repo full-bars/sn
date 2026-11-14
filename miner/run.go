@@ -45,6 +45,8 @@ const DefaultConnectUrl = "wss://connect.bringyour.com"
 var Version string
 
 func init() {
+	protectLogPipes()
+	prepareHotswapStderr()
 	// debug.SetGCPercent(10)
 
 	// Must run before initGlog(): initGlog reads URNETWORK_PROFILE/

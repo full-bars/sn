@@ -43,6 +43,55 @@ var ramlogsDockerEnvPath = "/.dockerenv"
 // descriptors stdout and stderr pointed at before initSHMLogger replaced them
 // with the ramlog pipe; -1 until then. restoreStdioBeforeExec hands them back.
 var ramlogOrigStdout, ramlogOrigStderr = -1, -1
+var ramlogStdioMu sync.Mutex
+var hotswapStderrDetached bool
+var hotswapStdoutInheritedPipe bool
+
+// An older parent can hand us its own ramlog pipe. No reader is guaranteed to
+// survive the handoff, so detach before logging and use our own pipe below.
+func prepareHotswapStderr() {
+	if os.Getenv(EnvHotSwap) != "1" {
+		return
+	}
+	var stderr, stdout unix.Stat_t
+	if unix.Fstat(2, &stderr) != nil || stderr.Mode&unix.S_IFMT != unix.S_IFIFO {
+		return
+	}
+	null, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+	if err != nil {
+		return
+	}
+	defer null.Close()
+	if unix.Fstat(1, &stdout) == nil && stdout.Dev == stderr.Dev && stdout.Ino == stderr.Ino {
+		hotswapStdoutInheritedPipe = true
+	}
+	if dup2(int(null.Fd()), 2) == nil {
+		hotswapStderrDetached = true
+	}
+}
+
+// hotswapStdio returns owned duplicates so command startup cannot close the
+// saved descriptors needed by a later hotswap.
+func hotswapStdio() (*os.File, *os.File, func(), error) {
+	ramlogStdioMu.Lock()
+	defer ramlogStdioMu.Unlock()
+	outfd, errfd := ramlogOrigStdout, ramlogOrigStderr
+	if outfd < 0 && errfd < 0 {
+		outfd, errfd = int(os.Stdout.Fd()), int(os.Stderr.Fd())
+	}
+	out, err := dupCloseOnExec(outfd)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	errcopy, err := dupCloseOnExec(errfd)
+	if err != nil {
+		unix.Close(out)
+		return nil, nil, nil, err
+	}
+	stdout := os.NewFile(uintptr(out), "hotswap-stdout")
+	stderr := os.NewFile(uintptr(errcopy), "hotswap-stderr")
+	return stdout, stderr, func() { stdout.Close(); stderr.Close() }, nil
+}
 
 // dupCloseOnExec duplicates fd with FD_CLOEXEC set atomically, so the copy
 // never leaks into a child process.
@@ -65,8 +114,8 @@ func restoreFD(saved, target int) {
 // logs anything, and the container's start script restarts it after its crash
 // backoff. The new image sets up its own ramlog pipe as usual.
 func restoreStdioBeforeExec() {
-	restoreFD(ramlogOrigStdout, int(os.Stdout.Fd()))
-	restoreFD(ramlogOrigStderr, int(os.Stderr.Fd()))
+	restoreFD(ramlogOrigStdout, 1)
+	restoreFD(ramlogOrigStderr, 2)
 }
 
 // shmInitOnce ensures initSHMLogger's banners, dup2, and goroutines are
@@ -140,16 +189,39 @@ func initSHMLogger() {
 			return
 		}
 
-		// Keep the original stdout/stderr for restoreStdioBeforeExec.
-		if fd, err := dupCloseOnExec(int(os.Stdout.Fd())); err == nil {
-			ramlogOrigStdout = fd
+		// Save the actual descriptor numbers. os.Stderr can alias os.Stdout.
+		ramlogStdioMu.Lock()
+		stdoutFD := 1
+		if hotswapStdoutInheritedPipe && hotswapStderrDetached {
+			// The original stdout may belong to the old process too. A later
+			// hotswap must not inherit it after our RAM log replaces it.
+			stdoutFD = 2
 		}
-		if fd, err := dupCloseOnExec(int(os.Stderr.Fd())); err == nil {
-			ramlogOrigStderr = fd
+		out, err := dupCloseOnExec(stdoutFD)
+		if err != nil {
+			ramlogStdioMu.Unlock()
+			r.Close()
+			w.Close()
+			f.Close()
+			return
 		}
+		errfd, err := dupCloseOnExec(2)
+		if err != nil {
+			unix.Close(out)
+			ramlogStdioMu.Unlock()
+			r.Close()
+			w.Close()
+			f.Close()
+			return
+		}
+		ramlogOrigStdout, ramlogOrigStderr = out, errfd
 
 		dup2(int(w.Fd()), int(os.Stdout.Fd()))
 		dup2(int(w.Fd()), int(os.Stderr.Fd()))
+		if hotswapStderrDetached {
+			dup2(int(w.Fd()), 2)
+		}
+		ramlogStdioMu.Unlock()
 
 		var fMu sync.Mutex
 

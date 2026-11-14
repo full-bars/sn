@@ -3,8 +3,15 @@
 package miner
 
 import (
+	"errors"
+	"io"
+	"log"
 	"os"
+	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"strings"
+	"syscall"
 	"testing"
 
 	"golang.org/x/sys/unix"
@@ -76,4 +83,192 @@ func TestDupCloseOnExecSetsFlag(t *testing.T) {
 // TestRestoreFDIgnoresUnsaved: nothing to restore when the redirect never ran.
 func TestRestoreFDIgnoresUnsaved(t *testing.T) {
 	restoreFD(-1, 1)
+}
+
+func TestHotSwapStderrHelper(t *testing.T) {
+	mode := os.Getenv("TEST_HOTSWAP_STDERR")
+	if mode == "" {
+		return
+	}
+	if mode == "old" {
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGPIPE)
+		signal.Stop(ch)
+	}
+	if mode == "old" || mode == "ignored" || mode == "successor" {
+		if _, err := syscall.Write(3, []byte("r")); err != nil {
+			os.Exit(5)
+		}
+		var b [1]byte
+		if _, err := syscall.Read(3, b[:]); err != nil {
+			os.Exit(6)
+		}
+	}
+	if mode == "successor-stdout" {
+		if _, err := os.Stdout.Write([]byte("candidate stdout\n")); err != nil {
+			os.Exit(4)
+		}
+		os.Exit(0)
+	}
+	if mode == "spawned" {
+		var b [1]byte
+		if _, err := syscall.Read(3, b[:]); err != nil {
+			os.Exit(2)
+		}
+	}
+	_, err := log.Writer().Write([]byte("candidate stderr\n"))
+	if mode == "ignored" && errors.Is(err, syscall.EPIPE) {
+		os.Exit(0)
+	}
+	if err != nil {
+		os.Exit(3)
+	}
+	os.Exit(0)
+}
+
+func TestHotSwapOrphanedStderr(t *testing.T) {
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, mode := range []string{"old", "ignored", "successor"} {
+		t.Run(mode, func(t *testing.T) {
+			r, w, err := os.Pipe()
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer r.Close()
+			defer w.Close()
+			fds, err := hotSwapSocketpair()
+			if err != nil {
+				t.Fatal(err)
+			}
+			parent := os.NewFile(uintptr(fds[0]), "parent")
+			child := os.NewFile(uintptr(fds[1]), "child")
+			defer parent.Close()
+			cmd := exec.Command(exe, "-test.run=^TestHotSwapStderrHelper$")
+			cmd.ExtraFiles = []*os.File{child}
+			cmd.Stdout, cmd.Stderr = w, w
+			cmd.Env = append(os.Environ(), "TEST_HOTSWAP_STDERR="+mode)
+			if mode == "successor" {
+				cmd.Env = append(cmd.Env, EnvHotSwap+"=1")
+			}
+			if err := cmd.Start(); err != nil {
+				child.Close()
+				t.Fatal(err)
+			}
+			child.Close()
+			var ready [1]byte
+			if _, err := io.ReadFull(parent, ready[:]); err != nil {
+				cmd.Process.Kill()
+				cmd.Wait()
+				t.Fatalf("helper not ready: %v", err)
+			}
+			r.Close()
+			if _, err := parent.Write([]byte("x")); err != nil {
+				cmd.Process.Kill()
+				cmd.Wait()
+				t.Fatal(err)
+			}
+			err = cmd.Wait()
+			if mode == "old" {
+				var exit *exec.ExitError
+				if !errors.As(err, &exit) || !exit.Sys().(syscall.WaitStatus).Signaled() || exit.Sys().(syscall.WaitStatus).Signal() != syscall.SIGPIPE {
+					t.Fatalf("old behavior: expected SIGPIPE, got %v", err)
+				}
+			} else if err != nil {
+				t.Fatalf("successor did not survive: %v", err)
+			}
+		})
+	}
+}
+
+func TestHotSwapNormalStderrUnchanged(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(exe, "-test.run=^TestHotSwapStderrHelper$")
+	cmd.Stdout, cmd.Stderr = w, w
+	cmd.Env = append(os.Environ(), "TEST_HOTSWAP_STDERR=normal", EnvHotSwap+"=0")
+	err = cmd.Run()
+	w.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := io.ReadAll(r)
+	if err != nil || !strings.HasSuffix(string(got), "candidate stderr\n") {
+		t.Fatalf("normal stderr = %q, %v", got, err)
+	}
+}
+
+func TestHotSwapSuccessorPreservesStdout(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(exe, "-test.run=^TestHotSwapStderrHelper$")
+	cmd.Stdout, cmd.Stderr = w, w
+	cmd.Env = append(os.Environ(), "TEST_HOTSWAP_STDERR=successor-stdout", EnvHotSwap+"=1")
+	err = cmd.Run()
+	w.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := io.ReadAll(r)
+	if err != nil || !strings.HasSuffix(string(got), "candidate stdout\n") {
+		t.Fatalf("successor stdout = %q, %v", got, err)
+	}
+}
+
+func TestHotSwapCandidateUsesOriginalStderr(t *testing.T) {
+	orig, err := os.Create(filepath.Join(t.TempDir(), "original-stderr"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer orig.Close()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer w.Close()
+	oldOut, oldErr := os.Stdout, os.Stderr
+	oldSavedOut, oldSavedErr := ramlogOrigStdout, ramlogOrigStderr
+	defer func() {
+		os.Stdout, os.Stderr = oldOut, oldErr
+		ramlogOrigStdout, ramlogOrigStderr = oldSavedOut, oldSavedErr
+	}()
+	os.Stdout, os.Stderr = w, w
+	ramlogOrigStdout, ramlogOrigStderr = int(orig.Fd()), int(orig.Fd())
+	t.Setenv("TEST_HOTSWAP_STDERR", "spawned")
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	session, err := spawnHotSwapCandidate(exe, []string{"-test.run=^TestHotSwapStderrHelper$"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer session.Close()
+	r.Close()
+	if _, err := session.parentFd.Write([]byte("x")); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.Wait(); err != nil {
+		t.Fatalf("candidate: %v", err)
+	}
+	contents, err := os.ReadFile(orig.Name())
+	if err != nil || !strings.HasSuffix(string(contents), "candidate stderr\n") {
+		t.Fatalf("original stderr = %q, %v", contents, err)
+	}
 }
