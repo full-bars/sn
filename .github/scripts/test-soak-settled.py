@@ -78,5 +78,39 @@ class Groups(unittest.TestCase):
         self.assertEqual(sum(r[0] for r in ss.grown('', BASE)), 7)
 
 
+def slotted(g, slots, rss=1000, fds=20):
+    return {'rss_kib': rss, 'fds': fds, 'goroutines': g, 'slots': slots}
+
+
+class Slots(unittest.TestCase):
+    def test_slot_count_adds_the_two_gauges(self):
+        page = "urnet_goroutines 300\nurnet_provider_client_ids_reused 2\nurnet_provider_client_ids_minted 1\n"
+        self.assertEqual(ss.slot_count(page), 3)
+
+    def test_slot_count_is_none_without_the_gauges(self):
+        self.assertIsNone(ss.slot_count("urnet_goroutines 300\n"))
+
+    def test_slot_count_ignores_a_malformed_value(self):
+        self.assertIsNone(ss.slot_count("urnet_provider_client_ids_reused abc\n"))
+
+    def test_settled_keeps_the_last_slot_count(self):
+        rows = [slotted(300, 3), slotted(290, 3), slotted(310, 4)]
+        self.assertEqual(ss.settled(rows)['slots'], 4)
+
+    def test_an_added_slot_is_not_a_leak(self):
+        # 260 goroutines on 3 slots, 308 on 4: 87 against 77 per slot.
+        self.assertEqual(ss.compare(slotted(260, 3), slotted(308, 4)), [])
+
+    def test_a_leak_at_constant_slots_fails(self):
+        self.assertEqual(ss.compare(slotted(260, 3), slotted(308, 3)), ['goroutines grew more than 5%'])
+
+    def test_growth_per_slot_fails_when_slots_differ(self):
+        out = ss.compare(slotted(260, 3), slotted(400, 4))
+        self.assertEqual(out, ['goroutines per slot grew more than 5% (slots 3 -> 4)'])
+
+    def test_a_missing_slot_count_falls_back_to_the_plain_bound(self):
+        self.assertEqual(ss.compare(slotted(260, None), slotted(308, 4)), ['goroutines grew more than 5%'])
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -7,6 +7,12 @@ start it is still opening its connections. A leaked goroutine stays. So both
 sides use the minimum of several samples taken a few seconds apart, and the
 check waits for the provider to settle first.
 
+The provider also adds proxies from public feeds during the run, so the number
+of running slots is not constant. Each slot owns its own goroutines. The helper
+reads the running slot count from the metrics page. When the count at the check
+differs from the baseline, goroutines are compared per slot, so a slot that came
+up from a feed is not read as a leak.
+
 When the goroutine bound fails, the check prints the goroutine stack groups
 that grew, taken from the provider's loopback profile listener, so a red run
 names what leaked.
@@ -32,8 +38,14 @@ FIELDS = ('rss_kib', 'fds', 'goroutines')
 
 
 def settled(samples):
-    """Minimum of each field. A leak stays in the minimum, a transient does not."""
-    return {k: min(s[k] for s in samples) for k in FIELDS}
+    """Minimum of each field. A leak stays in the minimum, a transient does not.
+
+    The slot count is the one from the last sample, because it is a level and
+    not a noisy count. It is None when the metrics page has no slot gauge.
+    """
+    out = {k: min(s[k] for s in samples) for k in FIELDS}
+    out['slots'] = samples[-1].get('slots')
+    return out
 
 
 def compare(base, now, goroutine_pct=5, rss_pct=10, fd_limit=1000):
@@ -43,9 +55,32 @@ def compare(base, now, goroutine_pct=5, rss_pct=10, fd_limit=1000):
         failed.append(f'RSS grew more than {rss_pct}%')
     if now['fds'] > fd_limit:
         failed.append(f'FD count exceeds {fd_limit}')
-    if now['goroutines'] * 100 > base['goroutines'] * (100 + goroutine_pct):
+    bs, ns = base.get('slots'), now.get('slots')
+    if bs and ns and bs != ns:
+        # Compare the cost of one slot. With a fixed overhead this is lenient when
+        # slots were added, which is the safe side for a bound on leaks.
+        if now['goroutines'] * bs * 100 > base['goroutines'] * ns * (100 + goroutine_pct):
+            failed.append(f'goroutines per slot grew more than {goroutine_pct}% (slots {bs} -> {ns})')
+    elif now['goroutines'] * 100 > base['goroutines'] * (100 + goroutine_pct):
         failed.append(f'goroutines grew more than {goroutine_pct}%')
     return failed
+
+
+_SLOT_GAUGES = ('urnet_provider_client_ids_reused', 'urnet_provider_client_ids_minted')
+
+
+def slot_count(metrics_text):
+    """Running provider slots: the reused and minted gauges added together.
+
+    Returns None when neither gauge is on the page, so an older provider is
+    still measured, only without the per-slot comparison.
+    """
+    found = {}
+    for line in metrics_text.splitlines():
+        parts = line.split()
+        if len(parts) == 2 and parts[0] in _SLOT_GAUGES and parts[1].isdigit():
+            found[parts[0]] = int(parts[1])
+    return sum(found.values()) if found else None
 
 
 _HEADER = re.compile(r'^(\d+) @ ')
@@ -93,7 +128,13 @@ def sample(pid, url, tmp):
     subprocess.run(['sh', str(SAMPLER), 'baseline', str(pid), url, str(tmp)],
                    check=True, stdout=subprocess.DEVNULL)
     pid_, start, rss, fds, gor = tmp.read_text().split()
-    return {'pid': pid_, 'start': start, 'rss_kib': int(rss), 'fds': int(fds), 'goroutines': int(gor)}
+    row = {'pid': pid_, 'start': start, 'rss_kib': int(rss), 'fds': int(fds), 'goroutines': int(gor)}
+    try:
+        with urllib.request.urlopen(url, timeout=10) as r:
+            row['slots'] = slot_count(r.read().decode('utf-8', 'replace'))
+    except OSError:
+        row['slots'] = None
+    return row
 
 
 def take(pid, url, count, interval, tmp):
@@ -126,7 +167,8 @@ def main(argv):
         time.sleep(float(os.environ.get('SOAK_SETTLE', '60')))
     rows = take(pid, url, count, interval, tmp)
     now = settled(rows)
-    print('samples goroutines:', [r['goroutines'] for r in rows], 'rss_kib:', [r['rss_kib'] for r in rows])
+    print('samples goroutines:', [r['goroutines'] for r in rows], 'slots:', [r['slots'] for r in rows],
+          'rss_kib:', [r['rss_kib'] for r in rows])
     print('settled', mode, now)
     try:
         stacks = fetch_goroutines(pprof_url)
@@ -137,13 +179,14 @@ def main(argv):
     ident = {'pid': rows[0]['pid'], 'start': rows[0]['start']}
     if mode == 'baseline':
         (d / 'settled-baseline').write_text(
-            ' '.join(str(v) for v in (ident['pid'], ident['start'], now['rss_kib'], now['fds'], now['goroutines'])) + '\n')
+            ' '.join(str(v) for v in (ident['pid'], ident['start'], now['rss_kib'], now['fds'], now['goroutines'],
+                                      now['slots'] if now['slots'] is not None else -1)) + '\n')
         return 0
-    pid_, start, rss, fds, gor = (d / 'settled-baseline').read_text().split()
+    pid_, start, rss, fds, gor, slots = (d / 'settled-baseline').read_text().split()
     if (pid_, start) != (ident['pid'], ident['start']):
         print('FAIL: provider restarted since baseline', file=sys.stderr)
         return 1
-    base = {'rss_kib': int(rss), 'fds': int(fds), 'goroutines': int(gor)}
+    base = {'rss_kib': int(rss), 'fds': int(fds), 'goroutines': int(gor), 'slots': int(slots) if int(slots) >= 0 else None}
     print('baseline', base)
     failed = compare(base, now,
                      goroutine_pct=int(os.environ.get('SOAK_GOROUTINE_PCT', '5')),
