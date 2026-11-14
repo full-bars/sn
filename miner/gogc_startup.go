@@ -129,6 +129,27 @@ func goGCSource(replayed bool, tier string) string {
 	}
 }
 
+// goGCObservedSource avoids attributing a different live value to the environment.
+func goGCObservedSource(env string, percent int, ok bool, source string) string {
+	if env == "" || !ok {
+		return source
+	}
+	var envPercent int
+	if env == "off" {
+		envPercent = -1
+	} else {
+		var err error
+		envPercent, err = strconv.Atoi(env)
+		if err != nil {
+			return "unknown; env GOGC is invalid"
+		}
+	}
+	if envPercent != percent {
+		return fmt.Sprintf("unknown; differs from env GOGC=%s", env)
+	}
+	return source
+}
+
 // goGCLogPart renders the GOGC half of the one runtime-tuning startup line.
 // percent is the live reading (-1 means collection is off); ok is false when
 // the runtime does not expose it, in which case the part says unknown rather

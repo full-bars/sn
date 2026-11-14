@@ -3,6 +3,7 @@ package miner
 import (
 	"fmt"
 	"math"
+	"os"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -287,9 +288,10 @@ func applyStartupMemoryTuning(maxMemory connect.ByteCount, proxies int) {
 	// they are answered by the same start, and two lines could disagree about
 	// which one they describe.
 	gcPercent, gcOK := readGOGCPercent()
+	gcSource := goGCObservedSource(os.Getenv("GOGC"), int(gcPercent), gcOK, goGCSource(gcReplayed, gcTier))
 	importantLogf("%s\n", goRuntimeTuningLogLine(
 		debug.SetMemoryLimit(-1), goMemLimitSource(memLimitReplayed, limitTier),
-		int(gcPercent), gcOK, goGCSource(gcReplayed, gcTier),
+		int(gcPercent), gcOK, gcSource,
 	))
 	resourceConfigLaunchCount.Store(int64(proxies))
 	resourceConfigWarningsOnce()

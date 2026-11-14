@@ -70,6 +70,8 @@ Quick jump:
 | `URNETWORK_PROXY_AUDIT` | `0` (off) | Set to `1` to enable automated [proxy audit](#proxy-audit) and quality enforcement: parks paid and file proxies that grade as proven junk. Off by default (observe mode). Toggle at runtime with `urnet-tools proxy audit on\|off\|status\|release` without restarting or dropping sessions. |
 | `URNETWORK_ADAPTIVE_GC` | - | **Not implemented in this line.** The miner has no GC governor (`miner/resource_config_warn.go:63-66`), and nothing reads this variable. The GOGC knob is set only by the profile tier default (`miner/profile_tiers.go`, `applyProfileGCPercent`) or by an operator-set `GOGC`. No memory-pressure tightening happens. |
 
+The startup runtime-tuning line reports the live GOGC value. If it differs from the current `GOGC` environment value, the line says its source is unknown instead of attributing the live value to the environment. Check the process environment and startup logs before changing tuning.
+
 ### 📊 Monitoring & Telemetry
 
 | Variable | Default | Description |
