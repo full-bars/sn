@@ -4,7 +4,35 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Changes after `v2026.11.8-1093262540-sn` through the pending release. Notes: `releases/next-35-7.md`.
+Everything merged after `v2026.11.9-1094091330-sn`.
+
+This update brings OpenBSD support, moves the `connect` and `sdk` pins forward to the merged fork main branches, and moves the build to Go 1.27.4. Redeploy after the update.
+
+### Added
+
+- **OpenBSD provider and `urnet-tools` support** (`docs/OpenBSD.md`, `scripts/Provider_Install_OpenBSD.sh`, `internal/urnettools/lifecycle_openbsd.go`). The provider and `urnet-tools` build for OpenBSD on amd64 and arm64. There is an installer, `rcctl` service setup, cron auto-update and release assets. The runtime was not run on a real OpenBSD host, and durable client registration is unavailable there. See the OpenBSD guide for the limits.
+
+### Changed
+
+- **The `connect` pin moves to the fork main at `cb9728fb5`** (`go.mod`). It is the fork merged with upstream connect main `0d6d5d001`, 207 upstream commits past the previous pin. It carries upstream's FP2 provider selection code, the handshake generation fix and the extender and DNS resolver changes of that range. The miner does not run the multi client window, so the provider selection change reaches a miner through the network operator's server. This pin does not carry it.
+- **The `sdk` pin moves to the fork main at `c364d632`** (`go.mod`). The sdk names the same `connect` commit. It also puts the extender activation pacing hook back on the fork main. A force push had dropped it, and the previous pin pointed at a commit that was on no branch. The full upstream sdk sync follows in a later release.
+- **The build is Go 1.27.4** (`go.mod`, `Dockerfile`, the workflows). The new `connect` requires it, and upstream sn and server already use it.
+
+### Fixed
+
+- **The `urnet-tools` root help lists `extender about`** (`internal/urnettools/cobra.go`). The root menu left the command out, and the root help test failed on Linux and on Windows.
+- **The BSD auto-update cron line builds its log path with `path.Join`** (`internal/urnettools/lifecycle_bsd_cron.go`). Behavior on a BSD host does not change. The path is always a forward-slash path now, on every build host.
+- **The OpenBSD installer and `urnet-tools` guard service identity.** They tell an absent service from an ambiguous process match before they run `rcctl`, keep manually started providers on the direct stop path, and remove the cron entry of a bare provider.
+
+### Known limits
+
+- The source-graph tests for SCTP, gVisor and the substrate RPC fork need sibling checkouts and fail the same way on a clean main in a plain worktree. The `connect` and `sdk` pin tests pass.
+- `scripts/mainnet-release-build/pin.sh` is the network operator's release tooling. It still expects the upstream `sdk` module path, while this fork replaces the `sdk` with its own fork. The fork's workflows do not run it. The source-graph tests follow `go.mod`.
+- The upstream `sdk` features that need new sdk code, such as the extender WebRTC carrier and router port mapping, are not in this release. The sdk pin is the fork main without the upstream sdk sync.
+
+## [v2026.11.9-1094091330-sn] - 2026-11-09
+
+Changes after `v2026.11.8-1093262540-sn`. Notes: `releases/v2026.11.9-1094091330-sn.md`.
 
 ### Added
 

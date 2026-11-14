@@ -111,6 +111,15 @@ In this fork it reads the old-style wallet record. It may say the coldkey is "No
 > [!NOTE]
 > The "Global Rank" and tier lines on this screen are the URnetwork **bandwidth leaderboard**. They are **not** head-tier eligibility and have nothing to do with the Top 200 seats. Ignore them for Bittensor purposes. 
 
+## Operator notices to know about (as of 2026-11-13)
+
+The network operator publishes dated notices on `ur.xyz/mainnet`. These are the ones that touch a provider or miner. The rules are the operator's and can change, so read the notice before you rely on a date or a number here.
+
+- **Providers without UDP or IPv6 are offered for the traffic they carry (2026-11-13).** With the operator's next server release and the next app releases, a provider whose checks failed only over HTTP/3 (UDP) is offered for TCP traffic. A provider whose connections prove IPv6 but whose checks failed only over IPv6 is offered for IPv4 traffic. Scoring, weights and payouts do not change. A provider that regains UDP or IPv6 is offered for it again within 8 hours. You do not need to change a setting. If your host blocks UDP, fix the network and update to the latest release, because some older builds do not route UDP.
+- **Extender pool from epoch 8 (2026-11-12).** From epoch 8 (block 9,600,028, around 2026-11-27 18:25 UTC) the part of each contract's usage that no provider earns counts for extenders, up to half of a pool. Rewards are paid in alpha, whose value changes and can fall. At the end of an epoch an extender needs to be in the active pool, to have at least one address that passes the five-minute challenge, to have a payout wallet, to stay outside a top-level miner's fleet and to stay off the operator's own networks. Epochs 6 and 7 run in shadow first. This release adds no support for the pool.
+- **Extenders earn only on contracts they can relay (2026-11-12).** Since the operator's 2026-11-12 server release, an extender is a contract hop only when it can have relayed that contract. Contracts created before that release keep their hops.
+- **Capture the flag from epoch 8 (2026-11-11).** Each of 249 countries gets ten slots per epoch, five for providers and five for extenders. Entry needs being online, passing checks, being in the country for at least half the epoch and being active at the end of the epoch. Winners are paid to the existing provider-pool payout wallet.
+
 ## FAQ
 
 ### Do I have to do anything?
