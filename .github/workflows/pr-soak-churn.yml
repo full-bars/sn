@@ -15,6 +15,7 @@ jobs:
       - run: python3 .github/scripts/test-soak-growth.py
       - run: bash .github/scripts/test-stop-provider.sh
       - run: python3 .github/scripts/test-check-churn-reload.py
+      - run: python3 .github/scripts/test-soak-settled.py
 
   churn:
     # Only this job uses the shared test account, so only it serializes with
@@ -31,6 +32,7 @@ jobs:
       GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
       GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
       URNETWORK_METRICS: 127.0.0.1:19100
+      URNETWORK_PPROF: 127.0.0.1:19101
       URNETWORK_PROXY_BENCHMARK: 'true'
       URNETWORK_SELF_HEAL: '1'
       PROXY_URL_REFRESH: 1m
@@ -71,7 +73,9 @@ jobs:
           # The first two minutes are the defined warmup, not readiness retries.
           sleep 120
           pid=$(cat /tmp/provider.pid)
-          sh .github/scripts/soak-growth.sh baseline "$pid" http://127.0.0.1:19100/metrics /tmp/churn-baseline
+          # The baseline and the final check each use the minimum of several
+          # samples, so a goroutine that drains on its own is not counted.
+          python3 .github/scripts/soak_settled.py baseline "$pid" http://127.0.0.1:19100/metrics http://127.0.0.1:19101 /tmp/soak
           proxy=$(cat /tmp/churn-proxy)
           for i in $(seq 1 6); do
             echo "churn window $i"
@@ -94,7 +98,19 @@ jobs:
             rest=$((began + 60 - $(date +%s)))
             if [ "$rest" -gt 0 ]; then sleep "$rest"; fi
           done
-          sh .github/scripts/soak-growth.sh check "$pid" http://127.0.0.1:19100/metrics /tmp/churn-baseline
+          # Wait for the provider to settle, then compare. A failure lists the
+          # goroutine stack groups that grew.
+          python3 .github/scripts/soak_settled.py check "$pid" http://127.0.0.1:19100/metrics http://127.0.0.1:19101 /tmp/soak
+      - name: Keep the goroutine profiles
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: churn-goroutines
+          path: |
+            /tmp/soak/goroutines-baseline.txt
+            /tmp/soak/goroutines-check.txt
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Teardown
         if: always()
         # Cleanup never decides the result; the churn step does. Wait for the
