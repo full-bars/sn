@@ -3,6 +3,7 @@
 package miner
 
 import (
+	"bufio"
 	"errors"
 	"io"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+	"time"
 
 	"golang.org/x/sys/unix"
 )
@@ -103,6 +105,25 @@ func TestHotSwapStderrHelper(t *testing.T) {
 		if _, err := syscall.Read(3, b[:]); err != nil {
 			os.Exit(6)
 		}
+	}
+	if mode == "live-successor" {
+		if _, err := log.Writer().Write([]byte("live stderr\n")); err != nil {
+			os.Exit(7)
+		}
+		var b [1]byte
+		if _, err := syscall.Read(3, b[:]); err != nil {
+			os.Exit(8)
+		}
+		if _, err := log.Writer().Write(make([]byte, 256*1024)); err != nil {
+			os.Exit(9)
+		}
+		os.Exit(0)
+	}
+	if mode == "successor" {
+		if _, err := log.Writer().Write(make([]byte, 256*1024)); err != nil {
+			os.Exit(9)
+		}
+		os.Exit(0)
 	}
 	if mode == "successor-stdout" {
 		if _, err := os.Stdout.Write([]byte("candidate stdout\n")); err != nil {
@@ -228,6 +249,63 @@ func TestHotSwapSuccessorPreservesStdout(t *testing.T) {
 	got, err := io.ReadAll(r)
 	if err != nil || !strings.HasSuffix(string(got), "candidate stdout\n") {
 		t.Fatalf("successor stdout = %q, %v", got, err)
+	}
+}
+
+func TestHotSwapForwardsLiveStderrAndDrainsAfterClose(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	defer w.Close()
+	fds, err := hotSwapSocketpair()
+	if err != nil {
+		t.Fatal(err)
+	}
+	parent := os.NewFile(uintptr(fds[0]), "parent")
+	child := os.NewFile(uintptr(fds[1]), "child")
+	defer parent.Close()
+	exe, err := os.Executable()
+	if err != nil {
+		child.Close()
+		t.Fatal(err)
+	}
+	cmd := exec.Command(exe, "-test.run=^TestHotSwapStderrHelper$")
+	cmd.Stdout = io.Discard
+	cmd.Stderr = w
+	cmd.ExtraFiles = []*os.File{child}
+	cmd.Env = append(os.Environ(), "TEST_HOTSWAP_STDERR=live-successor", EnvHotSwap+"=1")
+	if err := cmd.Start(); err != nil {
+		child.Close()
+		t.Fatal(err)
+	}
+	child.Close()
+	defer func() {
+		if cmd.ProcessState == nil {
+			cmd.Process.Kill()
+			cmd.Wait()
+		}
+	}()
+	if err := r.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	reader := bufio.NewReader(r)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			t.Fatalf("live stderr not forwarded: %v", err)
+		}
+		if line == "live stderr\n" {
+			break
+		}
+	}
+	r.Close()
+	if _, err := parent.Write([]byte("x")); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Wait(); err != nil {
+		t.Fatalf("successor after reader close: %v", err)
 	}
 }
 
