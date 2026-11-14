@@ -40,7 +40,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.27.3"
+          go-version: "1.27.4"
 
       - name: Build FreeBSD binaries on the runner (cross)
         env:
@@ -401,13 +401,13 @@ jobs:
           cpu: 2
           sync: rsync
           prepare: |
-            # Go must be exactly 1.27.3: go.mod requires it, and older 1.27.x
+            # Go must be exactly 1.27.4: go.mod requires it, and older 1.27.x
             # sits below the CVE floor this repo pins. FreeBSD's package tree
             # currently resolves `go` to go127 1.27.2, and mirrors 404 that
             # package outright (seen 2026-10-23), so install the official
             # tarball for the pinned version instead of depending on the
             # package mirror for the compiler.
-            GO_VERSION="1.27.3"
+            GO_VERSION="1.27.4"
             fetch -q -o /tmp/go.tgz "https://go.dev/dl/go${GO_VERSION}.freebsd-amd64.tar.gz" || {
               echo "FATAL: could not fetch Go ${GO_VERSION}"
               exit 1
