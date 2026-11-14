@@ -2,8 +2,10 @@ package miner
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 )
@@ -110,4 +112,54 @@ func containsAll(s string, subs ...string) bool {
 		}
 	}
 	return true
+}
+
+// lastSourceTransport serves one source whose body cancels the cycle when it
+// is read to the end. The response is complete, so the fetch succeeds and the
+// cancel is first seen after the fetch, which is the case the last source hits.
+type lastSourceTransport struct{ cancel context.CancelCauseFunc }
+
+func (tr *lastSourceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	body := &cancelAtEOFBody{Reader: strings.NewReader("192.0.2.1:1\n"), cancel: tr.cancel}
+	return &http.Response{StatusCode: 200, Header: make(http.Header), Body: body, Request: req}, nil
+}
+
+type cancelAtEOFBody struct {
+	*strings.Reader
+	cancel context.CancelCauseFunc
+}
+
+func (b *cancelAtEOFBody) Read(p []byte) (int, error) {
+	n, err := b.Reader.Read(p)
+	if err == io.EOF {
+		b.cancel(context.Canceled)
+	}
+	return n, err
+}
+
+func (b *cancelAtEOFBody) Close() error { return nil }
+
+// A shutdown that lands while the LAST source is read or probed has no later
+// iteration to notice it. The cycle must still say it was cancelled, and must
+// still not report a source failure.
+func TestFetchAndMergeProxyURLs_ShutdownDuringLastSourceIsLogged(t *testing.T) {
+	withTempHome(t)
+	warnings := captureSourceWarnings(t)
+
+	ctx, cancel := context.WithCancelCause(context.Background())
+	defer cancel(nil)
+
+	prev := proxyURLHTTPClient
+	proxyURLHTTPClient = &http.Client{Transport: &lastSourceTransport{cancel: cancel}}
+	t.Cleanup(func() { proxyURLHTTPClient = prev })
+
+	out := captureTlog(t, func() {
+		fetchAndMergeProxyURLs(ctx, []string{"http://source.invalid/list"}, 0, "", 0)
+	})
+	if !strings.Contains(out, "fetch cycle cancelled after 1 of 1 sources") {
+		t.Errorf("the cancelled cycle was not logged:\n%s", out)
+	}
+	if len(*warnings) != 0 {
+		t.Errorf("shutdown reported as source failures: %q", *warnings)
+	}
 }

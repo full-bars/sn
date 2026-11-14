@@ -6,10 +6,21 @@ import (
 	"testing"
 )
 
+func TestBSDCronCommandUsesBSDLogPath(t *testing.T) {
+	got := bsdCronCommand("/usr/local/bin/urnet-tools", "/var/log/urnetwork/", "--user", "urnet")
+	want := "'/usr/local/bin/urnet-tools' update -f '--user' 'urnet' >> '/var/log/urnetwork/auto-update.log' 2>&1"
+	if got != want {
+		t.Fatalf("bsdCronCommand = %q, want %q", got, want)
+	}
+}
+
 func TestBSDCronCommandEscapesPercent(t *testing.T) {
 	command := bsdCronCommand(`/a\%b'c`, `/logs%here`)
 	if strings.Count(command, `''\%`) != 2 {
 		t.Fatalf("percent signs not escaped for cron: %q", command)
+	}
+	if _, err := exec.LookPath("sh"); err != nil {
+		t.Skip("no sh on this host")
 	}
 	// Cron removes its percent escape before the shell parses the command.
 	shellCommand := strings.ReplaceAll(command, `\%`, `%`)

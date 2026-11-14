@@ -1,6 +1,6 @@
 module github.com/urfoundation/sn
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/ChainSafe/go-schnorrkel v1.1.0
@@ -224,7 +224,7 @@ replace github.com/urnetwork/proxy => github.com/urnetwork/proxy v0.0.0-20260923
 
 replace github.com/urnetwork/userwireguard => github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f
 
-replace github.com/urnetwork/sdk => github.com/full-bars/sdk v0.0.0-20261106080646-de089db38056
+replace github.com/urnetwork/sdk => github.com/full-bars/sdk v0.0.0-20261106092019-5c905e84008d
 
 replace github.com/urnetwork/glog => github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9
 

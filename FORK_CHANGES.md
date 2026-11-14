@@ -15,7 +15,7 @@ This document tracks all modifications made to the upstream `sn` (connect v2026)
 
 ## Current extender setup
 
-The host setup command lives in `internal/urnettools/`; the provider is built from `cli/miner/` and `miner/`. Setup previews platform and firewall actions before confirmation, checks for plan drift and preserves existing file capabilities when adding Linux bind privilege. On Linux, setup also offers a sysctl route (`net.ipv4.ip_unprivileged_port_start=443` in a drop-in) as an alternative to the file capability. It keeps a prior drop-in as `.pre-urnetwork`, reads persistence in systemd order and binds a sudo re-run to the provider it inspected. Status reports the active route, and the updater skips the capability check while the route is active. Notes: [releases/next-35-7.md](releases/next-35-7.md). FreeBSD setup is untested this release and prints manual commands only. UDP 53 is optional and user-managed. See [Extender](docs/Extender.md).
+The host setup command lives in `internal/urnettools/`; the provider is built from `cli/miner/` and `miner/`. Setup previews platform and firewall actions before confirmation, checks for plan drift and preserves existing file capabilities when adding Linux bind privilege. On Linux, setup also offers a sysctl route (`net.ipv4.ip_unprivileged_port_start=443` in a drop-in) as an alternative to the file capability. It keeps a prior drop-in as `.pre-urnetwork`, reads persistence in systemd order and binds a sudo re-run to the provider it inspected. Status reports the active route, and the updater skips the capability check while the route is active. Notes: [releases/v2026.11.9-1094091330-sn.md](releases/v2026.11.9-1094091330-sn.md). FreeBSD setup is untested this release and prints manual commands only. UDP 53 is optional and user-managed. See [Extender](docs/Extender.md).
 
 ## Porting Status
 
@@ -560,5 +560,15 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 **Files Modified**: `miner/proxy_udp_egress.go`, `miner/proxy_udp_check.go`, `miner/h3_packet_conn.go` and related tests; the idle timeout also depends on the pinned SDK.
 
 **How to Identify in New Upstream**: per-flow SOCKS5 UDP associations wired through `providerSlotDialSettings`, relay verification and the proxied-flow idle timeout.
+
+**Status**: shipping in this release.
+
+## 42. The sdk Pin on the Fork Main and Go 1.27.4
+
+**Purpose**: Pin the sdk to a commit that is reachable from the fork `main`, with the extender activation pacing hook the miner uses, and move the toolchain to Go 1.27.4. The connect pin stays where it was.
+
+**Files Modified**: `go.mod`, `go.sum`, `Dockerfile`, `.github/workflows/*.yml`, `scripts/source-graph/source_graph_test.go`, `internal/urnettools/cobra.go`, `internal/urnettools/lifecycle_bsd_cron.go` and the docs that name the Go version.
+
+**How to Identify in New Upstream**: the two `replace` lines for `github.com/urnetwork/connect` and `github.com/urnetwork/sdk` point at `github.com/full-bars/connect` and `github.com/full-bars/sdk`. Upstream sn has no such lines. Bring upstream in with a merge into the fork `main` of connect and the sdk, then move both pins together (see the pin bump runbook in the workspace docs). The merged connect main `cb9728fb5` was tried in this release and held back, because it failed the PR soak churn check.
 
 **Status**: shipping in this release.

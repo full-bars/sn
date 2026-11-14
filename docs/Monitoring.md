@@ -104,6 +104,28 @@ promtool test rules prometheus/rules/urnetwork.test.yml
 
 The test file covers the two enabled rules. `prometheus.yml` lists `urnetwork.yml` by name, so the test file is never loaded as rules.
 
+## Records of capacity decisions and enforcement
+
+Two commands read records that the provider keeps in its state directory. The records survive restarts and reboots. On a machine with several providers, add a target flag such as `--unit` or `--user`.
+
+### Capacity decisions
+
+```sh
+urnet-tools autopilot log        # the newest 20 decisions
+urnet-tools autopilot log 50     # the newest 50, at most 200
+```
+
+The command lists the newest capacity decisions, newest last. They are the OOM-aware start cap decisions and the results of operator trims. A shadow decision is a "would" action. The provider noted it and did not enforce it. The command also prints the `oom-cap` value. To change it, run `urnet-tools set oom-cap on|off|shadow`.
+
+### What the governors did
+
+```sh
+urnet-tools enforcement summary  # counts per kind and mode
+urnet-tools enforcement history 50
+```
+
+The record covers releases of silent clients, connect budget cuts, attempt caps, memory holds and crash-loop starts. `summary` is the default. It counts events per kind and mode for today, the last 7 and 30 UTC days, and since the log began. `history [N]` lists the newest N events, newest last. The default is 20 and the maximum is 500. Mode `shadow` means the governor noted what it would have done and did nothing.
+
 ## Metrics added with the live status snapshot
 
 | Metric | Type | Labels | Meaning |

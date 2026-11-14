@@ -154,6 +154,10 @@ After a restart another process may still hold that port for a moment. The miner
 
 If Docker RAM logs are enabled, the log follower may replay retained lines after a trim. Treat repeated lines as possible replays, not necessarily new events.
 
+## Does it earn?
+
+The role itself does not change what the provider earns. The network operator announced an extender pool for SN25 that starts with epoch 8, around 2026-11-27, and an extender in that pool can earn alpha. Read the notice in [Bittensor Operations](/full-bars/sn/wiki/Bittensor-Operations) before you rely on it, because the operator sets the rules and can change them. This release adds no support for the pool.
+
 ## What this does not tell you
 
 - `[extender] bound transport=tcp port=443` means the process bound the port inside the container. It does not mean the internet can reach it. Only the network's answer tells you that: the `is now activated` line. A refused probe is retried only after the hold in step 6.

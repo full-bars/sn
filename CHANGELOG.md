@@ -4,7 +4,50 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Changes after `v2026.11.8-1093262540-sn` through the pending release. Notes: `releases/next-35-7.md`.
+Everything merged after `v2026.11.9-1094091330-sn`.
+
+This update brings OpenBSD support, moves the `sdk` pin to a commit on the fork main branch, and moves the build to Go 1.27.4. The `connect` pin does not move. Redeploy after the update.
+
+### Added
+
+- **OpenBSD support.** The provider and `urnet-tools` build for OpenBSD on amd64 and arm64. `scripts/Provider_Install_OpenBSD.sh` installs an `rc.d` service managed with `rcctl`, and `urnet-tools` handles discovery, lifecycle, auto-start and update there. Releases publish `openbsd` provider archives and `urnet-tools-openbsd-<arch>` assets. `optimize` is not supported on OpenBSD and returns an error. The port is cross-compiled and unit-tested but has not run on an OpenBSD host, and durable client registration is unavailable there as on FreeBSD. See [OpenBSD](docs/OpenBSD.md).
+- **Reference for the capacity and enforcement records and three runtime keys** (`docs/Monitoring.md`, `docs/Configuration.md`, `docs/Installation.md`). `urnet-tools autopilot log`, `urnet-tools enforcement` and `urnet-tools lowmode` were missing from the guides. So were the `oom-cap`, `gomemlimit` and `metrics-listen` keys of `urnet-tools set`.
+
+### Changed
+
+- **The `sdk` pin moves to the fork main at `5c905e84`** (`go.mod`). It has the same code as the previous pin, which was on no branch because a force push had dropped it, and it keeps the extender activation pacing hook that the miner uses. Only its `go.mod` differs.
+- **The build is Go 1.27.4** (`go.mod`, `Dockerfile`, the workflows). Upstream sn and server already use it.
+
+### Fixed
+
+- **A shutdown during URL source probing no longer logs a source failure** (`miner/proxy_manager_url_source.go`). The probe reports every new line dead once its context is cancelled, and the all-dead branch took that for a failing source. The branch now needs a live context. `TestFetchAndMergeProxyURLs_ShutdownMidCycleIsNotSourceFailure` failed in 16 of 500 runs before the change and in none of 1000 after.
+- **The extender setup elevation test skips where the platform keeps every provider** (`internal/urnettools/extender_elevation_test.go`). macOS has no cross-user enumeration gap, so it never narrows the provider list, and the test failed on both macOS runners.
+- **The `urnet-tools` root help lists `extender about`** (`internal/urnettools/cobra.go`). The root menu left the command out, and the root help test failed on Linux and on Windows.
+- **The BSD auto-update cron line builds its log path with `path.Join`** (`internal/urnettools/lifecycle_bsd_cron.go`). Behavior on a BSD host does not change. The path is always a forward-slash path now, on every build host.
+- **The OpenBSD installer and `urnet-tools` guard service identity.** They tell an absent service from an ambiguous process match before they run `rcctl`, keep manually started providers on the direct stop path, and remove the cron entry of a bare provider.
+
+### Documentation
+
+- **The operations guide lists the operator notices that touch a provider or miner**, as of 2026-11-13 (`docs/Bittensor-Operations.md`).
+- **The extender guide says what the epoch 8 announcement means for the role** (`docs/Extender.md`).
+- **The CI guides match the workflows** (`docs/CI-and-Release-Process.md`, `docs/Distro-Matrix-CI.md`). They describe the PR soak churn check, the installer check that runs on pull requests, the release build matrix and the number of workflows.
+- **The structure page lists the CI helper scripts and the release scripts** (`docs/Project-Structure.md`).
+
+### CI
+
+- **The churn soak compares settled samples and names the goroutines that grew** (`.github/scripts/soak_settled.py`). The baseline and the final check use the minimum of five samples ten seconds apart, and the check waits a minute first. A failure prints the stack groups that gained goroutines and keeps both profiles as an artifact. The same commit failed once and passed once under the old single-sample check.
+- **The distro matrix harness matches the shipped unit and a full Arch upgrade** (`.github/scripts/systemd-smoke.sh`, `.github/workflows/distro-matrix.yml`). It checks `Type=notify`, which the installer has shipped since September, and Arch jobs run `pacman -Syu`. The matrix is green.
+
+### Known limits
+
+- The `connect` pin stays at the fork main `8e078bbca`. The merged fork main `cb9728fb5` (upstream connect main `0d6d5d001`) is held back. The first soak run on it failed with 27 percent more goroutines. That check compared one sample at the start with one at the end, so a change in the number of running proxy slots looked like growth. The new check compares settled samples per running slot. It passed the merged `connect` in two runs, with 0 and -2 percent goroutine growth and 6.6 to 7.4 percent more memory. The bump waits for more runs because that memory growth is higher than the 4 percent of the current pin.
+- The source-graph tests for SCTP, gVisor and the substrate RPC fork need sibling checkouts and fail the same way on a clean main in a plain worktree. The `connect` and `sdk` pin tests pass.
+- `scripts/mainnet-release-build/pin.sh` is the network operator's release tooling. It still expects the upstream `sdk` module path, while this fork replaces the `sdk` with its own fork. The fork's workflows do not run it. The source-graph tests follow `go.mod`.
+- The upstream `sdk` features that need new sdk code, such as the extender WebRTC carrier and router port mapping, are not in this release. The sdk pin is the fork main without the upstream sdk sync.
+
+## [v2026.11.9-1094091330-sn] - 2026-11-09
+
+Changes after `v2026.11.8-1093262540-sn`. Notes: `releases/v2026.11.9-1094091330-sn.md`.
 
 ### Added
 
@@ -49,7 +92,6 @@ Changes after `v2026.11.1-1087168030-sn` through this tag. Hashes are commits on
 
 ### Added
 
-- **OpenBSD support.** The provider and `urnet-tools` build for OpenBSD on amd64 and arm64. `scripts/Provider_Install_OpenBSD.sh` installs an `rc.d` service managed with `rcctl`, and `urnet-tools` handles discovery, lifecycle, auto-start and update there. Releases publish `openbsd` provider archives and `urnet-tools-openbsd-<arch>` assets. `optimize` is not supported on OpenBSD and returns an error. The port is cross-compiled and unit-tested but has not run on an OpenBSD host, and durable client registration is unavailable there as on FreeBSD. See [OpenBSD](docs/OpenBSD.md).
 - **Capture diagnostics from a running provider.** `urnet-tools diag` writes heap and goroutine profiles, a summary and, when available, a 30-second CPU profile without a restart. The capture requires 512 MiB free and contains sensitive data. (#360, 30e7c6b40)
 - **Inspect and configure the extender.** `urnet-tools extender status` reports the running role and `extender setup` checks the host and configures supported binding and firewall requirements. `top` and metrics expose its state. (#358, #340)
 - **The state store has migration and reconciliation primitives.** S1 adds inert migration records and a non-mutating file/store comparison; it does not add operator migration commands. (#376)

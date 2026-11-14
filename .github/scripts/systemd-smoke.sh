@@ -209,7 +209,7 @@ if [ ! -f "$INSTALLER" ]; then
     cond "installer not mounted at $INSTALLER; template parity not checked"
 else
     for pair in \
-        'Type=simple|the shipped unit is Type=simple' \
+        'Type=notify|the shipped unit is Type=notify' \
         'ExecStart=$install_path/bin/urnetwork provide|the shipped unit runs the provider with `provide`' \
         'Restart=on-failure|the shipped unit restarts on failure' \
         'RestartSec=5|the shipped unit waits 5s between restarts'
@@ -222,9 +222,10 @@ else
             fail "shipped installer no longer contains: $needle"
         fi
     done
-    if grep -qF 'Type=notify' "$INSTALLER"; then
-        cond "the shipped installer now mentions Type=notify — add the READY/STATUS assertions (TODO(systemd-notify))"
-    fi
+    # The smoke unit below is written by this script as Type=simple, so the
+    # READY and STATUS notifications of the shipped Type=notify unit are not
+    # exercised here yet.
+    cond "the shipped unit is Type=notify but this harness runs a Type=simple unit — add the READY/STATUS assertions (TODO(systemd-notify))"
 fi
 
 # ------------------------------------------------------------- unit install --
