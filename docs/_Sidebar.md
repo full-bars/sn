@@ -35,8 +35,6 @@
 * **[Project Structure](Project-Structure)**
 * **[urnet-docker](urnet-docker)**
 * **[Miner Image](Miner-Image)**
-* **[Operator Discovery](OPERATOR-DISCOVERY)**
-* **[Network Wallet Consent](NETWORK-WALLET-CONSENT)**
 * **[Approve Your Payout Wallet](Wallet-Consent)**
 * **[Run as an Extender](Extender)**
 * **[Monitoring](Monitoring)**
@@ -44,13 +42,11 @@
 * **[Node Identity](Node-Identity)**
 * **[Egress Security Policy](Egress-Security-Policy)**
 * **[HotSwap](HotSwap)**
-* **[LAUNCH](LAUNCH)**
 
 #### Diagnostics and Reference
 * **[Capture Diagnostics](Capture-Diagnostics)**
 * **[Troubleshooting](Troubleshooting)**
 * **[Log Message Reference](Log-Message-Reference)**
 * **[CI and Release Process](CI-and-Release-Process)**
-* **[Review Findings](REVIEW_FINDINGS)**
 * **[Distro Matrix CI](Distro-Matrix-CI)**
 * **[Feature Matrix CI](Feature-Matrix-CI)**

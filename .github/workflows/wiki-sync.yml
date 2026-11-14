@@ -64,6 +64,12 @@ jobs:
         run: |
           echo "Copying documentation pages to wiki repository..."
           cp -v main-repo/docs/*.md wiki-repo/
+          # These upstream design and launch records stay in the repository. They are not
+          # user guides, so they are not published. The loop also removes any copy that
+          # an earlier sync already published.
+          for f in OPERATOR-DISCOVERY NETWORK-WALLET-CONSENT LAUNCH REVIEW_FINDINGS; do
+            rm -fv "wiki-repo/$f.md"
+          done
           # The wiki predates the docs/ tree and its index links this page by
           # its capitalised name, so keep that name working.
           if [ -f "main-repo/docs/urnet-tools-go.md" ]; then
