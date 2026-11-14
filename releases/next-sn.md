@@ -41,6 +41,13 @@ fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/h
 sudo sh urnet-install.sh install
 ```
 
+On OpenBSD, download the installer and run it with an existing non-root service account (replace `urnet` with its name):
+
+```sh
+ftp -o urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_OpenBSD.sh
+doas env SERVICE_USER_OVERRIDE=urnet sh urnet-install.sh install
+```
+
 Start a new provider container:
 
 ```sh

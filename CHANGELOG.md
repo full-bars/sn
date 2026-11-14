@@ -10,7 +10,7 @@ This update brings OpenBSD support, moves the `sdk` pin to a commit on the fork 
 
 ### Added
 
-- **OpenBSD provider and `urnet-tools` support** (`docs/OpenBSD.md`, `scripts/Provider_Install_OpenBSD.sh`, `internal/urnettools/lifecycle_openbsd.go`). The provider and `urnet-tools` build for OpenBSD on amd64 and arm64. There is an installer, `rcctl` service setup, cron auto-update and release assets. The runtime was not run on a real OpenBSD host, and durable client registration is unavailable there. See the OpenBSD guide for the limits.
+- **OpenBSD support.** The provider and `urnet-tools` build for OpenBSD on amd64 and arm64. `scripts/Provider_Install_OpenBSD.sh` installs an `rc.d` service managed with `rcctl`, and `urnet-tools` handles discovery, lifecycle, auto-start and update there. Releases publish `openbsd` provider archives and `urnet-tools-openbsd-<arch>` assets. `optimize` is not supported on OpenBSD and returns an error. The port is cross-compiled and unit-tested but has not run on an OpenBSD host, and durable client registration is unavailable there as on FreeBSD. See [OpenBSD](docs/OpenBSD.md).
 
 ### Changed
 
@@ -77,7 +77,6 @@ Changes after `v2026.11.1-1087168030-sn` through this tag. Hashes are commits on
 
 ### Added
 
-- **OpenBSD support.** The provider and `urnet-tools` build for OpenBSD on amd64 and arm64. `scripts/Provider_Install_OpenBSD.sh` installs an `rc.d` service managed with `rcctl`, and `urnet-tools` handles discovery, lifecycle, auto-start and update there. Releases publish `openbsd` provider archives and `urnet-tools-openbsd-<arch>` assets. `optimize` is not supported on OpenBSD and returns an error. The port is cross-compiled and unit-tested but has not run on an OpenBSD host, and durable client registration is unavailable there as on FreeBSD. See [OpenBSD](docs/OpenBSD.md).
 - **Capture diagnostics from a running provider.** `urnet-tools diag` writes heap and goroutine profiles, a summary and, when available, a 30-second CPU profile without a restart. The capture requires 512 MiB free and contains sensitive data. (#360, 30e7c6b40)
 - **Inspect and configure the extender.** `urnet-tools extender status` reports the running role and `extender setup` checks the host and configures supported binding and firewall requirements. `top` and metrics expose its state. (#358, #340)
 - **The state store has migration and reconciliation primitives.** S1 adds inert migration records and a non-mutating file/store comparison; it does not add operator migration commands. (#376)

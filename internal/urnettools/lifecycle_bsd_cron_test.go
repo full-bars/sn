@@ -19,6 +19,9 @@ func TestBSDCronCommandEscapesPercent(t *testing.T) {
 	if strings.Count(command, `''\%`) != 2 {
 		t.Fatalf("percent signs not escaped for cron: %q", command)
 	}
+	if _, err := exec.LookPath("sh"); err != nil {
+		t.Skip("no sh on this host")
+	}
 	// Cron removes its percent escape before the shell parses the command.
 	shellCommand := strings.ReplaceAll(command, `\%`, `%`)
 	if out, err := exec.Command("sh", "-n", "-c", shellCommand).CombinedOutput(); err != nil {
