@@ -15,6 +15,13 @@ func TestExtenderSetupElevationPinsSoleAccessible(t *testing.T) {
 	setupDiscoverFn = func() []Provider {
 		return []Provider{{Unit: "own.service", User: currentUserName(), Binary: "/own"}, {Unit: "other.service", User: "other", Binary: "/other"}}
 	}
+	// Narrowing to the caller's own provider is a platform decision. macOS has
+	// no cross-user enumeration gap, so its narrowToAccessible keeps every
+	// provider and the selector refuses the ambiguity, which is the intended
+	// behaviour there.
+	if len(narrowToAccessible(setupDiscoverFn())) != 1 {
+		t.Skip("this platform does not narrow providers to the caller's own, so setup refuses an ambiguous selection")
+	}
 	var args []string
 	opts := setupRegressionOptions()
 	opts.Yes = true
