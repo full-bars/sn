@@ -21,7 +21,8 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 | `Dockerfile` | Builds the container image from `cli/miner/`, plus `urnet-tools` and `urnet-docker`. It is published as `:latest`. The `:miner` tag is an alias kept for one release (see [Miner Image](/full-bars/sn/wiki/Miner-Image)). |
 | `pelican/` | Egg file for the Pelican panel. |
 | `monitoring/` | Prometheus and Grafana bundle for watching a fleet (see [Monitoring](/full-bars/sn/wiki/Monitoring)). |
-| `scripts/` | Installers and uninstallers for Linux, macOS, Windows, FreeBSD and OpenBSD, plus build and release check scripts. |
+| `scripts/` | Installers and uninstallers for Linux, macOS, Windows, FreeBSD and OpenBSD, plus build and release check scripts. `scripts/compute-sn-tag.sh` computes the release tag and `scripts/pre-tag-check.sh` is the gate that runs before a tag. |
+| `.github/scripts/` | The CI helpers. They include the installer, systemd, OpenRC, FreeBSD and distro smoke harnesses, the ClamAV scan, the churn soak helpers (`soak-growth.sh`, `soak_settled.py` and `check-churn-reload.py`) and the script that refreshes the Bittensor live numbers. |
 | `deploy/` | A systemd unit for the provider, and the policy files for the test and main networks. |
 | `fake-release-server/` | A built binary of the fake release server that the installer tests use. Its source is in `scripts/ci/fake-release-server/`. |
 | `releases/` | Release notes. Draft the next sn body as `next-sn.md`; at tag time use `releases/<tag>.md`, which the release workflow reads. |
@@ -98,5 +99,5 @@ gofmt -l miner/ cli/ cmd/ internal/   # prints nothing when clean
 Build the container image:
 
 ```sh
-docker build --build-arg TARGETARCH=amd64 --build-arg VERSION=v<ver> -t ghcr.io/full-bars/sn:latest .
+docker build --build-arg TARGETARCH=amd64 --build-arg VERSION=YOUR_TAG -t ghcr.io/full-bars/sn:latest .
 ```

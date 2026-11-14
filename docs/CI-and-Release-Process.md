@@ -4,7 +4,7 @@ This page describes the automated checks and the release flow for the SN provide
 
 ## Workflows
 
-The repository ships sixteen workflows in `.github/workflows/`.
+The repository ships 23 workflows in `.github/workflows/`.
 
 ### Push and pull request gates
 
@@ -15,9 +15,20 @@ The repository ships sixteen workflows in `.github/workflows/`.
 | Unix lifecycle verification (`unix-lifecycle.yml`) | main push, pull requests | start/stop/restart/status against a fake provider on systemd |
 | Windows lifecycle verification (`windows-lifecycle.yml`) | main push, pull requests | Same lifecycle set against a fake provider under schtasks |
 | Tool functional smoke (`tool-functional-smoke.yml`) | main push, pull requests | Builds the real binaries and mints a JWT with the gauntlet account |
+| PR soak churn (`pr-soak-churn.yml`) | pull requests, manual | Adds and removes one proxy while the provider runs, and bounds the growth of goroutines, memory and file descriptors. See below |
 | docker-multi-container (`docker-multi-container.yml`) | main push | Targets and modes across three containers on one host, each with its own state volume |
 
 Docs-only changes skip CI through `paths-ignore`.
+
+### The churn soak
+
+`pr-soak-churn.yml` starts a provider with three anchor proxies and a test account. It waits two minutes. Then it adds and removes one more proxy three times each, one minute apart.
+
+`.github/scripts/soak_settled.py` takes the measurements. Both the baseline and the final check use the lowest of five samples taken ten seconds apart. The final check waits 60 seconds first. The bounds are 5 percent for goroutines, 10 percent for memory and 1000 file descriptors.
+
+The goroutine bound counts only goroutines that a proxy slot can own. The libp2p gossip peers and the UDP read pollers start and stop on their own, so the helper leaves them out. It reads the number of running slots from the metrics page. The provider also adds proxies from a public list during the run. If the slot count rises, the bound applies per slot.
+
+When the goroutine bound fails, the log lists the stack groups that grew. The job keeps both profiles as the `churn-goroutines` artifact. Run `python3 .github/scripts/test-soak-settled.py` to check the helper itself.
 
 ### Scheduled and manual
 
@@ -42,7 +53,7 @@ Releases follow the `v<date>-<build>-sn` tag scheme, where the build number is t
 2. Compute the tag once with `tag=$(scripts/compute-sn-tag.sh)` and keep that value for every remaining step. The value changes with time.
 3. Copy the prepared `releases/next-sn.md` to `releases/<tag>.md`, replacing `<tag>` in the filename with that exact value. Update its heading and asset names using the same value. Commit the final notes to main before tagging.
 4. Push a signed tag of that commit with the same value: `git tag -s "$tag" -m "$tag" && git push origin "$tag"`.
-5. Release Binaries builds the six-platform matrix, bundles the tarballs including the monitoring bundle and installers, and publishes with the notes from `releases/<tag>.md`. If the file is absent, GitHub auto-generates the notes.
+5. Release Binaries builds five operating systems on amd64 and arm64, bundles the tarballs including the monitoring bundle and installers, and publishes with the notes from `releases/<tag>.md`. If the file is absent, GitHub auto-generates the notes.
 6. The shakedown and docker shakedown fire on the same tag and validate the published artifacts.
 
 ### Scanning

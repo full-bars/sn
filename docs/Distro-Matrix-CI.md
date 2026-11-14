@@ -4,12 +4,13 @@ The release distro CI proves that a tagged release runs on the Linux
 distributions we ship to — plus Windows, macOS and FreeBSD — before operators
 see it. It is deliberately **release-only**: the cells are slow (privileged
 systemd containers, a FreeBSD VM, a Windows runner), so they run on release
-tags and on manual dispatch, never on pull requests or a nightly schedule. The
-per-PR quality gate remains `build.yml`.
+tags and on manual dispatch. Pull requests that change the installer or its
+packaging also run the four-image `installer-fast` check. Nothing runs on a
+nightly schedule. The per-PR quality gate remains `build.yml`.
 
 | Workflow | Trigger | Purpose |
 | --- | --- | --- |
-| `.github/workflows/distro-matrix.yml` | `v*` tags, `workflow_dispatch` | The matrix: the real installer, container smoke, systemd, Windows, macOS, FreeBSD, summary |
+| `.github/workflows/distro-matrix.yml` | `v*` tags, `workflow_dispatch`, installer-path pull requests (four cells) | The matrix: the real installer, container smoke, systemd, Windows, macOS, FreeBSD, summary |
 | `.github/workflows/freebsd.yml` | `v*` tags, `workflow_dispatch` | Real FreeBSD kernel verification (restored, adapted to the miner/tools line) |
 | `.github/workflows/openrc-smoke.yml` | `v*` tags, `workflow_dispatch` | Alpine/OpenRC service smoke + cross-OS vet (restored) |
 | `.github/workflows/portable-core.yml` | `v*` tags, `workflow_dispatch` | Cross-OS build/vet matrix + native Windows/macOS tests (restored) |
@@ -106,12 +107,11 @@ rg -n 'max-parallel|needs:|concurrency' \
   .github/workflows/openrc-smoke.yml .github/workflows/portable-core.yml
 ```
 
-The expected hits are the three intended fan-in edges in
-`distro-matrix.yml` — two `needs: build-binaries` (the container and systemd
-cells) and one `needs: [build-binaries, ...cells]` on the summary — plus one
+The expected hits in `distro-matrix.yml` are the `needs:` edges. The cells
+need `build-binaries`, the arm64 cells need `build-binaries-arm64`, and the
+summary needs every build and cell. There is one
 `concurrency:` block per workflow, keyed on `${{ github.workflow }}-${{
-github.ref }}` as described above. No `max-parallel:` line is set anywhere. Each of
-the four declares exactly the same triggers:
+github.ref }}` as described above. No `max-parallel:` line is set anywhere. `freebsd.yml`, `openrc-smoke.yml` and `portable-core.yml` declare exactly these triggers:
 
 ```yaml
 on:
@@ -121,7 +121,7 @@ on:
   workflow_dispatch:
 ```
 
-(no `pull_request`, no `schedule`).
+These three have no `pull_request` and no `schedule`. `distro-matrix.yml` adds a `pull_request` trigger. It is limited to the installer scripts, the installer harness and its own workflow file, and only the `installer-fast` cells run on those pull requests.
 
 ## Release gating (installer tier, report mode until two clean tags)
 
@@ -216,8 +216,11 @@ Build the payload (from a worktree at the commit under test):
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o /tmp/distroci/bin/miner ./cli/miner/
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o /tmp/distroci/bin/urnet-tools ./cmd/urnet-tools/
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o /tmp/distroci/bin/urnet-docker ./cmd/urnet-docker/
-cp <disposable-jwt> /tmp/distroci/bin/../fixtures/jwt && chmod 600 /tmp/distroci/fixtures/jwt
+mkdir -p /tmp/distroci/fixtures
+cp <disposable-jwt> /tmp/distroci/fixtures/jwt && chmod 600 /tmp/distroci/fixtures/jwt
 ```
+
+Replace `<disposable-jwt>` with the path to a disposable test JWT. Do not use a production account.
 
 Container cells (repeat per image in the matrix):
 

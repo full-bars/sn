@@ -26,6 +26,13 @@ This update brings OpenBSD support, moves the `sdk` pin to a commit on the fork 
 - **The BSD auto-update cron line builds its log path with `path.Join`** (`internal/urnettools/lifecycle_bsd_cron.go`). Behavior on a BSD host does not change. The path is always a forward-slash path now, on every build host.
 - **The OpenBSD installer and `urnet-tools` guard service identity.** They tell an absent service from an ambiguous process match before they run `rcctl`, keep manually started providers on the direct stop path, and remove the cron entry of a bare provider.
 
+### Documentation
+
+- **The operations guide lists the operator notices that touch a provider or miner**, as of 2026-11-13 (`docs/Bittensor-Operations.md`).
+- **The extender guide says what the epoch 8 announcement means for the role** (`docs/Extender.md`).
+- **The CI guides match the workflows** (`docs/CI-and-Release-Process.md`, `docs/Distro-Matrix-CI.md`). They describe the PR soak churn check, the installer check that runs on pull requests, the release build matrix and the number of workflows.
+- **The structure page lists the CI helper scripts and the release scripts** (`docs/Project-Structure.md`).
+
 ### CI
 
 - **The churn soak compares settled samples and names the goroutines that grew** (`.github/scripts/soak_settled.py`). The baseline and the final check use the minimum of five samples ten seconds apart, and the check waits a minute first. A failure prints the stack groups that gained goroutines and keeps both profiles as an artifact. The same commit failed once and passed once under the old single-sample check.
@@ -33,7 +40,7 @@ This update brings OpenBSD support, moves the `sdk` pin to a commit on the fork 
 
 ### Known limits
 
-- The `connect` pin stays at the fork main `8e078bbca`. The merged fork main `cb9728fb5` (upstream connect main `0d6d5d001`) is held back. With only that pin changed, the PR soak churn check failed, and goroutines grew by 27 percent over the churn windows against 4.7 percent on main. The pin moves when the growth is understood.
+- The `connect` pin stays at the fork main `8e078bbca`. The merged fork main `cb9728fb5` (upstream connect main `0d6d5d001`) is held back. The first soak run on it failed with 27 percent more goroutines. That check compared one sample at the start with one at the end, so a change in the number of running proxy slots looked like growth. The new check compares settled samples per running slot. It passed the merged `connect` in two runs, with 0 and -2 percent goroutine growth and 6.6 to 7.4 percent more memory. The bump waits for more runs because that memory growth is higher than the 4 percent of the current pin.
 - The source-graph tests for SCTP, gVisor and the substrate RPC fork need sibling checkouts and fail the same way on a clean main in a plain worktree. The `connect` and `sdk` pin tests pass.
 - `scripts/mainnet-release-build/pin.sh` is the network operator's release tooling. It still expects the upstream `sdk` module path, while this fork replaces the `sdk` with its own fork. The fork's workflows do not run it. The source-graph tests follow `go.mod`.
 - The upstream `sdk` features that need new sdk code, such as the extender WebRTC carrier and router port mapping, are not in this release. The sdk pin is the fork main without the upstream sdk sync.
