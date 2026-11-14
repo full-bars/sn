@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"path/filepath"
+	"path"
 	"strings"
 )
 
@@ -32,7 +32,7 @@ func bsdCronCommand(tool, logDir string, selector ...string) string {
 	for _, arg := range selector {
 		args += " " + quote(arg)
 	}
-	command := fmt.Sprintf("%s update -f%s >> %s 2>&1", quote(tool), args, quote(filepath.Join(logDir, "auto-update.log")))
+	command := fmt.Sprintf("%s update -f%s >> %s 2>&1", quote(tool), args, quote(path.Join(logDir, "auto-update.log")))
 	// Empty shell quotes separate a preceding backslash from cron's escape.
 	return strings.ReplaceAll(command, "%", `''\%`)
 }
