@@ -11,6 +11,7 @@ This update brings OpenBSD support, moves the `sdk` pin to a commit on the fork 
 ### Added
 
 - **OpenBSD support.** The provider and `urnet-tools` build for OpenBSD on amd64 and arm64. `scripts/Provider_Install_OpenBSD.sh` installs an `rc.d` service managed with `rcctl`, and `urnet-tools` handles discovery, lifecycle, auto-start and update there. Releases publish `openbsd` provider archives and `urnet-tools-openbsd-<arch>` assets. `optimize` is not supported on OpenBSD and returns an error. The port is cross-compiled and unit-tested but has not run on an OpenBSD host, and durable client registration is unavailable there as on FreeBSD. See [OpenBSD](docs/OpenBSD.md).
+- **Reference for the capacity and enforcement records and three runtime keys** (`docs/Monitoring.md`, `docs/Configuration.md`, `docs/Installation.md`). `urnet-tools autopilot log`, `urnet-tools enforcement` and `urnet-tools lowmode` were missing from the guides. So were the `oom-cap`, `gomemlimit` and `metrics-listen` keys of `urnet-tools set`.
 
 ### Changed
 
@@ -19,9 +20,16 @@ This update brings OpenBSD support, moves the `sdk` pin to a commit on the fork 
 
 ### Fixed
 
+- **A shutdown during URL source probing no longer logs a source failure** (`miner/proxy_manager_url_source.go`). The probe reports every new line dead once its context is cancelled, and the all-dead branch took that for a failing source. The branch now needs a live context. `TestFetchAndMergeProxyURLs_ShutdownMidCycleIsNotSourceFailure` failed in 16 of 500 runs before the change and in none of 1000 after.
+- **The extender setup elevation test skips where the platform keeps every provider** (`internal/urnettools/extender_elevation_test.go`). macOS has no cross-user enumeration gap, so it never narrows the provider list, and the test failed on both macOS runners.
 - **The `urnet-tools` root help lists `extender about`** (`internal/urnettools/cobra.go`). The root menu left the command out, and the root help test failed on Linux and on Windows.
 - **The BSD auto-update cron line builds its log path with `path.Join`** (`internal/urnettools/lifecycle_bsd_cron.go`). Behavior on a BSD host does not change. The path is always a forward-slash path now, on every build host.
 - **The OpenBSD installer and `urnet-tools` guard service identity.** They tell an absent service from an ambiguous process match before they run `rcctl`, keep manually started providers on the direct stop path, and remove the cron entry of a bare provider.
+
+### CI
+
+- **The churn soak compares settled samples and names the goroutines that grew** (`.github/scripts/soak_settled.py`). The baseline and the final check use the minimum of five samples ten seconds apart, and the check waits a minute first. A failure prints the stack groups that gained goroutines and keeps both profiles as an artifact. The same commit failed once and passed once under the old single-sample check.
+- **The distro matrix harness matches the shipped unit and a full Arch upgrade** (`.github/scripts/systemd-smoke.sh`, `.github/workflows/distro-matrix.yml`). It checks `Type=notify`, which the installer has shipped since September, and Arch jobs run `pacman -Syu`. The matrix is green.
 
 ### Known limits
 

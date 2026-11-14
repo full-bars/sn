@@ -165,6 +165,18 @@ single source of truth.
 > PID with no reachable socket is a startup failure or a same-user collision,
 > not a healthy provider.
 
+### Memory and listen address keys
+
+These runtime keys apply through the control socket, like the other `urnet-tools set` keys.
+
+| Key | Values | Effect |
+| :--- | :--- | :--- |
+| `oom-cap` | `on`, `off`, `shadow` | The OOM-aware start cap. `shadow` is the default. It logs what the cap would do and does not enforce it. `on` enforces the cap. `off` is the kill switch and forgets the standing cap. |
+| `gomemlimit` | bytes, for example `256MiB` or `1GiB` | The Go runtime memory limit. |
+| `metrics-listen` | `auto` or `ip:port` | The `/metrics` listen address. `auto` is the default. It binds loopback and every Tailscale IPv4, or `0.0.0.0` in a container. An explicit address is used as it is. `off` clears the value back to `auto`. A change rebinds a running listener with no restart. |
+
+The records that `oom-cap` writes are in [Monitoring](Monitoring.md#records-of-capacity-decisions-and-enforcement).
+
 ### Transport datagrams
 
 sn runs the platform transport over H3 (QUIC). QUIC DATAGRAM (RFC 9221) lets the

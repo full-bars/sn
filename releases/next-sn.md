@@ -75,8 +75,10 @@ Auth codes are single-use. Keep the state volume. If an existing identity is mis
 ### Fixes
 - **The `urnet-tools` root help lists `extender about`. [redeploy]**
 - **The BSD cron log path uses forward slashes on every build host. [no redeploy]**
+- **A shutdown during URL source probing no longer logs a source failure. [redeploy]** The probe reports every new line dead once its context is cancelled. The provider took that for a failing source and logged a warning. It now logs nothing.
 
 ### Documentation [no redeploy]
+- The monitoring guide covers `urnet-tools autopilot log` and `urnet-tools enforcement`. The configuration guide covers the `oom-cap`, `gomemlimit` and `metrics-listen` keys. The install guide lists `urnet-tools lowmode`.
 - The operations guide lists the operator notices that touch a provider or miner, as of 2026-11-13.
 - The extender guide says what the extender pool announced for epoch 8 means for the role.
 
