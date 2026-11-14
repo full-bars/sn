@@ -112,5 +112,60 @@ class Slots(unittest.TestCase):
         self.assertEqual(ss.compare(slotted(260, None), slotted(308, 4)), ['goroutines grew more than 5%'])
 
 
+ENV_DUMP = """goroutine profile: total 14
+6 @ 0x1 0x2
+#	0x1	github.com/urnetwork/connect.(*RemoteUserNatProvider).runReturnSender+0x44	/src/a.go:1
+#	0x2	runtime.selectgo+0x2a5	/usr/lib/go/src/runtime/select.go:335
+
+4 @ 0x1 0x2
+#	0x1	syscall.Syscall6+0x1	/usr/lib/go/src/syscall/x.go:1
+#	0x2	golang.org/x/sys/unix.EpollWait+0x2	/x.go:1
+#	0x3	github.com/urnetwork/connect.(*udpSocketReadPollShard).run+0x3	/src/udp.go:1
+
+3 @ 0x1 0x2
+#	0x1	github.com/libp2p/go-yamux/v5.(*Stream).Read+0x1	/y.go:1
+#	0x2	github.com/libp2p/go-libp2p/p2p/muxer/yamux.(*stream).Read+0x2	/y.go:2
+
+1 @ 0x1
+#	0x1	main.main+0x1	/m.go:1
+"""
+
+
+class Environment(unittest.TestCase):
+    def test_owned_leaves_out_the_environment_groups(self):
+        # 14 in the dump, 4 UDP pollers and 3 gossip streams are environment.
+        self.assertEqual(ss.owned_goroutines(ENV_DUMP), 7)
+
+    def test_owned_is_the_total_without_an_environment(self):
+        self.assertEqual(ss.owned_goroutines(BASE), 7)
+
+    def test_settled_takes_the_minimum_owned_when_every_sample_has_it(self):
+        rows = [dict(slotted(300, 3), owned=o) for o in (250, 240, 245)]
+        self.assertEqual(ss.settled(rows)['owned'], 240)
+
+    def test_settled_owned_is_none_when_a_sample_lacks_it(self):
+        rows = [dict(slotted(300, 3), owned=250), slotted(300, 3)]
+        self.assertIsNone(ss.settled(rows)['owned'])
+
+    def test_environment_growth_alone_passes(self):
+        # raw +8 percent (261 to 282), owned +1 percent (250 to 252)
+        base = dict(slotted(261, 3), owned=250)
+        now = dict(slotted(282, 3), owned=252)
+        self.assertEqual(ss.compare(base, now), [])
+
+    def test_slot_owned_growth_fails(self):
+        base = dict(slotted(261, 3), owned=250)
+        now = dict(slotted(282, 3), owned=270)
+        self.assertEqual(ss.compare(base, now), ['slot-owned goroutines grew more than 5%'])
+
+    def test_owned_per_slot_when_slots_differ(self):
+        base = dict(slotted(260, 3), owned=250)
+        now = dict(slotted(400, 4), owned=380)
+        self.assertEqual(ss.compare(base, now), ['slot-owned goroutines per slot grew more than 5% (slots 3 -> 4)'])
+
+    def test_falls_back_to_raw_without_owned(self):
+        self.assertEqual(ss.compare(slotted(261, 3), slotted(282, 3)), ['goroutines grew more than 5%'])
+
+
 if __name__ == '__main__':
     unittest.main()
