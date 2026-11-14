@@ -95,12 +95,12 @@ def settled(samples):
     out['owned'] = min(owned) if len(owned) == len(samples) else None
     # The slot count must come from the same sample as the goroutine count it
     # explains. A slot that starts while the samples are taken would otherwise
-    # pair a low count from before it with a slot count from after it.
-    if out['owned'] is not None:
-        pick = min(samples, key=lambda s: s['owned'])
-    else:
-        pick = min(samples, key=lambda s: s['goroutines'])
-    out['slots'] = pick.get('slots')
+    # pair a low count from before it with a slot count from after it. The raw and
+    # the slot-owned minimum can be different samples, so each keeps its own slot
+    # count, and compare uses the one of the count it checks.
+    out['slots_raw'] = min(samples, key=lambda s: s['goroutines']).get('slots')
+    out['slots_owned'] = min(samples, key=lambda s: s['owned']).get('slots') if out['owned'] is not None else None
+    out['slots'] = out['slots_owned'] if out['owned'] is not None else out['slots_raw']
     return out
 
 
@@ -113,7 +113,9 @@ def compare(base, now, goroutine_pct=5, rss_pct=10, fd_limit=1000):
         failed.append(f'FD count exceeds {fd_limit}')
     key = 'owned' if base.get('owned') and now.get('owned') is not None else 'goroutines'
     what = 'slot-owned goroutines' if key == 'owned' else 'goroutines'
-    bs, ns = base.get('slots'), now.get('slots')
+    suffix = 'owned' if key == 'owned' else 'raw'
+    bs = base.get('slots_' + suffix, base.get('slots'))
+    ns = now.get('slots_' + suffix, now.get('slots'))
     if bs and ns and ns > bs:
         # Slots were added. Compare the cost of one slot. A fixed overhead makes
         # this lenient, which is the safe side for a bound on leaks.
@@ -245,15 +247,18 @@ def main(argv):
     if mode == 'baseline':
         (d / 'settled-baseline').write_text(
             ' '.join(str(v) for v in (ident['pid'], ident['start'], now['rss_kib'], now['fds'], now['goroutines'],
-                                      now['slots'] if now['slots'] is not None else -1,
-                                      now['owned'] if now['owned'] is not None else -1)) + '\n')
+                                      now['slots_raw'] if now['slots_raw'] is not None else -1,
+                                      now['owned'] if now['owned'] is not None else -1,
+                                      now['slots_owned'] if now['slots_owned'] is not None else -1)) + '\n')
         return 0
-    pid_, start, rss, fds, gor, slots, owned = (d / 'settled-baseline').read_text().split()
+    pid_, start, rss, fds, gor, slots_raw, owned, slots_owned = (d / 'settled-baseline').read_text().split()
     if (pid_, start) != (ident['pid'], ident['start']):
         print('FAIL: provider restarted since baseline', file=sys.stderr)
         return 1
     base = {'rss_kib': int(rss), 'fds': int(fds), 'goroutines': int(gor),
-            'slots': int(slots) if int(slots) >= 0 else None, 'owned': int(owned) if int(owned) >= 0 else None}
+            'slots_raw': int(slots_raw) if int(slots_raw) >= 0 else None,
+            'slots_owned': int(slots_owned) if int(slots_owned) >= 0 else None,
+            'owned': int(owned) if int(owned) >= 0 else None}
     print('baseline', base)
     failed = compare(base, now,
                      goroutine_pct=int(os.environ.get('SOAK_GOROUTINE_PCT', '5')),

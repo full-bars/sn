@@ -190,5 +190,24 @@ class Environment(unittest.TestCase):
         self.assertEqual(ss.compare(slotted(261, 3), slotted(282, 3)), ['goroutines grew more than 5%'])
 
 
+class PartialProfiles(unittest.TestCase):
+    def test_each_minimum_keeps_its_own_slot_count(self):
+        rows = [dict(slotted(300, 3), owned=250), dict(slotted(400, 4), owned=240)]
+        out = ss.settled(rows)
+        self.assertEqual((out['goroutines'], out['slots_raw'], out['owned'], out['slots_owned']), (300, 3, 240, 4))
+
+    def test_profile_missing_on_one_side_compares_raw_with_its_own_slots(self):
+        # Baseline has profiles, the check does not. Raw 300 on 3 slots against
+        # raw 400 on 4 slots is the same cost per slot, so it is not growth.
+        base = ss.settled([dict(slotted(300, 3), owned=250), dict(slotted(400, 4), owned=240)])
+        now = ss.settled([dict(slotted(400, 4), owned=None), dict(slotted(405, 4), owned=None)])
+        self.assertEqual(ss.compare(base, now), [])
+
+    def test_profile_missing_on_one_side_still_catches_growth(self):
+        base = ss.settled([dict(slotted(300, 3), owned=250)])
+        now = ss.settled([dict(slotted(380, 3), owned=None)])
+        self.assertEqual(ss.compare(base, now), ['goroutines grew more than 5%'])
+
+
 if __name__ == '__main__':
     unittest.main()
