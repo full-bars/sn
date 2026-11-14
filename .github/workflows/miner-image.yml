@@ -83,6 +83,43 @@ jobs:
           fi
           echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
 
+      - name: Build the image filesystem for the ClamAV scan
+        if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: VERSION=${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          outputs: type=local,dest=${{ runner.temp }}/image_fs
+          cache-to: type=gha,mode=max
+
+      # Gate: ClamAV scans the root filesystem of every platform image before anything
+      # is pushed. The push step below reuses the layers built here from the cache.
+      # A detection, a scanner failure or a failed definition refresh stops the push.
+      - name: ClamAV gate (blocks the image push)
+        if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          CLAMAV_REPORT_FILE: ${{ runner.temp }}/clamav-image-report.md
+          CLAMAV_MIN_FILES: '100'
+        run: |
+          set -euo pipefail
+          if ! command -v clamscan >/dev/null 2>&1 || ! command -v freshclam >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq clamav clamav-freshclam >/dev/null
+          fi
+          ls "${RUNNER_TEMP}/image_fs"
+          bash .github/scripts/clamav-scan.sh "${RUNNER_TEMP}/image_fs"
+
+      - name: ClamAV image scan report
+        if: ${{ always() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
+        run: |
+          if [ -f "${RUNNER_TEMP}/clamav-image-report.md" ]; then
+            cat "${RUNNER_TEMP}/clamav-image-report.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          rm -rf "${RUNNER_TEMP}/image_fs"
+
       - name: Build the miner image
         uses: docker/build-push-action@v7
         with:
@@ -94,7 +131,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: VERSION=${{ steps.version.outputs.VERSION }}
           cache-from: type=gha
-          cache-to: type=gha,mode=min
+          cache-to: type=gha,mode=max
 
       - name: Assert a pre-release did not become the miner tag
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && (contains(github.ref, '-rc') || contains(github.ref, '-alpha') || contains(github.ref, '-beta')) }}
