@@ -36,7 +36,7 @@ Operators with **many distinct, stable public IP ranges** that are not shared wi
 The live figures below are read from the chains by CI, so this page does not carry hand-maintained numbers. The bullets after the table explain what each figure means.
 
 <!-- BEGIN SN25 LIVE NUMBERS (generated) -->
-_Live values · last changed 2026-11-13 15:17 UTC · checked hourly_
+_Live values · last changed 2026-11-14 02:14 UTC · checked hourly_
 
 | | Value |
 |---|---|
@@ -48,7 +48,7 @@ _Live values · last changed 2026-11-13 15:17 UTC · checked hourly_
 | Tempo | 360 blocks (~72 minutes) |
 | Gas price, chain 964 | 5.0 gwei |
 | One node binding | 245,301 gas, about 0.001227 TAO (~$0.26) |
-| Commitment oracle address | matches the coordinator oracle(), balance 0.0479 TAO |
+| Commitment oracle address | matches the coordinator oracle(), balance 0.1479 TAO |
 | Coordinator | not paused |
 <!-- END SN25 LIVE NUMBERS (generated) -->
 
