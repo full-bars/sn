@@ -73,3 +73,4 @@ If the gate fails, read the job log. A detection means you investigate, fix the 
 - Version tags push `:latest` plus the tag name to both registries.
 - Pre-release tags with `-rc`, `-alpha`, or `-beta` never touch `:latest`.
 - Main pushes push `:main` and a short-SHA tag so the image is always current.
+- ClamAV gates every push. Before it pushes, the job builds the root filesystem of each platform and scans it with `.github/scripts/clamav-scan.sh`, with fresh definitions. A detection or a scanner failure stops the push, so no tag moves. The same gate runs in the miner image workflow. The push step reuses the layers from the build cache. If the cache has been evicted, the push step builds again from scratch and takes longer.
