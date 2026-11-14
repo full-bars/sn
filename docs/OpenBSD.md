@@ -20,7 +20,7 @@ The installer does need one JSON parser. It installs the provider tarball only a
 doas pkg_add jq
 ```
 
-The installer needs root for the install tree and the `rc.d` script. It uses `doas` first and `sudo` as a fallback. If neither is configured, add a rule to `/etc/doas.conf` (for example `permit persist youruser`) or run from a root shell.
+The installer needs root for the install tree and the `rc.d` script. It uses `doas` first and `sudo` as a fallback. For service commands, `urnet-tools` selects `sudo` when `/etc/doas.conf` is missing and lets `doas` report other inspection errors. If neither is configured, add a rule to `/etc/doas.conf` (for example `permit persist youruser`) or run from a root shell.
 
 ## Install
 

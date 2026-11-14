@@ -46,6 +46,11 @@ func openbsdScriptServesBinary(script, binary string) bool {
 	return false
 }
 
+// openbsdDoasUsable leaves unknown configuration errors to doas.
+func openbsdDoasUsable(lookupErr, configErr error) bool {
+	return lookupErr == nil && !os.IsNotExist(configErr)
+}
+
 // openbsdRcctlArgv chooses the privilege escalation available to the caller.
 func openbsdRcctlArgv(euid int, hasDoas, hasSudo bool, args ...string) (string, []string, error) {
 	switch {
