@@ -1,7 +1,7 @@
 # Egress Security Policy
 
 The egress security (DPI) policy ships inside the **connect library** this
-provider links (`github.com/full-bars/connect`, at the commit pinned in `go.mod`) — there
+provider links (`github.com/full-bars/connect`, at the commit pinned in `go.mod`). There
 is no forked copy in this repo. Layered checks run in order on egress (and the
 CFAA source check on ingress); the first layer that decides wins. Verdicts
 (`ip_security.go`): **allow**, **drop**, or **incident** (drop + reported).
