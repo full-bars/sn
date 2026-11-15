@@ -51,7 +51,9 @@ getcap() {
         [ ! -e "$GETCAP_COUNT" ] || return 1
         : > "$GETCAP_COUNT"
     fi
-    printf '%s %s\n' "$1" "$(cat "$STATE")"
+    [ "${1:-}" != -n ] || shift
+    caps=$(cat "$STATE")
+    [ -z "$caps" ] || printf '%s %s\n' "$1" "$caps"
 }
 setcap() {
     printf '%s\n' "$*" >> "$CALLS"
@@ -88,14 +90,24 @@ sudo() {
             ):
                 with self.subTest(script=script, initial=initial, mode=mode, platform=platform):
                     result, calls, binary = self.run_helper(script, initial, mode, platform)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    installer = script == SCRIPTS[0]
+                    if installer and mode == "missing-getcap":
+                        self.assertEqual(calls, "")
+                        self.assertIn("cannot read existing file capabilities", result.stderr)
+                        continue
                     self.assertEqual(bool(calls), expect_call)
                     if expect_call:
-                        self.assertEqual(calls, f"cap_net_bind_service=+ep {binary}\n")
+                        spec = "cap_net_bind_service=+ep"
+                        if installer and initial:
+                            spec = initial + " cap_net_bind_service+ep"
+                        self.assertEqual(calls, f"{spec} {binary}\n")
                     self.assertEqual("WARNING:" in result.stderr, warn)
                     if warn:
                         self.assertEqual(len(result.stderr.splitlines()), 1)
                         quoted = "'" + binary.replace("'", "'\\''") + "'"
-                        self.assertIn("sudo setcap cap_net_bind_service=+ep " + quoted, result.stderr)
+                        spec = "'cap_net_bind_service=+ep'" if installer else "cap_net_bind_service=+ep"
+                        self.assertIn("sudo setcap " + spec + " " + quoted, result.stderr)
 
     def test_excluded_bounding_set_warns(self):
         for script in SCRIPTS:

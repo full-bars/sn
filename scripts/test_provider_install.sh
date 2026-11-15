@@ -121,11 +121,11 @@ test_do_install_rate_limit
 # --- TEST 4: get_asset_digest_from_api_response ---
 test_asset_digest_jq() {
     local json='{"tag_name": "v2026.9.28-1790016000-meso", "assets": [
-        {"name": "urnetwork-provider-v2026.9.28-1790016000-meso.tar.gz", "digest": "sha256:abc123"},
-        {"name": "urnet-tools-linux-amd64", "digest": "sha256:def456"}
+        {"name": "urnetwork-provider-v2026.9.28-1790016000-meso.tar.gz", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        {"name": "urnet-tools-linux-amd64", "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}
     ]}'
     local res=$(get_asset_digest_from_api_response "$json" "urnet-tools-linux-amd64")
-    assert_eq "def456" "$res" "digest extraction strips sha256: prefix and finds the named asset"
+    assert_eq "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" "$res" "digest extraction strips sha256: prefix and finds the named asset"
 }
 
 test_asset_digest_missing() {
