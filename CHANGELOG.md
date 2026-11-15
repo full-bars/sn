@@ -13,6 +13,7 @@ Everything merged after `v2026.11.14-1098572730-sn`.
 
 ### Changed
 
+- **Existing systemd units gain SIGPIPE restart protection during update.** The tool checks effective settings, installs a drop-in when needed and warns if operator settings defeat it. It does not restart the miner for this change.
 - **OpenBSD service commands fall back to sudo when doas has no configuration.** Other configuration inspection errors are left to doas to report.
 - **The startup GOGC line flags an environment value that differs from the live runtime setting.** It reports the live value and leaves its source unknown rather than attributing it to the environment.
 - **ClamAV gates the release** (`.github/workflows/release.yml`, `.github/scripts/clamav-scan.sh`, `.github/scripts/test-clamav-scan.sh`). The `create-release` job scans the exact files it uploads before it publishes, with definitions fetched by `freshclam` just before the scan. A detection, a scanner failure, a stale database or a failed refresh stops the release. VirusTotal still runs after publication and never gates. [no redeploy]

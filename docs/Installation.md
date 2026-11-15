@@ -6,7 +6,7 @@ This guide covers the Linux installer, user-level systemd service, post-install 
 
 The provider is designed to run as a **non-privileged user service** for maximum security and reliability.
 
-The systemd unit forces a restart after SIGPIPE. The installer warns if a user drop-in disables this recovery.
+The systemd unit forces a restart after SIGPIPE. The installer warns if an override disables this recovery. `urnet-tools update` also reconciles existing units with a managed drop-in when needed. It reloads systemd and checks effective settings; it warns when an override prevents protection. This reconciliation does not restart the miner. Systemd start rate limits still apply.
 
 > [!IMPORTANT]
 > Recommended: run this command as your normal non-root user. If run as root, the installer will guide you through creating a dedicated service user named `urnet`.

@@ -401,6 +401,9 @@ func cmdUpdate(args []string, force, dryRun bool) error {
 		}
 		if skip {
 			fmt.Printf("provider %s already on %s\n", providerLabel(p), cfg.Tag)
+			if _, err := ensureSigpipeRestartDropIn(p); err != nil {
+				fmt.Fprintf(os.Stderr, "warning: %s: SIGPIPE restart reconciliation: %v\n", p.Unit, err)
+			}
 			continue
 		}
 		if err := updateProviderWithRestart(p, cfg, stagedTool); err != nil {
@@ -866,6 +869,9 @@ func updateProvider(p Provider, cfg updateConfig) error {
 	// A standard restart re-execs the provider under the new Type=notify
 	// unit, which DOES set NOTIFY_SOCKET, so the new process starts
 	// correctly.
+	if _, err := ensureSigpipeRestartDropIn(p); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: %s: SIGPIPE restart reconciliation: %v\n", p.Unit, err)
+	}
 	migratedUnit := false
 	if migrated, err := reconcileUnitTypeForBinary(p, verifyProviderVersionFn(p.Binary)); err != nil {
 		return fmt.Errorf("update %s: binary %s was swapped but unit reconciliation failed: %w; no restart or HotSwap was attempted. Do not restart until the unit and binary are reconciled", providerLabel(p), p.Binary, err)

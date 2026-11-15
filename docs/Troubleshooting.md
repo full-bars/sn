@@ -2,7 +2,7 @@
 
 ## Provider stopped after SIGPIPE
 
-If `systemctl --user status urnetwork.service` reports `code=killed, signal=PIPE`, the older unit may not restart it. Run the current installer again, then check its warnings about restart overrides. Start the service with `systemctl --user start urnetwork.service`.
+If `systemctl --user status urnetwork.service` reports `code=killed, signal=PIPE`, the older unit may not restart it. Start the service with `systemctl --user start urnetwork.service`. Run `urnet-tools update` to reconcile the restart setting. Check warnings for `RestartPreventExitStatus` or later overrides that reset `RestartForceExitStatus`: these can prevent recovery even after the managed drop-in is written. The reconciliation does not restart the miner.
 
 ## Incident quick diagnosis
 
