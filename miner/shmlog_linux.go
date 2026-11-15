@@ -49,6 +49,12 @@ var hotswapStderrDetached bool
 var hotswapStdoutInheritedPipe bool
 var hotswapSafeStderr *os.File
 
+// isDevNullStat reports whether st describes /dev/null.
+func isDevNullStat(st unix.Stat_t) bool {
+	var null unix.Stat_t
+	return unix.Stat(os.DevNull, &null) == nil && null.Rdev == st.Rdev
+}
+
 // Keep a successor-owned reader on stderr. Forward while the inherited pipe
 // works, then keep draining if the old parent and its reader have gone away.
 func prepareHotswapStderr() {
@@ -56,7 +62,18 @@ func prepareHotswapStderr() {
 		return
 	}
 	var stderr, stdout unix.Stat_t
-	if unix.Fstat(2, &stderr) != nil || stderr.Mode&unix.S_IFMT != unix.S_IFIFO {
+	if unix.Fstat(2, &stderr) != nil {
+		return
+	}
+	if stderr.Mode&unix.S_IFMT == unix.S_IFCHR && isDevNullStat(stderr) {
+		// A successor of a successor can start with /dev/null as its stderr,
+		// because its parent had already detached an orphaned pipe. Fd 2 still
+		// has to reach the RAM log, so mark it detached and let initSHMLogger
+		// point it at the RAM log pipe.
+		hotswapStderrDetached = true
+		return
+	}
+	if stderr.Mode&unix.S_IFMT != unix.S_IFIFO {
 		return
 	}
 	null, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
