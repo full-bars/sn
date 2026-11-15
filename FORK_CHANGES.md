@@ -594,7 +594,7 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 
 **How to Identify in New Upstream**: Check `miner/profile_listen.go` and the `pprof` control key in `miner/control_socket.go`.
 
-**Status**: On `main` after `v2026.11.14-1098572730-sn` (unreleased).
+**Status**: Shipped in v2026.11.15-1099306820-sn.
 
 ---
 
@@ -612,7 +612,7 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 
 **How to Identify in New Upstream**: Check `SavedLogStdout` and `SavedLogStderr` in `miner/shmlog_linux.go` and `miner/hotswap_unix.go`, `ignoreSigpipe` in `miner/sigpipe_unix.go`, and `internal/urnettools/sigpipe_restart.go`.
 
-**Status**: On `main` after `v2026.11.14-1098572730-sn` (unreleased).
+**Status**: Shipped in v2026.11.15-1099306820-sn.
 
 ---
 
@@ -627,7 +627,7 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 
 **How to Identify in New Upstream**: Check the `github.com/full-bars/connect` replace pin in `go.mod` (`9713bcbf8b6d` or later carrying `epollFile` / `epollRawConn.Read` in `ip_udp_socket_poller_epoll.go`).
 
-**Status**: On `main` after `v2026.11.14-1098572730-sn` (unreleased).
+**Status**: Shipped in v2026.11.15-1099306820-sn.
 
 ---
 
@@ -647,4 +647,4 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 
 **How to Identify in New Upstream**: Check `miner/control_report_miner.go` (`parked` snapshot accounting), `internal/urnettools/process_start_linux.go`, `urnetwork@*.service` matching in `internal/urnettools/discover.go`, `openbsdPrivilegePrefix` in `internal/urnettools/lifecycle_openbsd.go`, and `miner/gogc_startup.go`.
 
-**Status**: On `main` after `v2026.11.14-1098572730-sn` (unreleased).
+**Status**: Shipped in v2026.11.15-1099306820-sn.

@@ -4,7 +4,11 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Everything merged after `v2026.11.14-1098572730-sn`.
+Everything merged after `v2026.11.15-1099306820-sn`.
+
+## [v2026.11.15-1099306820-sn] - 2026-11-15
+
+Changes after `v2026.11.14-1098572730-sn` through this tag. Notes: `releases/v2026.11.15-1099306820-sn.md`.
 
 ### Added
 
