@@ -1,6 +1,11 @@
 package miner
 
-import "sync"
+import (
+	"slices"
+	"sync"
+
+	"github.com/urnetwork/connect/extender"
+)
 
 // extender_observation.go publishes the extender's latest reading process-wide.
 //
@@ -93,6 +98,7 @@ func resetProviderExtenderObservation() {
 	extenderObservationListener = nil
 	extenderObservationState = providerExtenderObservation{}
 	extenderDetailState = providerExtenderDetail{}
+	extender.ResetProcessCarrierStats()
 }
 
 // The metrics seam reads what the listener published.
@@ -108,5 +114,17 @@ func providerExtenderControlLatest() *providerExtenderControlReading {
 	if !extenderObservationKnown {
 		return nil
 	}
-	return &providerExtenderControlReading{providerExtenderObservation: extenderObservationState, providerExtenderDetail: extenderDetailState}
+	detail := extenderDetailState
+	detail.Carriers = extenderCarrierReadings(detail.Carriers)
+	return &providerExtenderControlReading{providerExtenderObservation: extenderObservationState, providerExtenderDetail: detail}
+}
+
+func providerExtenderControlCarriers() []extenderCarrierReading {
+	extenderObservationLock.Lock()
+	var base []extenderCarrierReading
+	if extenderObservationKnown && len(extenderDetailState.Carriers) > 0 {
+		base = slices.Clone(extenderDetailState.Carriers)
+	}
+	extenderObservationLock.Unlock()
+	return extenderCarrierReadings(base)
 }

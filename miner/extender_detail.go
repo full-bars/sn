@@ -1,10 +1,12 @@
 package miner
 
 import (
+	"slices"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/urnetwork/connect/extender"
 	"github.com/urnetwork/sdk"
 )
 
@@ -23,19 +25,28 @@ import (
 // bounded, and this reply is read over a local socket by a terminal.
 const extenderDetailTextMax = 512
 
+// extenderCarrierReading holds cumulative served and refused counts for one carrier.
+type extenderCarrierReading struct {
+	Carrier         string            `json:"carrier"`
+	Served          uint64            `json:"served"`
+	Refused         uint64            `json:"refused"`
+	RefusalsByStage map[string]uint64 `json:"refusals_by_stage,omitempty"`
+}
+
 type providerExtenderDetail struct {
-	Ipv4                  string `json:"ipv4,omitempty"`
-	Ipv6                  string `json:"ipv6,omitempty"`
-	LastActivationError   string `json:"last_activation_error,omitempty"`
-	DnsPorts              string `json:"dns_ports,omitempty"`
-	ConnectionCount       int    `json:"connection_count,omitempty"`
-	PeerPingCount         int    `json:"peer_ping_count,omitempty"`
-	PeerPingCosignedCount int    `json:"peer_ping_cosigned_count,omitempty"`
-	PeerPingRejectedCount int    `json:"peer_ping_rejected_count,omitempty"`
-	PeerPingUnknownCount  int    `json:"peer_ping_unknown_count,omitempty"`
-	LastPeerPingTime      int64  `json:"last_peer_ping_time,omitempty"`
-	LimitedBySubnetsCount int    `json:"limited_by_subnets_count,omitempty"`
-	LimitedBySourceCount  int    `json:"limited_by_source_count,omitempty"`
+	Ipv4                  string                   `json:"ipv4,omitempty"`
+	Ipv6                  string                   `json:"ipv6,omitempty"`
+	LastActivationError   string                   `json:"last_activation_error,omitempty"`
+	DnsPorts              string                   `json:"dns_ports,omitempty"`
+	ConnectionCount       int                      `json:"connection_count,omitempty"`
+	PeerPingCount         int                      `json:"peer_ping_count,omitempty"`
+	PeerPingCosignedCount int                      `json:"peer_ping_cosigned_count,omitempty"`
+	PeerPingRejectedCount int                      `json:"peer_ping_rejected_count,omitempty"`
+	PeerPingUnknownCount  int                      `json:"peer_ping_unknown_count,omitempty"`
+	LastPeerPingTime      int64                    `json:"last_peer_ping_time,omitempty"`
+	LimitedBySubnetsCount int                      `json:"limited_by_subnets_count,omitempty"`
+	LimitedBySourceCount  int                      `json:"limited_by_source_count,omitempty"`
+	Carriers              []extenderCarrierReading `json:"carriers,omitempty"`
 }
 
 // providerExtenderControlReading is the control reply's extender object: the
@@ -95,4 +106,33 @@ func extenderDetailFromStatus(status *sdk.ExtenderProvideStatus) providerExtende
 		LimitedBySubnetsCount: status.LimitedBySubnetsCount,
 		LimitedBySourceCount:  status.LimitedBySourceCount,
 	}
+}
+
+func extenderCarrierReadings(base []extenderCarrierReading) []extenderCarrierReading {
+	if len(base) > 0 {
+		return slices.Clone(base)
+	}
+	servedByCarrier := extender.ProcessCarrierServedCounts()
+	refusalsByCarrier := extender.ProcessCarrierRefusalCounts()
+	carriers := extender.ExtenderCarrierPorts()
+	out := make([]extenderCarrierReading, 0, len(carriers))
+	for _, carrier := range carriers {
+		served := servedByCarrier[carrier]
+		stages := refusalsByCarrier[carrier]
+		var refused uint64
+		for _, count := range stages {
+			refused += count
+		}
+		var byStage map[string]uint64
+		if len(stages) > 0 {
+			byStage = stages
+		}
+		out = append(out, extenderCarrierReading{
+			Carrier:         carrier,
+			Served:          served,
+			Refused:         refused,
+			RefusalsByStage: byStage,
+		})
+	}
+	return out
 }

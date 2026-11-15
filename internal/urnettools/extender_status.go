@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
@@ -17,6 +18,14 @@ const (
 	SourceControlSocket = "control socket"
 	SourceUnknown       = "unavailable"
 )
+
+// ExtenderCarrierStats holds cumulative served and refused request counts for one carrier.
+type ExtenderCarrierStats struct {
+	Carrier         string            `json:"carrier"`
+	Served          uint64            `json:"served"`
+	Refused         uint64            `json:"refused"`
+	RefusalsByStage map[string]uint64 `json:"refusals_by_stage,omitempty"`
+}
 
 // ExtenderReading holds the provider's live control-socket observation.
 type ExtenderReading struct {
@@ -37,6 +46,7 @@ type ExtenderReading struct {
 	LastPeerPingTime      int64
 	LimitedBySubnetsCount int
 	LimitedBySourceCount  int
+	Carriers              []ExtenderCarrierStats
 
 	// BindRoute says how an unprivileged provider gets TCP 443 on this host.
 	// It is a host reading set by the printing commands, not by the provider.
@@ -131,7 +141,7 @@ func queryExtenderFromSocket(p Provider) (*ExtenderReading, error) {
 		PeerPingCount: ex.PeerPingCount, PeerPingCosignedCount: ex.PeerPingCosignedCount,
 		PeerPingRejectedCount: ex.PeerPingRejectedCount, PeerPingUnknownCount: ex.PeerPingUnknownCount,
 		LastPeerPingTime: ex.LastPeerPingTime, LimitedBySubnetsCount: ex.LimitedBySubnetsCount,
-		LimitedBySourceCount: ex.LimitedBySourceCount,
+		LimitedBySourceCount: ex.LimitedBySourceCount, Carriers: ex.Carriers,
 	}, nil
 }
 
@@ -177,4 +187,36 @@ func formatExtenderBlock(w io.Writer, reading ExtenderReading) {
 		fmt.Fprintf(w, "  Activation error:  %s\n", reading.LastRefusal)
 	}
 	fmt.Fprintf(w, "  Connections:       %d\n", reading.ConnectionCount)
+	formatExtenderCarrierStats(w, reading.Carriers)
+}
+
+func formatExtenderCarrierStats(w io.Writer, carriers []ExtenderCarrierStats) {
+	if len(carriers) == 0 {
+		return
+	}
+	fmt.Fprintln(w, "  Carriers:")
+	for _, c := range carriers {
+		line := fmt.Sprintf("    %-9s served %d, refused %d", c.Carrier+":", c.Served, c.Refused)
+		if len(c.RefusalsByStage) > 0 {
+			stages := make([]string, 0, len(c.RefusalsByStage))
+			for stage := range c.RefusalsByStage {
+				stages = append(stages, stage)
+			}
+			slices.SortFunc(stages, func(a, b string) int {
+				if c.RefusalsByStage[a] != c.RefusalsByStage[b] {
+					if c.RefusalsByStage[a] > c.RefusalsByStage[b] {
+						return -1
+					}
+					return 1
+				}
+				return strings.Compare(a, b)
+			})
+			parts := make([]string, 0, len(stages))
+			for _, stage := range stages {
+				parts = append(parts, fmt.Sprintf("%s %d", stage, c.RefusalsByStage[stage]))
+			}
+			line += " (" + strings.Join(parts, ", ") + ")"
+		}
+		fmt.Fprintln(w, line)
+	}
 }

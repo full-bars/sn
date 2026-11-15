@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/urnetwork/connect/extender"
 	"github.com/urnetwork/sdk"
 )
 
@@ -25,6 +26,8 @@ var allExtenderMetricFamilies = []string{
 	"urnet_extender_activation_refused",
 	"urnet_extender_revoked",
 	"urnet_extender_last_activation_attempt_seconds",
+	"urnet_extender_carrier_requests_total",
+	"urnet_extender_carrier_refused_total",
 }
 
 // When the extender seam hook is nil, all extender families must be completely
@@ -121,6 +124,12 @@ func TestExtenderMetricsKnownValues(t *testing.T) {
 		"# HELP urnet_extender_last_activation_attempt_seconds",
 		"# TYPE urnet_extender_last_activation_attempt_seconds gauge",
 		"urnet_extender_last_activation_attempt_seconds 1800000000",
+		"# HELP urnet_extender_carrier_requests_total",
+		"# TYPE urnet_extender_carrier_requests_total counter",
+		`urnet_extender_carrier_requests_total{carrier="tcp-443",outcome="served"} 0`,
+		`urnet_extender_carrier_requests_total{carrier="tcp-443",outcome="refused"} 0`,
+		"# HELP urnet_extender_carrier_refused_total",
+		"# TYPE urnet_extender_carrier_refused_total counter",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("scrape missing expected line %q:\n%s", want, out)
@@ -304,5 +313,44 @@ func TestExtenderObservationRetiredListener(t *testing.T) {
 	direct.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true})
 	if latest := providerExtenderObservationLatest(); latest != nil {
 		t.Fatalf("a retired listener's late callback must not publish, got %+v", *latest)
+	}
+}
+
+func TestExtenderMetricsCarrierRequestsAndRefusals(t *testing.T) {
+	resetProviderExtenderObservation()
+	t.Cleanup(resetProviderExtenderObservation)
+
+	extender.RecordProcessCarrierServed(extender.ExtenderCarrierTcp443)
+	extender.RecordProcessCarrierServed(extender.ExtenderCarrierTcp443)
+	extender.RecordProcessCarrierServed(extender.ExtenderCarrierUdp4053)
+	extender.RecordProcessCarrierRefusal(extender.ExtenderCarrierTcp443, "service")
+	extender.RecordProcessCarrierRefusal(extender.ExtenderCarrierTcp443, "service")
+	extender.RecordProcessCarrierRefusal(extender.ExtenderCarrierUdp53, "admission source")
+
+	withExtenderSeam(t, func() *providerExtenderObservation {
+		return &providerExtenderObservation{
+			Known:     true,
+			Enabled:   true,
+			Listening: true,
+		}
+	})
+
+	out := minerExtraMetrics()
+	for _, want := range []string{
+		`urnet_extender_carrier_requests_total{carrier="tcp-443",outcome="served"} 2`,
+		`urnet_extender_carrier_requests_total{carrier="tcp-443",outcome="refused"} 2`,
+		`urnet_extender_carrier_requests_total{carrier="udp-443",outcome="served"} 0`,
+		`urnet_extender_carrier_requests_total{carrier="udp-443",outcome="refused"} 0`,
+		`urnet_extender_carrier_requests_total{carrier="udp-4053",outcome="served"} 1`,
+		`urnet_extender_carrier_requests_total{carrier="udp-53",outcome="refused"} 1`,
+		`urnet_extender_carrier_refused_total{carrier="tcp-443",stage="service"} 2`,
+		`urnet_extender_carrier_refused_total{carrier="udp-53",stage="admission source"} 1`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("metrics missing %q:\n%s", want, out)
+		}
+	}
+	for _, err := range Lint(out) {
+		t.Errorf("lint error: %v", err)
 	}
 }

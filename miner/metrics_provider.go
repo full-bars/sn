@@ -727,4 +727,31 @@ func writeExtenderMetrics(b *strings.Builder, observation providerExtenderObserv
 		fmt.Fprintf(b, "# TYPE urnet_extender_last_activation_attempt_seconds gauge\n")
 		fmt.Fprintf(b, "urnet_extender_last_activation_attempt_seconds %d\n", observation.ActivationTime/1000)
 	}
+
+	carriers := providerExtenderControlCarriers()
+	fmt.Fprintf(b, "# HELP urnet_extender_carrier_requests_total Extender requests by carrier and outcome, cumulative.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_carrier_requests_total counter\n")
+	for _, c := range carriers {
+		fmt.Fprintf(b, "urnet_extender_carrier_requests_total{carrier=%s,outcome=\"served\"} %d\n",
+			prometheusLabelValue(c.Carrier), c.Served)
+		fmt.Fprintf(b, "urnet_extender_carrier_requests_total{carrier=%s,outcome=\"refused\"} %d\n",
+			prometheusLabelValue(c.Carrier), c.Refused)
+	}
+
+	fmt.Fprintf(b, "# HELP urnet_extender_carrier_refused_total Extender requests refused by carrier and stage, cumulative.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_carrier_refused_total counter\n")
+	for _, c := range carriers {
+		if len(c.RefusalsByStage) == 0 {
+			continue
+		}
+		stageNames := make([]string, 0, len(c.RefusalsByStage))
+		for stage := range c.RefusalsByStage {
+			stageNames = append(stageNames, stage)
+		}
+		slices.Sort(stageNames)
+		for _, stage := range stageNames {
+			fmt.Fprintf(b, "urnet_extender_carrier_refused_total{carrier=%s,stage=%s} %d\n",
+				prometheusLabelValue(c.Carrier), prometheusLabelValue(stage), c.RefusalsByStage[stage])
+		}
+	}
 }

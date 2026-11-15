@@ -6,6 +6,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/urnetwork/connect/extender"
 	"github.com/urnetwork/sdk"
 )
 
@@ -86,5 +87,46 @@ func TestExtenderActivationErrorIsRedactedAndInert(t *testing.T) {
 	status := &sdk.ExtenderProvideStatus{LastActivationError: cases["jwt"]}
 	if d := extenderDetailFromStatus(status); strings.Contains(d.LastActivationError, jwt) {
 		t.Fatalf("wire detail leaks: %q", d.LastActivationError)
+	}
+}
+
+func TestExtenderControlReadingIncludesCarrierStats(t *testing.T) {
+	resetProviderExtenderObservation()
+	t.Cleanup(resetProviderExtenderObservation)
+	testExtenderState(t)
+
+	extender.RecordProcessCarrierServed(extender.ExtenderCarrierTcp443)
+	extender.RecordProcessCarrierServed(extender.ExtenderCarrierTcp443)
+	extender.RecordProcessCarrierServed(extender.ExtenderCarrierUdp4053)
+	extender.RecordProcessCarrierRefusal(extender.ExtenderCarrierTcp443, "service")
+	extender.RecordProcessCarrierRefusal(extender.ExtenderCarrierTcp443, "service")
+	extender.RecordProcessCarrierRefusal(extender.ExtenderCarrierUdp53, "admission source")
+
+	listener := newProviderExtenderStatusListener(nil, 0, "")
+	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{
+		Enabled:     true,
+		Listening:   true,
+		ActivatedV4: true,
+	})
+
+	reading := providerExtenderControlLatest()
+	if reading == nil {
+		t.Fatal("no reading published")
+	}
+	byCarrier := map[string]extenderCarrierReading{}
+	for _, c := range reading.Carriers {
+		byCarrier[c.Carrier] = c
+	}
+	if got := byCarrier[extender.ExtenderCarrierTcp443]; got.Served != 2 || got.Refused != 2 || got.RefusalsByStage["service"] != 2 {
+		t.Fatalf("tcp-443 reading = %+v", got)
+	}
+	if got := byCarrier[extender.ExtenderCarrierUdp443]; got.Served != 0 || got.Refused != 0 || len(got.RefusalsByStage) != 0 {
+		t.Fatalf("udp-443 reading = %+v", got)
+	}
+	if got := byCarrier[extender.ExtenderCarrierUdp4053]; got.Served != 1 || got.Refused != 0 {
+		t.Fatalf("udp-4053 reading = %+v", got)
+	}
+	if got := byCarrier[extender.ExtenderCarrierUdp53]; got.Served != 0 || got.Refused != 1 || got.RefusalsByStage["admission source"] != 1 {
+		t.Fatalf("udp-53 reading = %+v", got)
 	}
 }

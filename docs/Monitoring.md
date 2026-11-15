@@ -151,6 +151,8 @@ The record covers releases of silent clients, connect budget cuts, attempt caps,
 | `urnet_auth_backoff_waits_total` | counter | | Lifetime backoff waits before a first sign-in |
 | `urnet_auth_backoff_stops_total` | counter | | Lifetime terminal stops after repeated refusals |
 | `urnet_auth_backoff_recoveries_total` | counter | | Lifetime recoveries from a non-zero failure streak |
+| `urnet_extender_carrier_requests_total` | counter | `carrier`, `outcome` | Cumulative extender requests by carrier (`tcp-443`, `udp-443`, `udp-4053`, `udp-53`) and outcome (`served`, `refused`) |
+| `urnet_extender_carrier_refused_total` | counter | `carrier`, `stage` | Cumulative extender requests refused by carrier and refusal stage |
 
 The `proxies` counts in `urnet-tools status` and `urnet-tools top` cover the running pool only. A proxy the trim cap holds back on purpose is `parked` in the snapshot JSON (`proxies.parked`), and the status `trim` row shows how many are held back. A parked proxy is not down, so a node whose running pool is healthy never reads `degraded` because of it.
 

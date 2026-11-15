@@ -9,6 +9,7 @@ Everything merged after `v2026.11.14-1098572730-sn`.
 ### Added
 
 - **Loopback diagnostics are on by default.** The pprof listener starts at `127.0.0.1:6060`, loopback only, so a stuck or heavy miner can be inspected without a restart. `urnet-tools set pprof off` turns it off and `urnet-tools set pprof <ip:port>` moves it, live and persisted. An explicit `URNETWORK_PPROF` still decides the address when it is set. If the default port stays in use, the miner binds a free loopback port.
+- **Per-carrier extender statistics** (`miner/`, `internal/urnettools/`, connect pin). The extender counts served and refused requests per carrier (`tcp-443`, `udp-443`, `udp-4053`, `udp-53`) and by refusal stage with bounded atomic counters. Rate-limited refusal log lines include the carrier label, and active minutes emit a per-carrier summary line. `urnet-tools extender status` displays the per-carrier counts and refusal reasons, and `/metrics` exports `urnet_extender_carrier_requests_total` and `urnet_extender_carrier_refused_total`.
 
 ### Fixed
 

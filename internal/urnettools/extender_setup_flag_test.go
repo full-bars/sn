@@ -82,3 +82,32 @@ func TestExtenderSocketAndTop(t *testing.T) {
 		}
 	}
 }
+
+func TestExtenderBlockRendersCarrierStats(t *testing.T) {
+	dir := t.TempDir()
+	startAuditSocket(t, filepath.Join(dir, "provider.sock"), func(req controlRequest) string {
+		if req.Cmd != "extender" {
+			return `{"ok":false}`
+		}
+		return `{"ok":true,"extender":{"known":true,"enabled":true,"listening":true,"activated_v4":true,"ipv4":"198.51.100.1","carriers":[{"carrier":"tcp-443","served":412,"refused":3,"refusals_by_stage":{"service":2,"destination authorization":1}},{"carrier":"udp-443","served":90,"refused":0},{"carrier":"udp-4053","served":12,"refused":1,"refusals_by_stage":{"admission source":1}},{"carrier":"udp-53","served":4,"refused":0}]}}`
+	})
+	p := Provider{StateDir: dir, Running: true}
+	r, err := queryExtenderFromSocket(p)
+	if err != nil {
+		t.Fatalf("queryExtenderFromSocket: %v", err)
+	}
+	var out bytes.Buffer
+	formatExtenderBlock(&out, *r)
+	got := out.String()
+	for _, want := range []string{
+		"Carriers:",
+		"tcp-443:  served 412, refused 3 (service 2, destination authorization 1)",
+		"udp-443:  served 90, refused 0",
+		"udp-4053: served 12, refused 1 (admission source 1)",
+		"udp-53:   served 4, refused 0",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("block missing %q:\n%s", want, got)
+		}
+	}
+}
