@@ -49,7 +49,7 @@ Panels:
 - **Extender:** whether the role is active and listening, its IPv4 and IPv6 addresses, the DNS ports, the connection count, and one row per carrier that has carried traffic with the bytes in (from clients) and out (to clients) in human units, for example `tcp443 ↓1.2 GiB ↑4.0 GiB`. The box keeps its place at every window height: it takes its rows first, Resources gives up rows before it is dropped, and Internals shrinks to what is left. The figures are the bytes this extender relayed since the provider started, not earnings.
 - **Events:** recent restarts (with reason) and proxy recoveries and losses, from data the provider already keeps.
 
-Keys: `q` quit, `tab` next provider on the host, `p` proxy detail, `?` help, `+`/`-` refresh rate. Resize is handled live.
+Keys: `q` quit, `tab` next provider on the host, `p` proxy detail, `?` help, `u` binary or decimal units, `+`/`-` refresh rate. Resize is handled live.
 
 ## Data flow
 
