@@ -231,7 +231,24 @@ func snapshotProxyCounts() (snapshotProxies, string) {
 		return counts, fmt.Sprintf("proxy state is unreadable: %v", err)
 	}
 	live := liveProxyHealthByKey()
+	// With a trim cap in force the persisted state still lists the proxies the
+	// cap holds back. They are parked on purpose, so they must not count as a
+	// down proxy or as part of the pool the state derivation judges. This
+	// process publishes its running set once the provide loop starts. Before
+	// that nothing can be told apart, so every entry counts as before.
+	running := map[string]struct{}{}
+	if desired, cap, _, ok := currentTrimSelection(); ok && 0 < cap && cap < desired {
+		for _, key := range controlRuntime.runningKeySnapshot() {
+			running[key] = struct{}{}
+		}
+	}
 	for key, entry := range state.Proxies {
+		if 0 < len(running) {
+			if _, isRunning := running[key]; !isRunning {
+				counts.Parked++
+				continue
+			}
+		}
 		health := entry.Health
 		if liveStatus, ok := live[key]; ok && liveStatus.Health != "" {
 			health = liveStatus.Health

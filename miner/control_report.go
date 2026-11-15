@@ -108,6 +108,11 @@ type snapshotProxies struct {
 	Degraded   int `json:"degraded"`
 	Connecting int `json:"connecting"`
 	Dead       int `json:"dead"`
+	// Parked is the proxies the trim cap holds back on purpose. They are not
+	// running and not down, so they stay out of the four counts above and out
+	// of total(), which is the pool the state derivation judges. Zero means
+	// nothing is held back, or the provider has not published its running set.
+	Parked int `json:"parked,omitempty"`
 
 	// A provider that predates trim reporting omits these; zeros then mean
 	// "not reported", never "uncapped". TrimReported is the presence flag that
