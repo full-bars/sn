@@ -563,12 +563,88 @@ Both jobs now run from one per-slot sampler loop with a single five-second ticke
 
 **Status**: shipping in this release.
 
-## 42. The sdk Pin on the Fork Main and Go 1.27.4
+## 42. Tool-First Update, RAM-Log Reopen, OpenBSD Support, URL Source Shutdown and Go 1.27.4 (v2026.11.9 to v2026.11.14)
 
-**Purpose**: Pin the sdk to a commit that is reachable from the fork `main`, with the extender activation pacing hook the miner uses, and move the toolchain to Go 1.27.4. The connect pin stays where it was.
+**Purpose**: Run newer `urnet-tools` first during updates, reopen replaced RAM log files, add OpenBSD provider and `urnet-tools` support, stop URL proxy source probes cleanly on shutdown, pin the `sdk` to a commit on the fork `main`, and move the toolchain to Go 1.27.4.
 
-**Files Modified**: `go.mod`, `go.sum`, `Dockerfile`, `.github/workflows/*.yml`, `scripts/source-graph/source_graph_test.go`, `internal/urnettools/cobra.go`, `internal/urnettools/lifecycle_bsd_cron.go` and the docs that name the Go version.
+**Files Modified**: `go.mod`, `go.sum`, `Dockerfile`, `.github/workflows/*.yml`, `scripts/source-graph/source_graph_test.go`, `miner/proxy_manager_url_source.go`, `miner/shmlog_linux.go`, `miner/shmlog_trim.go`, `miner/diag_disk_openbsd.go`, `internal/connectx/sysmem_openbsd.go`, `internal/urnettools/cobra.go`, `internal/urnettools/update.go`, `internal/urnettools/update_tool_first.go`, `internal/urnettools/update_extender.go`, `internal/urnettools/control_peer_linux.go`, `internal/urnettools/hotswap.go`, `internal/urnettools/discover_openbsd.go`, `internal/urnettools/discover_openbsd_parse.go`, `internal/urnettools/lifecycle_openbsd.go`, `internal/urnettools/lifecycle_openbsd_rc.go`, `internal/urnettools/openbsd_managed.go`, `internal/urnettools/jwt_read_openbsd.go`, `internal/urnettools/lifecycle_bsd_cron.go`, `scripts/Provider_Install_Linux.sh`, `scripts/Provider_Install_OpenBSD.sh` and the docs that name the Go version.
 
-**How to Identify in New Upstream**: the two `replace` lines for `github.com/urnetwork/connect` and `github.com/urnetwork/sdk` point at `github.com/full-bars/connect` and `github.com/full-bars/sdk`. Upstream sn has no such lines. Bring upstream in with a merge into the fork `main` of connect and the sdk, then move both pins together (see the pin bump runbook in the workspace docs). The merged connect main `cb9728fb5` was tried in this release and held back, because it failed the PR soak churn check.
+**Changes**:
+- **Tool-first self-update, OpenRC read-only verify and sysctl-aware capability checks** (`internal/urnettools/update_tool_first.go`, `internal/urnettools/update.go`, `internal/urnettools/update_extender.go`, `internal/urnettools/control_peer_linux.go`, `internal/urnettools/hotswap.go`): `urnet-tools update` installs a newer `urnet-tools` and re-execs it with the provider target set pinned; OpenRC restart verification reads build information and the release stamp without executing the binary as root; unreadable running images are verified over the peer-checked control socket; updates skip file capability checks when `net.ipv4.ip_unprivileged_port_start` is 443 or lower; rollback demotes `Type=notify-reload` units when needed; and the `Type=simple` decline message names older `Provider_Install_Linux.sh` versions.
+- **RAM log reopen and Linux installer hardening** (`miner/shmlog_linux.go`, `miner/shmlog_trim.go`, `scripts/Provider_Install_Linux.sh`): the provider reopens a replaced or removed important log after checking path ownership and permissions, and the Linux installer reads terminal confirmation through a pipe, preserves `-y` across `sudo`, fails closed on OpenRC tree preparation, backs up and restores the systemd unit alongside the binary on failed restarts, and tracks completed/skipped/failed optimizer steps.
+- **OpenBSD provider and `urnet-tools` support** (`internal/connectx/sysmem_openbsd.go`, `miner/diag_disk_openbsd.go`, `internal/urnettools/*_openbsd*.go`, `scripts/Provider_Install_OpenBSD.sh`, `.github/workflows/release.yml`): cross-builds and release assets cover OpenBSD amd64 and arm64 with an `rcctl` installer, service identity guards (distinguishing an absent service from an ambiguous process match before running `rcctl`, keeping manually started providers on the direct stop path, and removing the cron entry of a bare provider), physical memory and disk diagnostics, and symlink-safe JWT reads.
+- **URL source shutdown handling** (`miner/proxy_manager_url_source.go`): `fetchAndMergeProxyURLs` checks for a live context before treating an all-dead probe result as a failing source, so a shutdown mid-cycle does not log false source failure warnings.
+- **The `sdk` pin on fork `main`, Go 1.27.4 and CLI polish** (`go.mod`, `Dockerfile`, `.github/workflows/*.yml`, `internal/urnettools/cobra.go`, `internal/urnettools/lifecycle_bsd_cron.go`): moves the `sdk` pin to `5c905e84` on `full-bars/sdk` `main` (retaining the extender activation pacing hook), moves the build to Go 1.27.4, lists `extender about` in root help, and builds the BSD cron log path with `path.Join`.
 
-**Status**: shipping in this release.
+**How to Identify in New Upstream**: the two `replace` lines for `github.com/urnetwork/connect` and `github.com/urnetwork/sdk` point at `github.com/full-bars/connect` and `github.com/full-bars/sdk`. Upstream sn has no such lines. Check `internal/urnettools/update_tool_first.go`, `internal/urnettools/*_openbsd*.go`, `miner/shmlog_linux.go` and the context check in `miner/proxy_manager_url_source.go`.
+
+**Status**: Shipped in `v2026.11.9-1094091330-sn` and `v2026.11.14-1098572730-sn`.
+
+---
+
+## 43. Managed Loopback pprof Diagnostics Listener On by Default
+
+**Purpose**: Keep a loopback-only pprof listener available by default so a stuck or heavy miner can be inspected without a restart, while letting operators turn it off or move its loopback address live over the control socket.
+
+**Files Modified**: `miner/profile_listen.go`, `miner/control_socket.go`, `miner/control_state.go`, `miner/run.go`, `internal/urnettools/cli.go`, `internal/urnettools/restore_delegate.go` and their tests.
+
+**Changes**:
+- **Default loopback listener** (`miner/profile_listen.go`, `miner/run.go`): the miner starts a loopback-only pprof listener at `127.0.0.1:6060` by default. If the preferred port stays in use, the listener binds a free loopback port.
+- **Live control key** (`miner/profile_listen.go`, `miner/control_socket.go`, `internal/urnettools/cli.go`): `urnet-tools set pprof off` stops the listener and `urnet-tools set pprof <ip:port>` moves it to another loopback address live and persists the setting across restarts. An explicit `URNETWORK_PPROF` environment variable still takes precedence when set.
+
+**How to Identify in New Upstream**: Check `miner/profile_listen.go` and the `pprof` control key in `miner/control_socket.go`.
+
+**Status**: On `main` after `v2026.11.14-1098572730-sn` (unreleased).
+
+---
+
+## 44. HotSwap RAM-Log Stderr Handoff and SIGPIPE Restart Protection
+
+**Purpose**: Prevent a hot-swapped successor from dying with `SIGPIPE` when the draining parent exits and closes its internal RAM-log pipe, and ensure systemd restarts the service if `SIGPIPE` ever terminates it.
+
+**Files Modified**: `miner/hotswap_unix.go`, `miner/shmlog_linux.go`, `miner/shmlog_fallback.go`, `miner/cli_service.go`, `internal/urnettools/update.go`, `scripts/Provider_Install_Linux.sh`.
+
+**Files Added**: `miner/sigpipe_unix.go`, `miner/sigpipe_other.go`, `internal/urnettools/sigpipe_restart.go`, `internal/urnettools/sigpipe_status.go` and their tests.
+
+**Changes**:
+- **Original stdio passed across HotSwap** (`miner/shmlog_linux.go`, `miner/shmlog_fallback.go`, `miner/hotswap_unix.go`): when `enableRamLogs` redirects stdout and stderr into its internal trimming pipe, it saves duplicates of the original descriptors (`SavedLogStdout`, `SavedLogStderr`) and `spawnCandidate` passes those saved descriptors to the new process instead of the parent's pipe write-end. A new process that inherits an orphaned pipe or `/dev/null` stderr from an older binary drops it at startup when RAM logs are active and redirects stderr to the RAM log file.
+- **Ignore `SIGPIPE` in `provide` and restart on `SIGPIPE` in systemd** (`miner/sigpipe_unix.go`, `miner/cli_service.go`, `scripts/Provider_Install_Linux.sh`, `internal/urnettools/sigpipe_restart.go`, `internal/urnettools/sigpipe_status.go`, `internal/urnettools/update.go`): `provide` calls `signal.Ignore(syscall.SIGPIPE)`. The Linux installer writes `RestartForceExitStatus=SIGPIPE` in generated systemd units and warns when a restart override defeats it. During `urnet-tools update`, existing systemd units are checked and reconciled with a `sigpipe-restart.conf` drop-in when needed, without restarting the miner for the drop-in alone.
+
+**How to Identify in New Upstream**: Check `SavedLogStdout` and `SavedLogStderr` in `miner/shmlog_linux.go` and `miner/hotswap_unix.go`, `ignoreSigpipe` in `miner/sigpipe_unix.go`, and `internal/urnettools/sigpipe_restart.go`.
+
+**Status**: On `main` after `v2026.11.14-1098572730-sn` (unreleased).
+
+---
+
+## 45. Non-Blocking Go Netpoller Wait for UDP Readiness Shards via `connect` Pin
+
+**Purpose**: Stop UDP socket readiness shards from holding one OS thread per shard in blocking `epoll_wait` calls (~2,100 threads on a thousand-proxy node).
+
+**Files Modified**: `go.mod`, `go.sum` (bumping `github.com/full-bars/connect` to `v0.0.0-20261114203125-9713bcbf8b6d`).
+
+**Changes**:
+- In `full-bars/connect` (`ip_udp_socket_poller_epoll.go`), `udpSocketReadPoller` wraps its epoll descriptor in an `*os.File` registered with Go's runtime netpoller and waits via `syscall.RawConn.Read` with a non-blocking `unix.EpollWait(..., 0)` inside the callback. Idle shards park as goroutines rather than pinning OS threads.
+
+**How to Identify in New Upstream**: Check the `github.com/full-bars/connect` replace pin in `go.mod` (`9713bcbf8b6d` or later carrying `epollFile` / `epollRawConn.Read` in `ip_udp_socket_poller_epoll.go`).
+
+**Status**: On `main` after `v2026.11.14-1098572730-sn` (unreleased).
+
+---
+
+## 46. Trim-Parked Snapshot Accounting, Updater/Service Discovery Hardening and GOGC Source Check
+
+**Purpose**: Stop a trimmed node from reading `degraded` because of proxies intentionally held back by the trim cap, verify restarts when file capabilities make `/proc/<pid>/exe` unreadable, discover `urnetwork@*.service` template instances, preserve `doas` on OpenBSD when its config is unreadable, and flag a `GOGC` environment value that differs from the live runtime setting.
+
+**Files Modified**: `miner/control_report.go`, `miner/control_report_miner.go`, `miner/resource_config_warn.go`, `internal/urnettools/snapshot.go`, `internal/urnettools/update.go`, `internal/urnettools/discover.go`, `internal/urnettools/lifecycle_openbsd.go`, `internal/urnettools/lifecycle_openbsd_rc.go`.
+
+**Files Added**: `miner/gogc_startup.go`, `internal/urnettools/process_start_linux.go`, `internal/urnettools/process_start_other.go` and their tests.
+
+**Changes**:
+- **Trim-parked proxies excluded from status down counts** (`miner/control_report.go`, `miner/control_report_miner.go`, `internal/urnettools/snapshot.go`): status and `top` counts cover the running pool and report trim-held proxies as `parked` in the snapshot, so a node whose running pool is healthy stays `flowing` or `idle` instead of `degraded`.
+- **Restart verification for non-dumpable binaries** (`internal/urnettools/update.go`, `internal/urnettools/process_start_linux.go`): when file capabilities make `/proc/<pid>/exe` unreadable, `verifyRestartLanded` also accepts the Linux process start time after the binary swap, the installed binary's version stamp, and the PID change as proof that the restart landed.
+- **Template service discovery** (`internal/urnettools/discover.go`): systemd unit discovery recognizes `urnetwork@*.service` template instances alongside `urnetwork.service`.
+- **OpenBSD `doas` fallback and startup `GOGC` mismatch check** (`internal/urnettools/lifecycle_openbsd.go`, `miner/gogc_startup.go`, `miner/resource_config_warn.go`): `openbsdPrivilegePrefix` falls back to `sudo` only when `/etc/doas.conf` does not exist (`os.IsNotExist`), and the startup `GOGC` log line flags when `GOGC` in the environment differs from the live runtime setting, reporting the live value with an unknown source.
+
+**How to Identify in New Upstream**: Check `miner/control_report_miner.go` (`parked` snapshot accounting), `internal/urnettools/process_start_linux.go`, `urnetwork@*.service` matching in `internal/urnettools/discover.go`, `openbsdPrivilegePrefix` in `internal/urnettools/lifecycle_openbsd.go`, and `miner/gogc_startup.go`.
+
+**Status**: On `main` after `v2026.11.14-1098572730-sn` (unreleased).
