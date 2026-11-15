@@ -430,7 +430,7 @@ func TestExtractMinerBinaryPicksThisPlatform(t *testing.T) {
 func TestSystemdUnits(t *testing.T) {
 	units := systemdUnits("urnetwork-provider", "/home/me/.local/bin/provider", "/home/me/.urnetwork", false)
 	service := units["urnetwork-provider.service"]
-	for _, want := range []string{"ExecStart=/home/me/.local/bin/provider start", "Environment=URNETWORK_STATE_DIR=/home/me/.urnetwork", "Restart=on-failure", "RestartPreventExitStatus=3", "WantedBy=default.target"} {
+	for _, want := range []string{"ExecStart=/home/me/.local/bin/provider start", "Environment=URNETWORK_STATE_DIR=/home/me/.urnetwork", "Restart=on-failure", "RestartForceExitStatus=SIGPIPE", "RestartPreventExitStatus=3", "WantedBy=default.target"} {
 		if !strings.Contains(service, want) {
 			t.Fatalf("missing %q:\n%s", want, service)
 		}
@@ -439,7 +439,7 @@ func TestSystemdUnits(t *testing.T) {
 		t.Fatal("update units")
 	}
 	quoted := systemdUnits("test-name", "/opt/my miner/provider", "/var/lib/ur state", true)["test-name.service"]
-	if !strings.Contains(quoted, `ExecStart="/opt/my miner/provider" start`) || !strings.Contains(quoted, `"URNETWORK_STATE_DIR=/var/lib/ur state"`) || !strings.Contains(quoted, "URNETWORK_SERVICE_NAME=test-name") || !strings.Contains(quoted, "multi-user.target") {
+	if !strings.Contains(quoted, `ExecStart="/opt/my miner/provider" start`) || !strings.Contains(quoted, `"URNETWORK_STATE_DIR=/var/lib/ur state"`) || !strings.Contains(quoted, "URNETWORK_SERVICE_NAME=test-name") || !strings.Contains(quoted, "multi-user.target") || !strings.Contains(quoted, "RestartForceExitStatus=SIGPIPE") {
 		t.Fatal(quoted)
 	}
 }

@@ -528,6 +528,7 @@ After=network-online.target
 ExecStart=%s start
 %s# 3 means the device needs setup (provider setup); restarting won't help
 Restart=on-failure
+RestartForceExitStatus=SIGPIPE
 RestartSec=15
 RestartPreventExitStatus=3
 

@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=simple
 ExecStart=/usr/local/bin/urnetwork provide --allow-client-registration
 Restart=on-failure
+RestartForceExitStatus=SIGPIPE
 RestartSec=5
 # 79 is minerExitAuthStopped: the persisted streak reached 30 refusals over
 # at least 2 hours, so systemd must not restart it. Fix the credentials, then
