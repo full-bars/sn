@@ -1,5 +1,9 @@
 # Troubleshooting
 
+## Provider stopped after SIGPIPE
+
+If `systemctl --user status urnetwork.service` reports `code=killed, signal=PIPE`, the older unit may not restart it. Run the current installer again, then check its warnings about restart overrides. Start the service with `systemctl --user start urnetwork.service`.
+
 ## Incident quick diagnosis
 
 > [!NOTE]

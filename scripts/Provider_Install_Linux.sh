@@ -1018,6 +1018,8 @@ sanitize_restart_dropins ()
     eff_restart_file="the shipped unit"
     rpes_75_file=""
     succ_75_file=""
+    rpes_pipe_file=""
+    force_pipe=1
 
     for f in "$dropin_dir"/*.conf; do
         [ -f "$f" ] || continue
@@ -1025,6 +1027,7 @@ sanitize_restart_dropins ()
             pr_warn "Repairing invalid 'Restart=' value in %s (systemd requires no/always/on-failure/etc, not yes/true/1)" "$f"
             sed -i -E 's/^[[:space:]]*Restart=(yes|true|1)[[:space:]]*$/Restart=on-failure/' "$f"
         fi
+        in_service=0
         while IFS= read -r line || [ -n "$line" ]; do
             # systemd strips whitespace from lines and values, so normalize
             # both ends of the line (also absorbing CRLF endings) and of the
@@ -1032,6 +1035,11 @@ sanitize_restart_dropins ()
             # hash and are untouched by the strips.
             line="${line#"${line%%[![:space:]]*}"}"
             line="${line%"${line##*[![:space:]]}"}"
+            case "$line" in
+                '[Service]') in_service=1; continue ;;
+                \[*\]) in_service=0; continue ;;
+            esac
+            [ "$in_service" = 1 ] || continue
             case "$line" in
                 'Restart='*)
                     value="${line#Restart=}"
@@ -1081,6 +1089,7 @@ sanitize_restart_dropins ()
                             for token in $value; do
                                 case "$token" in
                                     75|TEMPFAIL) rpes_75_file="$f" ;;
+                                    SIGPIPE) rpes_pipe_file="$f" ;;
                                 esac
                             done
                             set +f
@@ -1088,7 +1097,21 @@ sanitize_restart_dropins ()
                         # An empty directive resets the accumulated list.
                         *)
                             rpes_75_file=""
+                            rpes_pipe_file=""
                             ;;
+                    esac
+                    ;;
+                'RestartForceExitStatus='*)
+                    value="${line#RestartForceExitStatus=}"
+                    case "$value" in
+                        *[![:space:]]*)
+                            set -f
+                            for token in $value; do
+                                [ "$token" != SIGPIPE ] || force_pipe=1
+                            done
+                            set +f
+                            ;;
+                        *) force_pipe=0 ;;
                     esac
                     ;;
             esac
@@ -1111,6 +1134,11 @@ sanitize_restart_dropins ()
     fi
     if [ -n "$rpes_75_file" ]; then
         pr_warn "%s prevents restart on exit status 75, which the provider's swap-thrash recovery uses. This applies under every Restart= policy, including Restart=always; remove 75 (or TEMPFAIL) from RestartPreventExitStatus, or reset the list with an empty RestartPreventExitStatus= line." "$rpes_75_file"
+    fi
+    if [ -n "$rpes_pipe_file" ]; then
+        pr_warn "%s prevents restart after SIGPIPE; the conflicting restart prevention must be removed to restore recovery." "$rpes_pipe_file"
+    elif [ "$force_pipe" = 0 ] && [ "$eff_restart" != always ] && [ "$eff_restart" != on-success ]; then
+        pr_warn "The systemd overrides disable restart after SIGPIPE; restoring RestartForceExitStatus=SIGPIPE enables recovery."
     fi
 }
 
@@ -1259,6 +1287,7 @@ NotifyAccess=all
 Environment="HOST_HOSTNAME=$(hostname)"
 ExecStart=$install_path/bin/urnetwork provide
 Restart=on-failure
+RestartForceExitStatus=SIGPIPE
 RestartSec=5
 
 [Install]

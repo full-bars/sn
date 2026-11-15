@@ -686,6 +686,42 @@ test_sanitize_restart_dropins_effective_statuses() {
 }
 test_sanitize_restart_dropins_effective_statuses
 
+test_sanitize_restart_dropins_sigpipe() {
+    local tmp d out
+    tmp="$(mktemp -d)"
+    d="$tmp/systemd/user/urnetwork.service.d"
+    mkdir -p "$d"
+    out="$tmp/warns.txt"
+    pr_warn() { printf '%s\n' "$*" >> "$out"; }
+    printf '[Service]\nRestartForceExitStatus=\nRestart=\n' > "$d/10-reset.conf"
+    : > "$out"
+    XDG_CONFIG_HOME="$tmp" sanitize_restart_dropins
+    assert_eq "1" "$(case "$(< "$out")" in *SIGPIPE*) printf 1;; *) printf 0;; esac)" "empty force list warns after empty Restart"
+    printf '[Service]\nRestart=always\n' > "$d/20-always.conf"
+    : > "$out"
+    XDG_CONFIG_HOME="$tmp" sanitize_restart_dropins
+    assert_eq "0" "$(wc -c < "$out" | tr -d ' ')" "later always handles SIGPIPE"
+    printf '[Service]\nRestartPreventExitStatus=SIGPIPE\n' > "$d/30-prevent.conf"
+    : > "$out"
+    XDG_CONFIG_HOME="$tmp" sanitize_restart_dropins
+    assert_eq "1" "$(case "$(< "$out")" in *SIGPIPE*) printf 1;; *) printf 0;; esac)" "SIGPIPE prevention beats always"
+    printf '[Service]\nRestartPreventExitStatus=\n' > "$d/40-clear.conf"
+    : > "$out"
+    XDG_CONFIG_HOME="$tmp" sanitize_restart_dropins
+    assert_eq "0" "$(wc -c < "$out" | tr -d ' ')" "later prevention reset clears warning"
+    rm -f "$d/20-always.conf" "$d/30-prevent.conf" "$d/40-clear.conf"
+    printf '[Unit]\nRestartForceExitStatus=SIGPIPE\n' > "$d/20-wrong-section.conf"
+    : > "$out"
+    XDG_CONFIG_HOME="$tmp" sanitize_restart_dropins
+    assert_eq "1" "$(case "$(< "$out")" in *SIGPIPE*) printf 1;; *) printf 0;; esac)" "force in another section cannot hide a reset"
+    printf '[Service]\nRestartForceExitStatus=SIGPIPE\n[Unit]\nRestartForceExitStatus=\n' > "$d/20-wrong-section.conf"
+    : > "$out"
+    XDG_CONFIG_HOME="$tmp" sanitize_restart_dropins
+    assert_eq "0" "$(wc -c < "$out" | tr -d ' ')" "reset in another section cannot cancel force"
+    rm -rf "$tmp"
+}
+test_sanitize_restart_dropins_sigpipe
+
 if ! sh scripts/test_installer_capabilities.sh; then
     FAILS=$((FAILS + 1))
 fi
