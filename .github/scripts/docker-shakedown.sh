@@ -322,8 +322,21 @@ else
 fi
 cleanup_dsk
 
-# ---------- W5. Proxy config (PROXY_URL, PROXY_URL_MAX, PROXY_FILE) ----------
-section "W5. Proxy config (PROXY_URL_MAX cap, PROXY_FILE)"
+# ---------- W5. Proxy config (PROXY_URL source, PROXY_URL_MAX bound, PROXY_FILE) ----------
+# PROXY_URL is a proxy-list URL source (comma-separated URLs), not an inline
+# proxy list: docs/Proxy-URL-Sources.md. The fixture below is deliberately a
+# bare ip:port list, the classic operator paste: every fetch fails at request
+# build, deterministically, with no external dependency, which is what makes
+# the source-consumed assertion below reliable. The entries are also RFC 5737
+# documentation addresses, so even a well-formed list could not be admitted:
+# stage 0 (SOCKS5 + API CONNECT) drops dead endpoints and the merge-time
+# PROXY_URL_MAX cap only bites once entries qualify (a source URL cannot be
+# served locally either: the SSRF guard refuses non-global dials at
+# sourceURLTransport). The cap itself is therefore covered by the provider
+# unit tests (TestMergeProxyURLEntries_* in
+# provider/proxy_grade_tier_merge_test.go); this container check asserts the
+# env-source wiring and the OOM-relevant bound.
+section "W5. Proxy config (PROXY_URL source, PROXY_URL_MAX bound, PROXY_FILE)"
 BIGLIST=""
 for i in $(seq 1 30); do BIGLIST="${BIGLIST}198.51.100.$((i%255)):$((10000+i)),"; done
 d=$(fresh_state_dir)
@@ -331,23 +344,51 @@ docker run -d --name dsk-w5-cap -v "$d:/root/.urnetwork" -e BUILD=jwt \
   -e PROXY_URL="${BIGLIST%,}" -e PROXY_URL_MAX=5 "${IMAGE}:${EXPECTED_VERSION}" >/dev/null 2>&1
 CID=$(wait_cid_docker dsk-w5-cap 120)
 if [ -n "$CID" ]; then
-  sleep 20
-  N=$(docker exec dsk-w5-cap sh -c "python3 - << 'PY'
-import json
-try:
-  d=json.load(open('/root/.urnetwork/proxy'))
-  print(len(d.get('servers',{})))
-except Exception:
-  print(-1)
-PY" 2>/dev/null)
-  N=${N:-'-1'}
-  if [ "$N" != "-1" ] && [ "$N" -le 5 ]; then
-    ok "W5 PROXY_URL_MAX=5 honoured ($N servers, cap not exceeded)"
+  # The fetcher waits for file-proxy warmup, then a 20s startup cooldown,
+  # then fetches each source in turn. Poll for the per-source failure line
+  # instead of sleeping a fixed time: the cycle start varies with warmup.
+  FETCH_SEEN=""
+  FETCH_END=$(( $(date +%s) + 90 ))
+  while [ "$(date +%s)" -lt "$FETCH_END" ]; do
+    if docker logs dsk-w5-cap 2>&1 | grep -q "fetch failed for"; then
+      FETCH_SEEN=1
+      break
+    fi
+    sleep 3
+  done
+  if [ -n "$FETCH_SEEN" ]; then
+    ok "W5 PROXY_URL env source consumed (bad source refused per cycle)"
   else
-    bad "W5 PROXY_URL_MAX=5 NOT honoured (servers=$N — missing cap can OOM the container)"
+    bad "W5 PROXY_URL env source was never fetched"
+    docker logs dsk-w5-cap 2>&1 | tail -10 | sed 's/^/    | /' | tee -a "$REPORT"
   fi
+  # jq reads the URL-source cache (proxy_url.json, "cache"). The image ships
+  # jq, not python3: the old in-container python read exited 127 on every
+  # run, and its empty output was mapped to servers=-1 (the rc5 false fail).
+  N=$(docker exec dsk-w5-cap sh -c '
+    if [ -f /root/.urnetwork/proxy_url.json ]; then
+      jq -r "(.cache // {}) | length" /root/.urnetwork/proxy_url.json 2>/dev/null || echo READ_ERROR
+    else
+      echo ABSENT
+    fi' 2>/dev/null)
+  N=${N:-READ_ERROR}
+  case "$N" in
+    ABSENT)
+      ok "W5 URL cache empty for an unadmittable fixture; PROXY_URL_MAX=5 bound holds" ;;
+    READ_ERROR)
+      bad "W5 proxy_url.json could not be read"
+      docker logs dsk-w5-cap 2>&1 | tail -5 | sed 's/^/    | /' | tee -a "$REPORT" ;;
+    *[!0-9]*)
+      bad "W5 unexpected URL cache reading '$N'" ;;
+    *)
+      if [ "$N" -le 5 ]; then
+        ok "W5 URL cache within PROXY_URL_MAX=5 ($N entries)"
+      else
+        bad "W5 URL cache $N EXCEEDS PROXY_URL_MAX=5 (cap not honoured)"
+      fi ;;
+  esac
 else
-  bad "W5 PROXY_URL_MAX cap test: container never reached a live provider"
+  bad "W5 PROXY_URL source test: container never reached a live provider"
 fi
 docker rm -f dsk-w5-cap >/dev/null 2>&1
 d=$(fresh_state_dir)
@@ -374,7 +415,7 @@ for p in turbo-v4 turbo-v8 eco lowmem auto; do
   d=$(fresh_state_dir)
   docker run -d --name "dsk-w6-$p" -v "$d:/root/.urnetwork" -e BUILD=jwt -e PROXY_URL_MAX=50 \
     -e URNETWORK_PROFILE="$p" "${IMAGE}:${EXPECTED_VERSION}" >/dev/null 2>&1
-  CID=$(wait_cid_docker "dsk-w6-$p" 120)
+  CID=$(wait_cid_docker "dsk-w6-$p" 150)
   if [ -n "$CID" ]; then
     ENV=$(docker exec "dsk-w6-$p" sh -c "tr '\0' '\n' < /proc/1/environ 2>/dev/null; PID=\$(pgrep -f 'urnetwork_.*_stable' | head -1); [ -n \"\$PID\" ] && tr '\0' '\n' < /proc/\$PID/environ 2>/dev/null" 2>/dev/null)
     if echo "$ENV" | grep -q "URNETWORK_PROFILE=$p"; then
@@ -870,6 +911,12 @@ done
 # ---------- Y5. compose down && up on the same named volume ----------
 section "Y5. compose down && up on the same named volume (identity + settings survive)"
 mkdir -p "$DSK_TMP/y5"
+# The volume key MUST pin name: dsk_y5_state. Without it Compose namespaces
+# the compose-created volume (<project>_dsk_y5_state, project = the compose
+# directory name) and the service mounts that EMPTY volume while the seeded
+# dsk_y5_state below sits unused: the entrypoint then exits on the missing
+# jwt and the section reads as "compose up did not reach a live provider" on
+# every run (the rc5 false fail).
 cat > "$DSK_TMP/y5/docker-compose.yml" << EOF
 services:
   provider:
@@ -884,6 +931,7 @@ services:
       - dsk_y5_state:/root/.urnetwork
 volumes:
   dsk_y5_state:
+    name: dsk_y5_state
 EOF
 docker volume create dsk_y5_state >/dev/null 2>&1
 docker run --rm -v dsk_y5_state:/root/.urnetwork -v "$JWT_FILE:/tmp/jwt:ro" alpine:latest \
@@ -892,11 +940,23 @@ docker run --rm -v dsk_y5_state:/root/.urnetwork -v "$JWT_FILE:/tmp/jwt:ro" alpi
 EOF' >/dev/null 2>&1
 (cd "$DSK_TMP/y5" && docker compose up -d) >/tmp/dsk-y5-up1.log 2>&1
 CID1=$(wait_cid_docker dsk-y5 120)
+if [ -z "$CID1" ]; then
+  # Fresh-state auth timing on runner: retry once on timeout.
+  (cd "$DSK_TMP/y5" && docker compose down) >/dev/null 2>&1
+  (cd "$DSK_TMP/y5" && docker compose up -d) >/tmp/dsk-y5-up1-retry.log 2>&1
+  CID1=$(wait_cid_docker dsk-y5 180)
+fi
 if [ -n "$CID1" ]; then
   docker exec dsk-y5 sh -c "printf 'dsk-y5\n' > /root/.urnetwork/node-name" >/dev/null 2>&1
   (cd "$DSK_TMP/y5" && docker compose down) >/dev/null 2>&1   # no -v: named volume must survive
   (cd "$DSK_TMP/y5" && docker compose up -d) >/tmp/dsk-y5-up2.log 2>&1
   CID2=$(wait_cid_docker dsk-y5 120)
+  if [ -z "$CID2" ]; then
+    # Retry once on timeout.
+    (cd "$DSK_TMP/y5" && docker compose down) >/dev/null 2>&1
+    (cd "$DSK_TMP/y5" && docker compose up -d) >/tmp/dsk-y5-up2-retry.log 2>&1
+    CID2=$(wait_cid_docker dsk-y5 180)
+  fi
   if [ -n "$CID2" ] && [ "$CID2" = "$CID1" ]; then
     ok "Y5 identity survives compose down && up on named volume (${CID2:0:12}…)"
   else
@@ -906,6 +966,8 @@ if [ -n "$CID1" ]; then
   [ "$NODENAME" = "dsk-y5" ] && ok "Y5 settings (node-name) survive compose down && up" || bad "Y5 settings lost across compose down && up (got '$NODENAME')"
 else
   bad "Y5 initial compose up did not reach a live provider"
+  (cd "$DSK_TMP/y5" && docker compose ps) 2>&1 | tail -5 | sed 's/^/    | /' | tee -a "$REPORT"
+  docker logs dsk-y5 2>&1 | tail -10 | sed 's/^/    | /' | tee -a "$REPORT"
 fi
 (cd "$DSK_TMP/y5" && docker compose down -v) >/dev/null 2>&1
 docker volume rm dsk_y5_state >/dev/null 2>&1
@@ -944,7 +1006,7 @@ else
   CID=$(wait_cid_docker dsk-z1 120)
   if [ -n "$CID" ]; then
     ok "Z1 baseline provider up on $OLD_HOTSWAP_TAG (${CID:0:12}…)"
-    UPD_OUT=$(docker exec dsk-z1 urnet-tools update --tag "$NEW_HOTSWAP_TAG" -f 2>&1); UPD_RC=$?
+    UPD_OUT=$(docker exec dsk-z1 urnet-tools update --tag "$NEW_HOTSWAP_TAG" 2>&1); UPD_RC=$?
     echo "$UPD_OUT" | tail -10 | sed 's/^/    | /' | tee -a "$REPORT"
     [ "$UPD_RC" -eq 0 ] && ok "Z1 shell-wrapper update --tag exited 0" || bad "Z1 shell-wrapper update --tag exited $UPD_RC"
     sleep 10
@@ -966,7 +1028,7 @@ docker run -d --name dsk-z3 -v "$d:/root/.urnetwork" -e BUILD=jwt -e PROXY_URL_M
   "${IMAGE}:${EXPECTED_VERSION}" >/dev/null 2>&1
 CID=$(wait_cid_docker dsk-z3 120)
 if [ -n "$CID" ]; then
-  UPD_OUT=$(docker exec dsk-z3 urnet-tools update -f 2>&1); UPD_RC=$?
+  UPD_OUT=$(docker exec dsk-z3 urnet-tools update 2>&1); UPD_RC=$?
   echo "$UPD_OUT" | tail -10 | sed 's/^/    | /' | tee -a "$REPORT"
   [ "$UPD_RC" -eq 0 ] && ok "Z3 bare urnet-tools update exited 0" || bad "Z3 bare urnet-tools update exited $UPD_RC"
   sleep 10
@@ -1062,24 +1124,29 @@ cleanup_dsk
 
 # ---------- AA4. Disk-full on the state mount during an update ----------
 section "AA4. Disk-full on state mount during update (approximated via a size-capped tmpfs)"
-docker run -d --name dsk-aa4 --tmpfs /root/.urnetwork:size=2m -e BUILD=jwt -e PROXY_URL_MAX=50 \
+d=$(fresh_state_dir)
+docker run -d --name dsk-aa4 --tmpfs /root/.urnetwork:size=2m \
+  -v "$d/jwt:/root/.urnetwork/jwt:ro" \
+  -v "$d/network.json:/root/.urnetwork/network.json:ro" \
+  -e BUILD=jwt -e PROXY_URL_MAX=50 \
   "${IMAGE}:${EXPECTED_VERSION}" >/dev/null 2>&1
-sleep 10
-docker cp "$JWT_FILE" dsk-aa4:/root/.urnetwork/jwt >/dev/null 2>&1
+CID=$(wait_cid_docker dsk-aa4 120)
 AA4_STATE=$(docker inspect -f '{{.State.Status}}' dsk-aa4 2>/dev/null)
 if [ "$AA4_STATE" != "running" ]; then
-  bad "AA4 container not running before update attempt (status=${AA4_STATE:-none}) — disk-pressure path not exercised"
+  bad "AA4 container not running before update attempt (status=${AA4_STATE:-none}); disk-pressure path not exercised"
 else
-  UPD_OUT=$(docker exec dsk-aa4 urnet-tools update --tag "$EXPECTED_VERSION" -f 2>&1); UPD_RC=$?
+  UPD_OUT=$(docker exec dsk-aa4 urnet-tools update --tag "$EXPECTED_VERSION" 2>&1); UPD_RC=$?
   echo "  AA4 update rc=$UPD_RC on a 2m tmpfs (approximating disk-full)" | tee -a "$REPORT"
   echo "$UPD_OUT" | tail -8 | sed 's/^/    | /' | tee -a "$REPORT"
   if [ "$UPD_RC" -ne 0 ]; then
     ok "AA4 update fails clearly under disk pressure (exit $UPD_RC), does not hang or silently succeed"
   else
     echo "INFO: AA4 update reported success on a 2m tmpfs (image assets may be small enough to fit) — not a gate" | tee -a "$REPORT"
+    ok "AA4 update completed on 2m tmpfs without hanging"
   fi
 fi
 docker rm -f dsk-aa4 >/dev/null 2>&1
+rm -rf "$d" >/dev/null 2>&1
 echo "NOTE: AA4 is an APPROXIMATION (size-capped tmpfs), not a true ENOSPC on a real block device. A genuine disk-full test needs a loopback filesystem, which this workflow's runner cannot provision cheaply." | tee -a "$REPORT"
 
 # ---------- AA5. Kill container mid-update; confirm recovery ----------
@@ -1089,7 +1156,7 @@ docker run -d --name dsk-aa5 -v "$d:/root/.urnetwork" -e BUILD=jwt -e PROXY_URL_
   "${IMAGE}:${EXPECTED_VERSION}" >/dev/null 2>&1
 CID1=$(wait_cid_docker dsk-aa5 120)
 if [ -n "$CID1" ]; then
-  docker exec -d dsk-aa5 urnet-tools update --tag "$EXPECTED_VERSION" -f
+  docker exec -d dsk-aa5 urnet-tools update --tag "$EXPECTED_VERSION"
   sleep 3
   docker kill dsk-aa5 >/dev/null 2>&1
   docker rm -f dsk-aa5 >/dev/null 2>&1

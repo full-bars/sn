@@ -6,6 +6,10 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 Everything merged after `v2026.11.15-1099306820-sn`.
 
+### Changed
+
+- **The Docker shakedown checks no longer fail on harness bugs** (`.github/scripts/docker-shakedown.sh`). The in-container update checks passed `-f`, which `urnet-tools update` no longer accepts. The proxy cache check read the cache with `python3`, which the image does not ship, so it always read -1. The profile startup wait was too short for a slow runner. The state handling of two checks was wrong. These repairs were made in the 3.23 line in October and are ported here. [no redeploy]
+
 ## [v2026.11.15-1099306820-sn] - 2026-11-15
 
 Changes after `v2026.11.14-1098572730-sn` through this tag. Notes: `releases/v2026.11.15-1099306820-sn.md`.
