@@ -84,7 +84,7 @@ func TestExtenderSocketAndTop(t *testing.T) {
 }
 
 func TestExtenderBlockRendersCarrierStats(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	startAuditSocket(t, filepath.Join(dir, "provider.sock"), func(req controlRequest) string {
 		if req.Cmd != "extender" {
 			return `{"ok":false}`
