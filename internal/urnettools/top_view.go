@@ -28,6 +28,10 @@ const (
 	topEventsMin = 1
 	topEventsMax = 4
 	topNowRows   = 11
+	// topExtenderMinRows is the least the Extender box is drawn with (frame, role and
+	// listen rows). topResourcesMinRows is the least Resources shrinks to for it.
+	topExtenderMinRows  = 4
+	topResourcesMinRows = 3
 	// topNowRowsTraffic is the Now panel when the provider reports traffic
 	// totals: billable and total rates with their averages, the session bytes
 	// of each, then the usual rows. 16 so the two interior rows needed to
@@ -76,14 +80,29 @@ func (m *topModel) drawFull(b *tui.Buffer) {
 	// internals and the column is tall enough, Resources shrinks to its three
 	// rows and Internals takes the rest.
 	resRows := m.resourceRows() + 2
-	withInternals := m.hasInternals() && cols[1].H >= nowRows+resRows+topInternalsRows
 	withExtender := m.showExtender || m.extender.Source != ""
+	// The Extender box has priority over Internals: whether the extender is up and
+	// listening is what an operator opens top to check, so it never gives way. It
+	// gets its full height, or all the room there is, and Resources gives up rows
+	// before it is dropped. Internals takes what is left and is left out only when
+	// that is below topInternalsRows.
+	if withExtender && cols[1].H-nowRows-resRows < topExtenderMinRows {
+		resRows = max(cols[1].H-nowRows-topExtenderMinRows, topResourcesMinRows)
+	}
+	avail := max(cols[1].H-nowRows-resRows, 0)
+	extH := 0
+	if withExtender && avail >= topExtenderMinRows {
+		extH = min(m.extenderRows(), avail)
+	}
+	showExtender := extH > 0
+	withInternals := m.hasInternals() && avail-extH >= topInternalsRows
 	var side []tui.Rect
-	if withExtender && withInternals && cols[1].H >= nowRows+resRows+topInternalsRows+m.extenderRows() {
-		side = tui.SplitRows(cols[1], tui.Fixed(nowRows), tui.Fixed(resRows), tui.Fixed(m.extenderRows()), tui.Flex(1))
-	} else if withInternals {
+	switch {
+	case showExtender:
+		side = tui.SplitRows(cols[1], tui.Fixed(nowRows), tui.Fixed(resRows), tui.Fixed(extH), tui.Flex(1))
+	case withInternals:
 		side = tui.SplitRows(cols[1], tui.Fixed(nowRows), tui.Fixed(resRows), tui.Flex(1))
-	} else {
+	default:
 		// Resources takes its content, not the rest of the column: a box of blank
 		// rows says nothing. What is left stays empty.
 		side = tui.SplitRows(cols[1], tui.Fixed(nowRows), tui.Fixed(min(resRows, max(cols[1].H-nowRows, 0))), tui.Flex(1))
@@ -108,21 +127,17 @@ func (m *topModel) drawFull(b *tui.Buffer) {
 	m.drawEvents(box(left[2], "Events"))
 	m.drawNow(box(side[0], "Now"))
 	m.drawResources(box(side[1], "Resources"))
-	if withExtender && withInternals && len(side) > 3 {
+	at := 2
+	if showExtender {
 		m.drawExtender(box(side[2], "Extender"))
+		at = 3
+	}
+	if withInternals {
 		title := "Internals"
 		if m.rt.showing {
 			title = "Goroutines"
 		}
-		m.drawInternals(box(side[3], title))
-	} else if withInternals {
-		title := "Internals"
-		if m.rt.showing {
-			title = "Goroutines"
-		}
-		m.drawInternals(box(side[2], title))
-	} else if withExtender && len(side) > 2 && side[2].H >= 3 {
-		m.drawExtender(box(side[2], "Extender"))
+		m.drawInternals(box(side[at], title))
 	}
 }
 
