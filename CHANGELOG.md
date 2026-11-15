@@ -6,10 +6,18 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 Everything merged after `v2026.11.14-1098572730-sn`.
 
+### Added
+
+- **Loopback diagnostics are on by default.** The pprof listener starts at `127.0.0.1:6060`, loopback only, so a stuck or heavy miner can be inspected without a restart. `urnet-tools set pprof off` turns it off and `urnet-tools set pprof <ip:port>` moves it, live and persisted. An explicit `URNETWORK_PPROF` still decides the address when it is set. If the default port stays in use, the miner binds a free loopback port.
+
 ### Fixed
 
 - **urnet-tools update reports "failed to update" when the restarted provider binary carries file capabilities** (`internal/urnettools/update.go`, `internal/urnettools/process_start_linux.go`). A non-dumpable provider makes `/proc/<pid>/exe` unreadable, which the updater treated as "restart did not land" and failed the update. The verifier now also accepts the process start time after the binary swap, the installed binary's version stamp, and the pid change as proof the restart landed. Tests cover the pass and fail paths.
 - **urnet-tools providers/status/update only knew `urnetwork.service`** (`internal/urnettools/discover.go`). A leftover `urnetwork@ipv6.service` template instance (same binary, same state dir) was never listed, so it stayed on an old version and consumed memory. Discovery now also recognizes `urnetwork@*.service` instances. No unit is deleted or disabled; single-provider output is unchanged.
+- **A trimmed node no longer reads degraded because of the proxies the trim holds back.** `urnet-tools status` and `top` counted every configured proxy, including the ones the trim cap parks on purpose, so a healthy node running 900 of 4,130 proxies showed `DEGRADED` and "3041 of 4408 proxies down". The counts now cover the running pool, the held-back proxies are reported as `parked` in the snapshot, and a node whose running pool is healthy stays `flowing` or `idle`. A running pool that is really down still reads degraded.
+- **The installer makes the systemd provider restart after SIGPIPE.** It warns when a restart override prevents recovery.
+- **A hotswap on a host with RAM logs no longer kills the new miner.** The new process inherited the old process's log pipe as its error output. When the old process finished draining and exited, the next write to that pipe ended the new process with SIGPIPE. systemd counts that as a clean exit, so a unit with `Restart=on-failure` stayed dead. The old process now hands the new one the original logging destination, and a new process that inherits an orphaned pipe from an older binary drops it at startup when RAM logs are on. The long-running `provide` command ignores SIGPIPE, so a broken log pipe cannot end it.
+- **A busy node no longer runs thousands of threads** (connect pin). Each UDP readiness shard waited in a blocking `epoll_wait`, which held one OS thread per shard, and the provider runs about two shards for every proxy. A node with a thousand proxies ended up with about 2,100 threads, 2,100 epoll descriptors and 2,100 eventfds, and a single core spent much of its time switching between them. The shards now wait through the Go network poller and park as goroutines. The pin moves to a connect commit that carries the fix.
 
 ### Changed
 
@@ -19,17 +27,6 @@ Everything merged after `v2026.11.14-1098572730-sn`.
 - **ClamAV gates the release** (`.github/workflows/release.yml`, `.github/scripts/clamav-scan.sh`, `.github/scripts/test-clamav-scan.sh`). The `create-release` job scans the exact files it uploads before it publishes, with definitions fetched by `freshclam` just before the scan. A detection, a scanner failure, a stale database or a failed refresh stops the release. VirusTotal still runs after publication and never gates. [no redeploy]
 - **ClamAV gates the Docker images** (`.github/workflows/build.yml`, `.github/workflows/miner-image.yml`). Before a push, the job builds the image filesystem for each platform and scans it with `.github/scripts/clamav-scan.sh`, with definitions fetched just before the scan. A detection, a scanner failure or a failed refresh stops the push, so no tag moves. The push step reuses the layers from the build cache. [no redeploy]
 - Disable the test unit start limit during rapid shakedown restarts; the systemd shakedown checks hotswap survival after the old process drains in both RAM log modes.
-
-### Fixed
-
-- **A trimmed node no longer reads degraded because of the proxies the trim holds back.** `urnet-tools status` and `top` counted every configured proxy, including the ones the trim cap parks on purpose, so a healthy node running 900 of 4,130 proxies showed `DEGRADED` and "3041 of 4408 proxies down". The counts now cover the running pool, the held-back proxies are reported as `parked` in the snapshot, and a node whose running pool is healthy stays `flowing` or `idle`. A running pool that is really down still reads degraded.
-- **The installer makes the systemd provider restart after SIGPIPE.** It warns when a restart override prevents recovery.
-- **A hotswap on a host with RAM logs no longer kills the new miner.** The new process inherited the old process's log pipe as its error output. When the old process finished draining and exited, the next write to that pipe ended the new process with SIGPIPE. systemd counts that as a clean exit, so a unit with `Restart=on-failure` stayed dead. The old process now hands the new one the original logging destination, and a new process that inherits an orphaned pipe from an older binary drops it at startup when RAM logs are on. The long-running `provide` command ignores SIGPIPE, so a broken log pipe cannot end it.
-- **A busy node no longer runs thousands of threads** (connect pin). Each UDP readiness shard waited in a blocking `epoll_wait`, which held one OS thread per shard, and the provider runs about two shards for every proxy. A node with a thousand proxies ended up with about 2,100 threads, 2,100 epoll descriptors and 2,100 eventfds, and a single core spent much of its time switching between them. The shards now wait through the Go network poller and park as goroutines. The pin moves to a connect commit that carries the fix.
-
-### Added
-
-- **Loopback diagnostics are on by default.** The pprof listener starts at `127.0.0.1:6060`, loopback only, so a stuck or heavy miner can be inspected without a restart. `urnet-tools set pprof off` turns it off and `urnet-tools set pprof <ip:port>` moves it, live and persisted. An explicit `URNETWORK_PPROF` still decides the address when it is set. If the default port stays in use, the miner binds a free loopback port.
 
 ## [v2026.11.14-1098572730-sn] - 2026-11-14
 
