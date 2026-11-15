@@ -32,6 +32,7 @@ Changes after `v2026.11.14-1098572730-sn` through this tag. Notes: `releases/v20
 - **ClamAV gates the release** (`.github/workflows/release.yml`, `.github/scripts/clamav-scan.sh`, `.github/scripts/test-clamav-scan.sh`). The `create-release` job scans the exact files it uploads before it publishes, with definitions fetched by `freshclam` just before the scan. A detection, a scanner failure, a stale database or a failed refresh stops the release. VirusTotal still runs after publication and never gates. [no redeploy]
 - **ClamAV gates the Docker images** (`.github/workflows/build.yml`, `.github/workflows/miner-image.yml`). Before a push, the job builds the image filesystem for each platform and scans it with `.github/scripts/clamav-scan.sh`, with definitions fetched just before the scan. A detection, a scanner failure or a failed refresh stops the push, so no tag moves. The push step reuses the layers from the build cache. [no redeploy]
 - Disable the test unit start limit during rapid shakedown restarts; the systemd shakedown checks hotswap survival after the old process drains in both RAM log modes.
+- **The ClamAV scan limits rise to 3000M per file and 8000M in total** (`.github/scripts/clamav-scan.sh`). The combined release archive is larger than the old 1000M limit, which stopped the first release attempt. A file over the new limit still fails the scan. [no redeploy]
 
 ## [v2026.11.14-1098572730-sn] - 2026-11-14
 
