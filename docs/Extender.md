@@ -2,6 +2,21 @@
 
 An extender is a provider that also listens on a port the internet can reach, so the network can publish your address and clients can connect through it. The network accepts each address family on its own, IPv4 and IPv6, and each one has its own `activate v4` or `activate v6` log line. This page walks you through publishing TCP 443 from a Docker provider, then reading the log to see whether the role started and whether the network accepted it. You need it only if the host has a public IPv4 address and you can open inbound TCP 443. A host behind NAT cannot take the role today.
 
+## See how much traffic the extender relays
+
+`urnet-tools extender status` prints a `Traffic relayed` table, one row per carrier, in human units (B, KiB, MiB, GiB, TiB):
+
+```text
+  Traffic relayed (since the provider started):
+    carrier           in         out      rate in     rate out  connections
+    tcp-443:    1.2 GiB    4.0 GiB    45.0 KiB/s   310.0 KiB/s  3 now, 1280 total
+    udp-443:   12.0 MiB     3.0 MiB     0.0 B/s      0.0 B/s     0 now, 40 total
+```
+
+`in` is the bytes from clients and `out` is the bytes to them. The rates are measured between two samples of the counters. `top` shows the same totals in its Extender box, one row per carrier that has carried traffic, and `/metrics` exports `urnet_extender_carrier_bytes_total{carrier,direction}` and `urnet_extender_carrier_connections{carrier}`.
+
+These are the bytes this extender relayed. What the network credits depends on the contracts it counts, so these figures measure relayed traffic and are not a statement of earnings. The counts start at zero when the provider starts.
+
 ## Before you start
 
 - The extender role needs inbound TCP 443. That port needs privilege on Linux, FreeBSD, and macOS, and an inbound firewall rule on Windows.

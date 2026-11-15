@@ -28,6 +28,8 @@ var allExtenderMetricFamilies = []string{
 	"urnet_extender_last_activation_attempt_seconds",
 	"urnet_extender_carrier_requests_total",
 	"urnet_extender_carrier_refused_total",
+	"urnet_extender_carrier_bytes_total",
+	"urnet_extender_carrier_connections",
 }
 
 // When the extender seam hook is nil, all extender families must be completely

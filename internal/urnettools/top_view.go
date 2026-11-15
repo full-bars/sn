@@ -754,7 +754,25 @@ func (m *topModel) extenderLines() []extenderLine {
 	if ex.ConnectionCount > 0 {
 		lines = append(lines, extenderLine{"conns", strconv.Itoa(ex.ConnectionCount), th.Dim})
 	}
+	// The traffic this extender relayed, one row per carrier, in human units: the
+	// bytes in from clients and the bytes out to them since the provider started.
+	down, up := "↓", "↑"
+	if th.ASCII {
+		down, up = "v", "^"
+	}
+	for _, c := range ex.CarrierBytes {
+		if c.IngressBytes == 0 && c.EgressBytes == 0 && c.LiveConns == 0 {
+			continue
+		}
+		lines = append(lines, extenderLine{topCarrierShort(c.Carrier),
+			down + tui.Bytes(float64(c.IngressBytes)) + " " + up + tui.Bytes(float64(c.EgressBytes)), th.Dim})
+	}
 	return lines
+}
+
+// topCarrierShort is a carrier name that fits the narrow key column of the side box.
+func topCarrierShort(carrier string) string {
+	return strings.ReplaceAll(carrier, "-", "")
 }
 
 // drawExtender draws the extender role and activation status.

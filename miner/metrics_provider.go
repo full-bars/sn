@@ -738,6 +738,19 @@ func writeExtenderMetrics(b *strings.Builder, observation providerExtenderObserv
 			prometheusLabelValue(c.Carrier), c.Refused)
 	}
 
+	traffic := extenderCarrierBytesReadings(time.Now())
+	fmt.Fprintf(b, "# HELP urnet_extender_carrier_bytes_total Bytes this extender relayed by carrier and direction, cumulative. Direction in is from clients, out is to clients.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_carrier_bytes_total counter\n")
+	for _, c := range traffic {
+		fmt.Fprintf(b, "urnet_extender_carrier_bytes_total{carrier=%s,direction=\"in\"} %d\n", prometheusLabelValue(c.Carrier), c.IngressBytes)
+		fmt.Fprintf(b, "urnet_extender_carrier_bytes_total{carrier=%s,direction=\"out\"} %d\n", prometheusLabelValue(c.Carrier), c.EgressBytes)
+	}
+	fmt.Fprintf(b, "# HELP urnet_extender_carrier_connections Relayed connections open now by carrier.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_carrier_connections gauge\n")
+	for _, c := range traffic {
+		fmt.Fprintf(b, "urnet_extender_carrier_connections{carrier=%s} %d\n", prometheusLabelValue(c.Carrier), c.LiveConns)
+	}
+
 	fmt.Fprintf(b, "# HELP urnet_extender_carrier_refused_total Extender requests refused by carrier and stage, cumulative.\n")
 	fmt.Fprintf(b, "# TYPE urnet_extender_carrier_refused_total counter\n")
 	for _, c := range carriers {

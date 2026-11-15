@@ -3,6 +3,8 @@ package miner
 import (
 	"slices"
 	"strings"
+	"sync"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -33,6 +35,22 @@ type extenderCarrierReading struct {
 	RefusalsByStage map[string]uint64 `json:"refusals_by_stage,omitempty"`
 }
 
+// extenderCarrierBytesReading is the traffic this extender relayed on one carrier: the
+// cumulative bytes on each side, the rate at the last sample, the relayed connections
+// open now and opened since the process started, and the last minutes of ingress plus
+// egress as whole KiB. These are bytes this extender relayed, not earnings: the network
+// credits contracts.
+type extenderCarrierBytesReading struct {
+	Carrier      string   `json:"carrier"`
+	IngressBytes uint64   `json:"ingress_bytes"`
+	EgressBytes  uint64   `json:"egress_bytes"`
+	RateInBps    uint64   `json:"rate_in_bps,omitempty"`
+	RateOutBps   uint64   `json:"rate_out_bps,omitempty"`
+	LiveConns    uint64   `json:"live_conns"`
+	ConnsTotal   uint64   `json:"conns_total"`
+	Minutes      []uint32 `json:"minutes,omitempty"`
+}
+
 type providerExtenderDetail struct {
 	Ipv4                  string                   `json:"ipv4,omitempty"`
 	Ipv6                  string                   `json:"ipv6,omitempty"`
@@ -47,6 +65,8 @@ type providerExtenderDetail struct {
 	LimitedBySubnetsCount int                      `json:"limited_by_subnets_count,omitempty"`
 	LimitedBySourceCount  int                      `json:"limited_by_source_count,omitempty"`
 	Carriers              []extenderCarrierReading `json:"carriers,omitempty"`
+	// CarrierBytes is the traffic this extender relayed, per carrier.
+	CarrierBytes []extenderCarrierBytesReading `json:"carrier_bytes,omitempty"`
 }
 
 // providerExtenderControlReading is the control reply's extender object: the
@@ -132,6 +152,37 @@ func extenderCarrierReadings(base []extenderCarrierReading) []extenderCarrierRea
 			Served:          served,
 			Refused:         refused,
 			RefusalsByStage: byStage,
+		})
+	}
+	return out
+}
+
+// extenderBytesSample keeps the rate samples at least a second apart, however many
+// readers (the control reply, the metrics scrape) ask in a short time.
+var extenderBytesSample struct {
+	sync.Mutex
+	last time.Time
+}
+
+// extenderCarrierBytesReadings reads the process wide relayed traffic in the canonical
+// carrier order, after folding a sample into the rates and the minute history when the
+// last one is a second old.
+func extenderCarrierBytesReadings(now time.Time) []extenderCarrierBytesReading {
+	extenderBytesSample.Lock()
+	if extenderBytesSample.last.IsZero() || now.Sub(extenderBytesSample.last) >= time.Second {
+		extender.SampleProcessCarrierRates(now)
+		extenderBytesSample.last = now
+	}
+	extenderBytesSample.Unlock()
+	stats := extender.ProcessCarrierByteStats(now)
+	carriers := extender.ExtenderCarrierPorts()
+	out := make([]extenderCarrierBytesReading, 0, len(carriers))
+	for _, carrier := range carriers {
+		s := stats[carrier]
+		out = append(out, extenderCarrierBytesReading{
+			Carrier: carrier, IngressBytes: s.IngressBytes, EgressBytes: s.EgressBytes,
+			RateInBps: s.RateInBps, RateOutBps: s.RateOutBps,
+			LiveConns: s.LiveConns, ConnsTotal: s.ConnsTotal, Minutes: s.Minutes,
 		})
 	}
 	return out

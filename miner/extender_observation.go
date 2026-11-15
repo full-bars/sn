@@ -3,6 +3,7 @@ package miner
 import (
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/urnetwork/connect/extender"
 )
@@ -116,6 +117,7 @@ func providerExtenderControlLatest() *providerExtenderControlReading {
 	}
 	detail := extenderDetailState
 	detail.Carriers = extenderCarrierReadings(detail.Carriers)
+	detail.CarrierBytes = extenderCarrierBytesReadings(time.Now())
 	return &providerExtenderControlReading{providerExtenderObservation: extenderObservationState, providerExtenderDetail: detail}
 }
 

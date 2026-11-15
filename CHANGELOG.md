@@ -10,6 +10,10 @@ Everything merged after `v2026.11.15-1099306820-sn`.
 
 - **The Docker shakedown checks no longer fail on harness bugs** (`.github/scripts/docker-shakedown.sh`). The in-container update checks passed `-f` to the shell `urnet-tools` wrapper that the Docker image ships, which does not accept that flag. The Go `urnet-tools` on a host still does. The proxy cache check read the cache with `python3`, which the image does not ship, so it always read -1. The profile startup wait was too short for a slow runner. The state handling of two checks was wrong. These repairs were made in the 3.23 line in October and are ported here. [no redeploy]
 
+### Added
+
+- **Traffic the extender relays, per carrier** (`miner/extender_detail.go`, `internal/urnettools/extender_status.go`, connect pin). The extender counts the bytes it relays on `tcp-443`, `udp-443`, `udp-4053` and `udp-53`, on each side, with the rate, the relayed connections and a minute history. `urnet-tools extender status` prints a `Traffic relayed` table in human units, `top` shows one row per carrier in its Extender box, and `/metrics` exports `urnet_extender_carrier_bytes_total{carrier,direction}` and `urnet_extender_carrier_connections{carrier}`. The datagram carriers now count their bytes too, which the totals missed. These are bytes this extender relayed, not earnings. [redeploy]
+
 ## [v2026.11.15-1099306820-sn] - 2026-11-15
 
 Changes after `v2026.11.14-1098572730-sn` through this tag. Notes: `releases/v2026.11.15-1099306820-sn.md`.

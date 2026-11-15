@@ -141,6 +141,7 @@ type ExtenderObservation struct {
 	LimitedBySubnetsCount int                    `json:"limited_by_subnets_count,omitempty"`
 	LimitedBySourceCount  int                    `json:"limited_by_source_count,omitempty"`
 	Carriers              []ExtenderCarrierStats `json:"carriers,omitempty"`
+	CarrierBytes          []ExtenderCarrierBytes `json:"carrier_bytes,omitempty"`
 }
 
 // pendingOp is an entry in ~/.urnetwork/pending_overrides.json.

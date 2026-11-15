@@ -19,6 +19,22 @@ const (
 	SourceUnknown       = "unavailable"
 )
 
+// ExtenderCarrierBytes is the traffic this extender relayed on one carrier: bytes on
+// each side since the process started, the rate at the last sample, the relayed
+// connections open now and opened since start, and the last minutes of ingress plus
+// egress as whole KiB. They are bytes this extender relayed, not earnings: the
+// network credits contracts.
+type ExtenderCarrierBytes struct {
+	Carrier      string   `json:"carrier"`
+	IngressBytes uint64   `json:"ingress_bytes"`
+	EgressBytes  uint64   `json:"egress_bytes"`
+	RateInBps    uint64   `json:"rate_in_bps,omitempty"`
+	RateOutBps   uint64   `json:"rate_out_bps,omitempty"`
+	LiveConns    uint64   `json:"live_conns"`
+	ConnsTotal   uint64   `json:"conns_total"`
+	Minutes      []uint32 `json:"minutes,omitempty"`
+}
+
 // ExtenderCarrierStats holds cumulative served and refused request counts for one carrier.
 type ExtenderCarrierStats struct {
 	Carrier         string            `json:"carrier"`
@@ -47,6 +63,7 @@ type ExtenderReading struct {
 	LimitedBySubnetsCount int
 	LimitedBySourceCount  int
 	Carriers              []ExtenderCarrierStats
+	CarrierBytes          []ExtenderCarrierBytes
 
 	// BindRoute says how an unprivileged provider gets TCP 443 on this host.
 	// It is a host reading set by the printing commands, not by the provider.
@@ -141,7 +158,7 @@ func queryExtenderFromSocket(p Provider) (*ExtenderReading, error) {
 		PeerPingCount: ex.PeerPingCount, PeerPingCosignedCount: ex.PeerPingCosignedCount,
 		PeerPingRejectedCount: ex.PeerPingRejectedCount, PeerPingUnknownCount: ex.PeerPingUnknownCount,
 		LastPeerPingTime: ex.LastPeerPingTime, LimitedBySubnetsCount: ex.LimitedBySubnetsCount,
-		LimitedBySourceCount: ex.LimitedBySourceCount, Carriers: ex.Carriers,
+		LimitedBySourceCount: ex.LimitedBySourceCount, Carriers: ex.Carriers, CarrierBytes: ex.CarrierBytes,
 	}, nil
 }
 
@@ -188,6 +205,7 @@ func formatExtenderBlock(w io.Writer, reading ExtenderReading) {
 	}
 	fmt.Fprintf(w, "  Connections:       %d\n", reading.ConnectionCount)
 	formatExtenderCarrierStats(w, reading.Carriers)
+	formatExtenderTraffic(w, reading.CarrierBytes)
 }
 
 func formatExtenderCarrierStats(w io.Writer, carriers []ExtenderCarrierStats) {
@@ -219,4 +237,23 @@ func formatExtenderCarrierStats(w io.Writer, carriers []ExtenderCarrierStats) {
 		}
 		fmt.Fprintln(w, line)
 	}
+}
+
+// formatExtenderTraffic prints the traffic this extender relayed, per carrier, in
+// human units. "in" is from clients and "out" is to clients.
+func formatExtenderTraffic(w io.Writer, carriers []ExtenderCarrierBytes) {
+	if len(carriers) == 0 {
+		return
+	}
+	fmt.Fprintln(w, "  Traffic relayed (since the provider started):")
+	fmt.Fprintf(w, "    %-9s %11s %11s %12s %12s  %s\n", "carrier", "in", "out", "rate in", "rate out", "connections")
+	var in, out uint64
+	for _, c := range carriers {
+		in += c.IngressBytes
+		out += c.EgressBytes
+		fmt.Fprintf(w, "    %-9s %11s %11s %12s %12s  %d now, %d total\n", c.Carrier+":",
+			formatBytes(float64(c.IngressBytes)), formatBytes(float64(c.EgressBytes)),
+			formatBytes(float64(c.RateInBps))+"/s", formatBytes(float64(c.RateOutBps))+"/s", c.LiveConns, c.ConnsTotal)
+	}
+	fmt.Fprintf(w, "    %-9s %11s %11s\n", "all:", formatBytes(float64(in)), formatBytes(float64(out)))
 }
