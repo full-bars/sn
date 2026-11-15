@@ -6,6 +6,10 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 Everything merged after `v2026.11.15-1099306820-sn`.
 
+### Fixed
+
+- **A hot swap on a miner node no longer aborts on the provider key lock** (`miner/hotswap.go`, `miner/hotswap_key_custody.go`, `clientauth/provider_key.go`). The new process opens the provider key right after the takeover message and takes its owner lock without waiting. The old process still held that lock, so the new process exited with `startup_recovery_required` and the handoff aborted. The old process now releases the lock when it sends the takeover message, next to `provider_state.db`, and takes it back if the handoff aborts. The fix is in the old process, so the first update that carries it still needs a restart. [redeploy]
+
 ### Changed
 
 - **The Docker shakedown checks no longer fail on harness bugs** (`.github/scripts/docker-shakedown.sh`). The in-container update checks passed `-f` to the shell `urnet-tools` wrapper that the Docker image ships, which does not accept that flag. The Go `urnet-tools` on a host still does. The proxy cache check read the cache with `python3`, which the image does not ship, so it always read -1. The profile startup wait was too short for a slow runner. The state handling of two checks was wrong. These repairs were made in the 3.23 line in October and are ported here. [no redeploy]

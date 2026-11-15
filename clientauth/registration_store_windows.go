@@ -651,6 +651,10 @@ func custodyRightNames(mask uint32) string {
 }
 
 // Releasing the lock and directory is part of the caller's completed result.
+// Hot swap is refused on Windows, so the owner lock is never handed over.
+func (self *registrationStore) unlockForHandoff() error   { return nil }
+func (self *registrationStore) relockAfterHandoff() error { return nil }
+
 func (self *registrationStore) close() error {
 	if self == nil {
 		return nil

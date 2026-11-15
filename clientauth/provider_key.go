@@ -343,6 +343,26 @@ func (self *ProviderClientKeyOwner) RotationBackupName() string {
 	return self.rotationBackup
 }
 
+// ReleaseForHotSwap gives the key's owner lock to a hot swap candidate. The
+// candidate takes the lock without waiting, so the retiring process must let go
+// of it before the candidate starts its provider run. The key stays open here.
+func (self *ProviderClientKeyOwner) ReleaseForHotSwap() error {
+	if self == nil {
+		return nil
+	}
+	return self.store.unlockForHandoff()
+}
+
+// ReacquireAfterAbortedHotSwap takes the owner lock back when the handoff
+// aborts and this process keeps serving. It fails while the candidate still
+// holds the lock.
+func (self *ProviderClientKeyOwner) ReacquireAfterAbortedHotSwap() error {
+	if self == nil {
+		return nil
+	}
+	return self.store.relockAfterHandoff()
+}
+
 // Closing belongs to the enclosing service after every user has joined.
 func (self *ProviderClientKeyOwner) Close() error {
 	if self == nil {

@@ -82,7 +82,8 @@ Historical validator scope encodings omit the additive role/slot fields and
 retain their original bytes.
 
 The key owner locks `.provider.key.registration.lock` across all provider
-workers. It publishes and fsyncs `.provider.key`, then `.provider.key.identity`,
+workers. A hot swap parent releases that lock when it sends TAKEOVER, so the candidate
+can take it, and takes it back if the handoff aborts. It publishes and fsyncs `.provider.key`, then `.provider.key.identity`,
 before any API allocation. An explicit rotation (explicit creation over a zero
 or wrong-length retained key) publishes the timestamped backup of the replaced
 file first, then the fresh key and its marker. Each independent slot retains its

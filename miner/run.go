@@ -1430,6 +1430,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return startupRefusal(ctx, err)
 	}
 	defer func() { returnErr = errors.Join(returnErr, keyOwner.Close()) }()
+	setHotSwapKeyCustody(keyOwner)
+	defer setHotSwapKeyCustody(nil)
 	if backup := keyOwner.RotationBackupName(); backup != "" {
 		// The operator asked for a new durable identity; the replaced key file
 		// must stay recoverable and the replacement must be visible.

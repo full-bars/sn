@@ -304,6 +304,27 @@ func (self *registrationStore) write(name string, raw []byte) (returnErr error) 
 }
 
 // Releasing the lock and directory is part of the caller's completed result.
+// unlockForHandoff drops the owner lock and keeps the descriptors open, so the
+// same store can take the lock back (relockAfterHandoff).
+func (self *registrationStore) unlockForHandoff() error {
+	if self == nil || self.lock == nil {
+		return errors.New("registration owner lock is not held")
+	}
+	return unix.Flock(int(self.lock.Fd()), unix.LOCK_UN)
+}
+
+// relockAfterHandoff takes the owner lock back without waiting. It reports an
+// active owner while a successor still holds the lock.
+func (self *registrationStore) relockAfterHandoff() error {
+	if self == nil || self.lock == nil {
+		return errors.New("registration owner lock is not held")
+	}
+	if err := unix.Flock(int(self.lock.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
+		return errRegistrationOwnerActive
+	}
+	return self.check()
+}
+
 func (self *registrationStore) close() error {
 	if self == nil {
 		return nil

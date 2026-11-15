@@ -322,6 +322,12 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 	flushSettingsBeforeRelease()
 	releaseProviderStore()
 	hotswapLog("⚡ [hotswap] Released %s for the candidate\n", providerStoreFileName)
+	// The candidate opens the provider key right after TAKEOVER and takes its
+	// owner lock without waiting, so the lock goes with the store.
+	if err := releaseKeyCustodyForCandidate(); err != nil {
+		hotswapLog("❌ [hotswap] Could not release the provider key lock: %v. Aborting handoff; live provider retained.\n", err)
+		return errors.Join(err, abortBatonHandoff(session))
+	}
 
 	// Send TAKEOVER to candidate FIRST before yielding
 	if err := writeHotswapMessage(session.Writer, HotswapMessage{
@@ -374,7 +380,7 @@ func abortBatonHandoff(session *HotswapParentSession) error {
 	// Kill the candidate first: if it already opened the file, its exit
 	// releases the bbolt lock the reopen waits on.
 	session.Kill()
-	storeErr := restoreProviderStoreAfterAbortedHandoff()
+	storeErr := errors.Join(restoreProviderStoreAfterAbortedHandoff(), restoreKeyCustodyAfterAbortedHandoff())
 	if owner := getActiveHotSwapControlSocket(); owner != nil {
 		// Restore the store before reopening the listener: once it answers again,
 		// every control request must observe the parent's restored state.

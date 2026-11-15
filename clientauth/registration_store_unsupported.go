@@ -44,3 +44,7 @@ func (self *registrationStore) scanNames([]string, func(string) error) error {
 }
 
 func (self *registrationStore) close() error { return nil }
+
+// Hot swap does not hand the owner lock over on these platforms.
+func (self *registrationStore) unlockForHandoff() error   { return nil }
+func (self *registrationStore) relockAfterHandoff() error { return nil }
