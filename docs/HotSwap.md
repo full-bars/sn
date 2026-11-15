@@ -5,6 +5,9 @@ HotSwap replaces the running provider with a new binary without stopping the ser
 > [!IMPORTANT]
 > HotSwap removes the gap where **no provider process is running** (about 2 to 3 seconds on a plain restart on the test node). It does **not** keep your proxy connections up: the old process drops almost all of them within a second of the handover and the new process re-establishes them over about 30 seconds, the same ramp a plain restart has. Measured numbers are in [What it costs](#what-it-costs).
 
+> [!WARNING]
+> **Known limitation on the sn miner (observed 2026-11-15).** On a miner node with provider registration custody, the handoff starts and then aborts. The new process cannot take the provider's registration lock (`<client>.registration.lock`), which the old process still holds: `clientauth/registration_store_unix.go` takes it without waiting and refuses with `errRegistrationOwnerActive`. The new process reports `startup_recovery_required`, exits, and the old process logs `Candidate failed active takeover (EOF). Aborting handoff; live provider retained.` The old process keeps serving and nothing is lost, but the node stays on the old binary. Until this is fixed, apply an update by restarting the service (`systemctl --user restart urnetwork.service`). A plain restart with the same binary starts normally, because the old process has released the lock by then. This was seen on a node with 901 proxy slots. The 3.23 provider does not use this registration lock.
+
 ## What HotSwap is, and is not
 
 - The new provider is a **separate OS process** started by the old one (`fork` and `exec` of the binary on disk). The two talk only over a private control socket, using READY, TAKEOVER and ACK messages.

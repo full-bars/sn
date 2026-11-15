@@ -43,9 +43,10 @@ One provider per screen, sized to the terminal. Illustration only:
 Panels:
 
 - **Throughput:** the last 10 minutes of billable rate as a braille graph, from the snapshot's sample ring, redrawn once per second.
-- **Now:** current, 1 minute and 5 minute rate, clients, pressure, and the state verdict with the "why is it idle" hint when idle.
+- **Now:** current, 1 minute and 5 minute rate, clients, sessions and pressure, and the state verdict with the "why is it idle" hint when idle. The sessions row reads `N pqe / N cl`: `pqe` is the sessions on a post-quantum key exchange, and `cl` is every other client (older clients and plaintext sessions included), which is the clients minus the post-quantum sessions.
 - **Proxies:** pool by status and the busiest proxies by billable rate.
 - **Resources:** heap against the memory limit, descriptors against their limit, goroutines.
+- **Extender:** whether the role is active and listening, its IPv4 and IPv6 addresses, the DNS ports, the connection count, and one row per carrier that has carried traffic with the bytes in (from clients) and out (to clients) in human units, for example `tcp443 ↓1.2 GiB ↑4.0 GiB`. The box keeps its place at every window height: it takes its rows first, Resources gives up rows before it is dropped, and Internals shrinks to what is left. The figures are the bytes this extender relayed since the provider started, not earnings.
 - **Events:** recent restarts (with reason) and proxy recoveries and losses, from data the provider already keeps.
 
 Keys: `q` quit, `tab` next provider on the host, `p` proxy detail, `?` help, `+`/`-` refresh rate. Resize is handled live.
