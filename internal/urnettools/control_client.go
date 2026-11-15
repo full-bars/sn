@@ -161,6 +161,7 @@ var controlKeyCanonical = map[string]string{
 	"proxy_self_heal":             "proxy_self_heal",
 	"proxy-audit":                 "proxy_audit",
 	"proxy_audit":                 "proxy_audit",
+	"pprof":                       "pprof",
 	"oom-cap":                     "oom_cap",
 	"oom_cap":                     "oom_cap",
 	"smart-dialer":                "smart_dialer",
@@ -243,6 +244,10 @@ func validateControlValue(canonicalKey, value string) error {
 		case "none", "url", "all":
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", canonicalKey, value)
+		}
+	case "pprof":
+		if !validPprofControlValue(value) {
+			return fmt.Errorf("pprof: must be on, off or a loopback ip:port such as 127.0.0.1:6060 (got %q)", value)
 		}
 	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send":
 		switch strings.ToLower(value) {
@@ -735,4 +740,23 @@ func providerVersionFromSocket(p Provider) (string, bool) {
 		return "", false
 	}
 	return resp.BuildVersion, true
+}
+
+// validPprofControlValue accepts on, off or a literal loopback ip:port, the
+// values the provider's pprof key takes.
+func validPprofControlValue(value string) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "on", "off":
+		return true
+	}
+	host, port, err := net.SplitHostPort(strings.TrimSpace(value))
+	if err != nil {
+		return false
+	}
+	ip := net.ParseIP(host)
+	if ip == nil || !ip.IsLoopback() {
+		return false
+	}
+	n, err := strconv.Atoi(port)
+	return err == nil && 0 <= n && n <= 65535
 }

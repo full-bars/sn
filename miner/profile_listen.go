@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -22,14 +23,10 @@ import (
 // that shows where the time actually goes, and the miner had no listener at
 // all.
 //
-// Enable path. The provider enables profiling from URNETWORK_PPROF, read once
-// at startup in provide(). There is no control key and no CLI flag for it, so
-// this port uses exactly the same variable and no second mechanism. That also
-// means the miner's control surface does not advertise it: the control-key
-// table (controlKeys, with its live/restart/none classification) is for
-// settings the socket accepts, and pprof is not one of them. The unrelated
-// `profile` control key is the transport profile (eco/lowmem/turbo-v4), not
-// this.
+// Enable path. Profiling is on by default at 127.0.0.1:6060. The control key
+// `pprof` (on, off or a loopback host:port) changes it live, and an explicit
+// URNETWORK_PPROF keeps deciding the address when it is set. The unrelated
+// `profile` control key is the transport profile (eco/lowmem/turbo-v4).
 //
 // Binding. Stricter than the provider, deliberately. provider.EnableProfiling
 // passes whatever string it is given straight to net.Listen, so
@@ -249,10 +246,79 @@ func stopProfiling() error {
 // same retry, read once at startup. Off unless the operator asked for it, and
 // a bad value is one clear line, not a retry loop that cannot succeed.
 func startProfilingAtStartup(ctx context.Context) {
-	spec := strings.TrimSpace(os.Getenv(envProfiling))
-	if spec == "" {
+	profilingRunCtx.Store(profilingCtxBox{ctx: ctx})
+	if spec := strings.TrimSpace(os.Getenv(envProfiling)); spec != "" {
+		startProfiling(ctx, spec, false)
 		return
 	}
+	// On by default, on loopback only. The control key `pprof` turns it off or
+	// moves it, so a stuck or heavy miner can be inspected without a restart.
+	value := pprofModeOn
+	if saved, ok := globalControlState.get("pprof"); ok && saved != "" {
+		value = saved
+	}
+	if err := applyPprofMode(value); err != nil {
+		tlog("[profile] diagnostics are off: %v\n", err)
+	}
+}
+
+const (
+	pprofModeOn      = "on"
+	pprofModeOff     = "off"
+	pprofDefaultAddr = "127.0.0.1:6060"
+)
+
+// profilingRunCtx is the run context a live `pprof` change binds under. The
+// box keeps the stored type the same, which atomic.Value requires.
+var profilingRunCtx atomic.Value
+
+type profilingCtxBox struct{ ctx context.Context }
+
+// validPprofValue reports whether value is on, off or a literal loopback host:port.
+func validPprofValue(value string) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case pprofModeOn, pprofModeOff:
+		return true
+	}
+	_, err := pprofLoopbackAddr(value)
+	return err == nil
+}
+
+// applyPprofMode makes the listener match a value of the control key `pprof`.
+// An explicit URNETWORK_PPROF keeps deciding the address and the value waits.
+func applyPprofMode(value string) error {
+	if !validPprofValue(value) {
+		return fmt.Errorf("pprof: must be on, off or a loopback host:port (got %q)", value)
+	}
+	if os.Getenv(envProfiling) != "" {
+		tlog("[profile] %s decides the diagnostics address, so the pprof setting %q is saved and applies when that variable is unset\n", envProfiling, value)
+		return nil
+	}
+	ctx := context.Background()
+	if box, ok := profilingRunCtx.Load().(profilingCtxBox); ok && box.ctx != nil {
+		ctx = box.ctx
+	}
+	v := strings.ToLower(strings.TrimSpace(value))
+	if err := stopProfiling(); err != nil {
+		return err
+	}
+	if v == pprofModeOff {
+		tlog("[profile] diagnostics stopped\n")
+		return nil
+	}
+	if v == pprofModeOn {
+		startProfiling(ctx, pprofDefaultAddr, true)
+		return nil
+	}
+	startProfiling(ctx, strings.TrimSpace(value), false)
+	return nil
+}
+
+// startProfiling binds spec in the background with the hotswap retry. With
+// fallback set, a default port that stays taken (another miner on the same
+// host, say) is replaced by a free loopback port instead of leaving the miner
+// without diagnostics.
+func startProfiling(ctx context.Context, spec string, fallback bool) {
 	// Validate once and hand the normalized address to the listener and the
 	// retry logs, so [::ffff:127.0.0.1]:6060 is reported as 127.0.0.1:6060
 	// everywhere instead of being re-parsed and logged as it was typed.
@@ -278,7 +344,7 @@ func startProfilingAtStartup(ctx context.Context) {
 	profilingRetry = loop
 	profilingMu.Unlock()
 
-	tlog("[profile] enabling pprof on %s\n", addr)
+	tlog("[profile] enabling diagnostics on %s (loopback only): /debug/pprof/goroutine?debug=1, /debug/pprof/threadcreate?debug=1, /debug/pprof/heap\n", addr)
 	goSafe("pprof_listener", func() {
 		defer func() {
 			profilingMu.Lock()
@@ -290,6 +356,11 @@ func startProfilingAtStartup(ctx context.Context) {
 			close(loop.done)
 		}()
 		enableProfilingWithRetry(retryCtx, addr, enableProfiling, 90*time.Second, time.Second, tlog)
+		if fallback && retryCtx.Err() == nil && profilingAddr() == "" {
+			if err := enableProfiling(retryCtx, "127.0.0.1:0"); err == nil {
+				tlog("[profile] %s stayed in use, so diagnostics use %s\n", addr, profilingAddr())
+			}
+		}
 	})
 }
 

@@ -49,6 +49,7 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 | `choose-network <api> <connect> [target]` | Point provider to custom API and WebSocket signaling endpoints. Use `--reset` to restore the default endpoints. |
 | `fast-auth [on\|off\|status] [target]` | Toggle or check `~/.urnetwork/fast_auth` marker to bypass the auth rate limiter. Confirm-gated. |
 | `set [help \| <key> <val> \| <key> off \| <key>] [target]` | Get, set, or clear runtime provider state overrides (`node-name`, `proxy-url-max`, `proxy-url-refresh`, `cleanup-scope`, `cleanup-interval`, `fast-auth`). Sent live over the provider control socket, or queued to `pending_overrides.json` if the provider is stopped. Confirm-gated. |
+| `set pprof [on\|off\|<ip:port>]` | Turn the loopback pprof diagnostics on or off, or move them to another loopback address. The default is on at `127.0.0.1:6060`. Applies live, no restart. See Troubleshooting, "Inspecting a stuck or heavy miner". |
 | `rename <name> [target]` | Alias for `set node-name <name>`. The miner persists the value but never reports it, so this changes nothing in this line. Use `off` to clear. See [Node-Identity](Node-Identity). |
 | `session save <file> [target]` | Export an encrypted identity bundle (AES-256-GCM) of provider JWT identity and state. Prompts for passphrase. |
 | `session load <file> [target] [--allow-different-account]` | Decrypt and load an identity bundle into the provider. Automatically backs up current state first. Verifies account identity unless bypassed. |

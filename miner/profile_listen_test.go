@@ -47,18 +47,33 @@ func getPprof(t *testing.T, addr, path string) (int, string, string) {
 	return resp.StatusCode, string(body), resp.Header.Get("Content-Type")
 }
 
-// Profiling is off unless the operator asked for it: no env value, no
-// listener, and nothing bound to a default port.
-func TestProfilingOffByDefault(t *testing.T) {
+// Profiling is on by default and follows the `pprof` key at startup: a saved
+// off leaves nothing bound, and a saved loopback address binds exactly that.
+func TestProfilingFollowsTheKeyAtStartup(t *testing.T) {
 	if err := stopProfiling(); err != nil {
 		t.Fatalf("reset: %v", err)
 	}
+	t.Cleanup(func() { _ = stopProfiling() })
 	t.Setenv(envProfiling, "")
+	previous := globalControlState
+	state := newControlState()
+	globalControlState = state
+	t.Cleanup(func() { globalControlState = previous })
 
+	if err := state.set("pprof", "off"); err != nil {
+		t.Fatal(err)
+	}
 	startProfilingAtStartup(context.Background())
 	if addr := profilingAddr(); addr != "" {
-		_ = stopProfiling()
-		t.Fatalf("profiling started without %s: listening on %s", envProfiling, addr)
+		t.Fatalf("profiling started although the key says off: listening on %s", addr)
+	}
+
+	if err := state.set("pprof", "127.0.0.1:0"); err != nil {
+		t.Fatal(err)
+	}
+	startProfilingAtStartup(context.Background())
+	if addr := waitForProfilingAddr(t); !strings.HasPrefix(addr, "127.0.0.1:") {
+		t.Fatalf("bound %q, want a loopback address", addr)
 	}
 }
 

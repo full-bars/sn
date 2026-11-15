@@ -24,6 +24,10 @@ Everything merged after `v2026.11.14-1098572730-sn`.
 - **A hotswap on a host with RAM logs no longer kills the new miner.** The new process inherited the old process's log pipe as its error output. When the old process finished draining and exited, the next write to that pipe ended the new process with SIGPIPE. systemd counts that as a clean exit, so a unit with `Restart=on-failure` stayed dead. The old process now hands the new one the original logging destination, and a new process that inherits an orphaned pipe from an older binary drops it at startup when RAM logs are on. The long-running `provide` command ignores SIGPIPE, so a broken log pipe cannot end it.
 - **A busy node no longer runs thousands of threads** (connect pin). Each UDP readiness shard waited in a blocking `epoll_wait`, which held one OS thread per shard, and the provider runs about two shards for every proxy. A node with a thousand proxies ended up with about 2,100 threads, 2,100 epoll descriptors and 2,100 eventfds, and a single core spent much of its time switching between them. The shards now wait through the Go network poller and park as goroutines. The pin moves to a connect commit that carries the fix.
 
+### Added
+
+- **Loopback diagnostics are on by default.** The pprof listener starts at `127.0.0.1:6060`, loopback only, so a stuck or heavy miner can be inspected without a restart. `urnet-tools set pprof off` turns it off and `urnet-tools set pprof <ip:port>` moves it, live and persisted. An explicit `URNETWORK_PPROF` still decides the address when it is set. If the default port stays in use, the miner binds a free loopback port.
+
 ## [v2026.11.14-1098572730-sn] - 2026-11-14
 
 Changes after `v2026.11.9-1094091330-sn`. Notes: `releases/v2026.11.14-1098572730-sn.md`.

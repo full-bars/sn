@@ -365,6 +365,7 @@ var controlLiveEffectKeys = map[string]bool{
 	"proxy_dead_cleanup_interval": true,
 	"hot_restart":                 true,
 	"proxy_audit":                 true,
+	"pprof":                       true,
 	"fast_auth":                   true,
 	"oom_cap":                     true,
 	"baseline":                    true,
@@ -464,6 +465,7 @@ var controlLiveDefaults = map[string]string{
 	// path maps any non-positive value to math.MaxInt64.
 	"gomemlimit": "0",
 	"gogc":       "100",
+	"pprof":      "on",
 	// Without an entry here, clearing metrics called applyControlLiveDefault,
 	// which returned nil without touching the listener: the endpoint kept
 	// serving while the CLI reported success and no restart needed. That is
@@ -544,6 +546,10 @@ func applyControlLiveDefault(key string) error {
 func validateControlValue(key, value string) error {
 	valLower := strings.ToLower(value)
 	switch key {
+	case "pprof":
+		if !validPprofValue(value) {
+			return fmt.Errorf("pprof: must be on, off or a loopback host:port such as 127.0.0.1:6060 (got %q)", value)
+		}
 	case "proxy_url_refresh", "proxy_dead_cleanup_interval":
 		d, err := time.ParseDuration(value)
 		if err != nil {
@@ -1223,6 +1229,8 @@ func applyControlLiveSideEffect(key, value string) error {
 		// first and the legacy override file second.
 		globalProxyControlState.set(key, value)
 		tlog("[control] applied %s=%s to the running proxy manager\n", key, value)
+	case "pprof":
+		return applyPprofMode(value)
 	case "proxy_audit":
 		return applyProxyAuditControlLive(value)
 	case "oom_cap":

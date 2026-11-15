@@ -90,6 +90,7 @@ var controlKeys = map[string]bool{
 	"metrics":                     true,
 	"metrics_listen":              true,
 	"proxy_audit":                 true,
+	"pprof":                       true,
 	"smart_dialer":                true,
 	"h3":                          true,
 	"h3_datagram":                 true,

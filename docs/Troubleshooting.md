@@ -121,6 +121,23 @@ packets.
 - **Fix**: if you use `--cpus`, make sure the limit is high enough to handle
   the signaling overhead of your proxy list.
 
+## Inspecting a stuck or heavy miner
+
+Loopback diagnostics are on by default at `127.0.0.1:6060`, so a miner that is slow, stuck or running too many threads can be inspected without a restart. A restart destroys the evidence. Run these on the host:
+
+```sh
+# goroutines grouped by stack, the cheap first look
+curl -s 127.0.0.1:6060/debug/pprof/goroutine?debug=1 | head -40
+# where OS threads were created
+curl -s 127.0.0.1:6060/debug/pprof/threadcreate?debug=1 | head -40
+# the heap
+curl -s 127.0.0.1:6060/debug/pprof/heap?debug=1 | head -40
+# the OS thread count of the miner
+ls /proc/$(systemctl --user show urnetwork -p MainPID --value)/task | wc -l
+```
+
+`goroutine?debug=2` prints every goroutine and costs memory and a short pause on a host with tens of thousands of goroutines, so start with `debug=1`. The listener answers on loopback only, so any local user can read it, and a heap profile can hold tokens that were in memory. `urnet-tools set pprof off` turns it off and `urnet-tools set pprof 127.0.0.1:7000` moves it. If the default port stays in use, for example by another miner on the same host, the miner binds a free loopback port and the log names it.
+
 ## HotSwap declines on an existing node
 
 **Symptom**: `urnet-tools hotswap`, or a `urnet-tools update` on a HotSwap-capable

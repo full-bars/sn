@@ -265,6 +265,7 @@ var setKeyHelps = []string{
 	"  metrics             on|off        enable metrics endpoint",
 	"  metrics-listen      auto|<ip:port> /metrics listen address. auto binds loopback plus every Tailscale IPv4 (0.0.0.0 in a container); an explicit address is used as-is, and off clears back to auto. Live; a change rebinds a running listener (default: auto)",
 	"  baseline            on|off        record this box's behaviour into baseline.jsonl every 15 minutes, with the lifetime billable counter, for `urnet-tools baseline show|compare` (default: on)",
+	"  pprof               on|off|<ip:port>  loopback diagnostics for goroutine, heap and thread profiles (default: on at 127.0.0.1:6060)",
 	"  proxy-audit         on|off        grade proxies and park the ones that prove junk. Observe mode by default (logs verdicts without acting); parking only acts when hot-restart is on (default: off)",
 }
 
@@ -282,7 +283,7 @@ var setKeyHelps = []string{
 // every identity instead of disabling it.
 func treatsOffAsClear(canonicalKey string) bool {
 	switch canonicalKey {
-	case "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3":
+	case "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3", "pprof":
 		return false
 	}
 	return true
@@ -601,6 +602,7 @@ func formatSets(p Provider, want string) error {
 		{"h3-datagram-send", "h3_datagram_send"},
 		{"baseline", "baseline"},
 		{"proxy-audit", "proxy_audit"},
+		{"pprof", "pprof"},
 	}
 
 	for _, item := range orderedKeys {
