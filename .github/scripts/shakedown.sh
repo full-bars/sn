@@ -95,6 +95,7 @@ markers_snapshot() { j | awk -v n="$1" 'NR > n' | grep -oE "client_id: [0-9a-f-]
 # own wait_client_id/assertion fails and the report says which check broke.
 restart_provider() {
   echo $(journal_line_count)
+  runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user reset-failed urnetwork.service >/dev/null 2>&1 || true
   timeout 180 runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user restart urnetwork.service
 }
 
@@ -197,6 +198,12 @@ printf '200\n' > /home/urnet/.urnetwork/proxy_url_max
 printf '10m\n' > /home/urnet/.urnetwork/proxy_url_refresh
 chown -R urnet:urnet /home/urnet/.urnetwork && chmod 600 /home/urnet/.urnetwork/jwt
 export XDG_RUNTIME_DIR=/run/user/$(id -u urnet)
+# Rapid restart tests must not be throttled by the user manager.
+mkdir -p /home/urnet/.config/systemd/user/urnetwork.service.d
+printf '[Unit]\nStartLimitIntervalSec=0\n' > /home/urnet/.config/systemd/user/urnetwork.service.d/shakedown-limit.conf
+chown -R urnet:urnet /home/urnet/.config
+runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user daemon-reload
+runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user reset-failed urnetwork.service >/dev/null 2>&1 || true
 runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user start urnetwork.service
 # MUST-FIX 8: poll for client_id instead of sleep 8. The provider
 # runs a synchronous up-to-1GB O_SYNC disk audit at provide start (10-60s on
@@ -925,6 +932,102 @@ CID=$(wait_client_id "$MARK" 120)
 [ -n "$CID" ] && ok "T: provider healthy on $EXPECTED_BASE after re-pin (client_id ${CID:0:12}…)" || bad "T: no client_id after re-pin restart"
 
 
+# ---------- H2. Hotswap on systemd ----------
+# A successor once died from SIGPIPE after the old RAM-log process drained.
+# Check both log modes after the old process exits.
+section "H2. Hotswap on systemd"
+hotswap_systemd() {
+  local mode="$1" bin=/home/urnet/.local/share/urnetwork-provider/bin/urnetwork
+  local old new state end mark version target readers stage journal
+  mkdir -p "$OVERRIDE_DIR"
+  printf '[Service]\nType=notify\nNotifyAccess=all\nEnvironment="URNETWORK_RAMLOGS=%s"\n' "$mode" > "$OVERRIDE_DIR/zz-hotswap-test.conf"
+  chown urnet:urnet "$OVERRIDE_DIR/zz-hotswap-test.conf"
+  runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user daemon-reload
+  if ! restart_provider >/dev/null; then t1bad "H2: RAMLOGS=$mode initial restart failed"; return; fi
+  old=$(runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user show -p MainPID --value urnetwork.service)
+  version=$("$bin" --version 2>&1)
+  if ! [[ "$old" =~ ^[1-9][0-9]*$ ]] || ! kill -0 "$old" 2>/dev/null; then t1bad "H2: RAMLOGS=$mode invalid initial MainPID '$old'"; return; fi
+  echo "  H2: RAMLOGS=$mode old PID=$old version=$version" | tee -a "$REPORT"
+  # Preflight checks JWT and API access, not a version difference. Replace the
+  # installed inode with an identical copy before signalling the old process.
+  stage=$(mktemp "${bin}.hotswap.XXXXXX") || { t1bad "H2: cannot create stage"; return; }
+  if ! cp --preserve=all "$bin" "$stage" || ! mv -f "$stage" "$bin"; then
+    rm -f "$stage"; t1bad "H2: RAMLOGS=$mode could not stage binary"; return
+  fi
+  mark=$(date -u +%FT%T.%3NZ)
+  if ! kill -USR2 "$old"; then t1bad "H2: RAMLOGS=$mode SIGUSR2 failed"; return; fi
+  new=0; end=$(( $(date +%s) + 120 ))
+  while [ "$(date +%s)" -lt "$end" ]; do
+    state=$(runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user show -p ActiveState --value urnetwork.service)
+    case "$state" in failed|inactive|'') t1bad "H2: RAMLOGS=$mode unit entered '$state' during handoff"; return;; esac
+    new=$(runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user show -p MainPID --value urnetwork.service)
+    if [[ "$new" =~ ^[1-9][0-9]*$ ]] && [ "$new" != "$old" ]; then break; fi
+    sleep 2
+  done
+  if ! [[ "$new" =~ ^[1-9][0-9]*$ ]] || [ "$new" = "$old" ]; then t1bad "H2: RAMLOGS=$mode handoff timed out"; return; fi
+  ok "H2: RAMLOGS=$mode MainPID changed $old -> $new"
+  end=$(( $(date +%s) + 420 ))
+  while kill -0 "$old" 2>/dev/null && [ "$(date +%s)" -lt "$end" ]; do
+    state=$(runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user show -p ActiveState --value urnetwork.service)
+    case "$state" in failed|inactive|'') t1bad "H2: RAMLOGS=$mode unit entered '$state' while draining"; return;; esac
+    sleep 5
+  done
+  if kill -0 "$old" 2>/dev/null; then t1bad "H2: RAMLOGS=$mode old PID did not drain within 420s"; return; fi
+  ok "H2: RAMLOGS=$mode old PID drained"
+  end=$(( $(date +%s) + 45 ))
+  while [ "$(date +%s)" -lt "$end" ]; do
+    state=$(runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user show -p ActiveState --value urnetwork.service)
+    case "$state" in failed|inactive|'') t1bad "H2: RAMLOGS=$mode unit entered '$state' after drain"; return;; esac
+    sleep 3
+  done
+  state=$(runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user show -p ActiveState --value urnetwork.service)
+  if [ "$state" = active ] && kill -0 "$new" 2>/dev/null && [ "$(runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user show -p MainPID --value urnetwork.service)" = "$new" ]; then
+    ok "H2: RAMLOGS=$mode successor remains active"
+  else
+    t1bad "H2: RAMLOGS=$mode successor not active"
+  fi
+  if ! journal=$(runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" journalctl --user -u urnetwork.service --no-pager -q --since "$mark"); then
+    t1bad "H2: RAMLOGS=$mode journal read failed"
+  elif printf '%s\n' "$journal" | grep -qE 'signal=PIPE|code=killed'; then
+    t1bad "H2: RAMLOGS=$mode journal contains killed process"
+  else
+    ok "H2: RAMLOGS=$mode journal has no killed process"
+  fi
+  target=$(readlink "/proc/$new/fd/2" 2>/dev/null) || target=''
+  if [ -z "$target" ]; then
+    skip "H2: RAMLOGS=$mode stderr fd unreadable"
+  elif [[ "$target" = pipe:\[*\] ]]; then
+    readers=$(python3 - "$target" <<'PY'
+import glob, os, sys
+count = 0
+for fd in glob.glob('/proc/[0-9]*/fd/[0-9]*'):
+    try:
+        if os.readlink(fd) != sys.argv[1]:
+            continue
+        with open(fd.replace('/fd/', '/fdinfo/')) as f:
+            flags = next(line.split()[1] for line in f if line.startswith('flags:'))
+        if int(flags, 8) & 3 in (0, 2):
+            count += 1
+    except (OSError, StopIteration, ValueError):
+        continue
+print(count)
+PY
+)
+    if [ "${readers:-0}" -gt 0 ]; then
+      ok "H2: RAMLOGS=$mode stderr pipe has $readers readers"
+    else
+      t1bad "H2: RAMLOGS=$mode stderr pipe has no reader"
+    fi
+  else
+    ok "H2: RAMLOGS=$mode stderr is $target"
+  fi
+  skip "H2: RAMLOGS=$mode no verified safe command to force a Go stderr log"
+}
+hotswap_systemd 1
+hotswap_systemd 0
+rm -f "$OVERRIDE_DIR/zz-hotswap-test.conf"
+runuser -u urnet -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" systemctl --user daemon-reload
+
 # ---------- U. Type=notify + READY/STATUS ----------
 section "U. Type=notify + READY/STATUS"
 mkdir -p "$OVERRIDE_DIR"
@@ -945,6 +1048,7 @@ U_TYPE=$(runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) system
 # an unwrapped call measures nothing and, if READY never arrives, hangs until
 # the CI job watchdog kills the whole run instead of failing this one check.
 U1_T0=$(date +%s)
+runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user reset-failed urnetwork.service >/dev/null 2>&1 || true
 timeout 120 runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user restart urnetwork.service
 U1_ACTIVE=0
 for i in $(seq 1 30); do
@@ -979,6 +1083,7 @@ fi
 cp /etc/hosts /tmp/hosts.pre-u3.bak
 echo "127.0.0.1 api.bringyour.com # shakedown U3 outage simulation" >> /etc/hosts
 U3_T0=$(date +%s)
+runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user reset-failed urnetwork.service >/dev/null 2>&1 || true
 timeout 120 runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user restart urnetwork.service
 U3_RC=$?
 U3_ELAPSED=$(( $(date +%s) - U3_T0 ))
@@ -1235,6 +1340,7 @@ for corrupt in truncated invalid-json literal-null; do
   esac
   chown urnet:urnet /home/urnet/.urnetwork/pending_overrides.json
   W3_MARK=$(journal_line_count)
+  runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user reset-failed urnetwork.service >/dev/null 2>&1 || true
   timeout 90 runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user start urnetwork.service
   W3_RC=$?
   if [ "$W3_RC" -eq 124 ]; then
@@ -1340,6 +1446,7 @@ EOF
   chown -R urnet:urnet /home/urnet/.config
   runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user daemon-reload
   W8_MARK=$(journal_line_count)
+  runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user reset-failed urnetwork.service >/dev/null 2>&1 || true
   timeout 90 runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user restart urnetwork.service
   W8_RESTART_RC=$?
   if [ "$W8_RESTART_RC" -eq 124 ]; then
@@ -1401,6 +1508,7 @@ EOF
   echo "  applying MemoryMax=$MEMLIMIT (systemd reports: $X_APPLIED)" | tee -a "$REPORT"
   X_OOM_BEFORE=$(journalctl -k --no-pager 2>/dev/null | grep -ci "out of memory")
   X_MARK=$(journal_line_count)
+  runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user reset-failed urnetwork.service >/dev/null 2>&1 || true
   timeout 150 runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user restart urnetwork.service
   X_RESTART_RC=$?
   if [ "$X_RESTART_RC" -eq 124 ]; then
@@ -1439,6 +1547,7 @@ EOF
 chown -R urnet:urnet /home/urnet/.config
 runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user daemon-reload
 X_MARK2=$(journal_line_count)
+runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user reset-failed urnetwork.service >/dev/null 2>&1 || true
 timeout 150 runuser -u urnet -- env XDG_RUNTIME_DIR=/run/user/$(id -u urnet) systemctl --user restart urnetwork.service
 X_CID2=$(wait_client_id "$X_MARK2" 150)
 PROC_PID=$(pgrep -u urnet -f 'urnetwork provide' | head -1)
@@ -1534,6 +1643,7 @@ chmod 600 "/home/$Z_USER/.urnetwork/jwt"
 Z_XDG="/run/user/$(id -u $Z_USER)"
 mkdir -p "$Z_XDG" && chown "$Z_USER:$Z_USER" "$Z_XDG"
 runuser -u "$Z_USER" -- env XDG_RUNTIME_DIR="$Z_XDG" systemctl --user daemon-reload
+runuser -u "$Z_USER" -- env XDG_RUNTIME_DIR="$Z_XDG" systemctl --user reset-failed urnetwork.service >/dev/null 2>&1 || true
 runuser -u "$Z_USER" -- env XDG_RUNTIME_DIR="$Z_XDG" systemctl --user start urnetwork.service
 
 Z_CID=""
