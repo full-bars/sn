@@ -30,6 +30,9 @@ func TestCmdStartUsesInstalledDefaultWhenDiscoveryTimesOut(t *testing.T) {
 		t.Skip("systemd fallback is Linux-only")
 	}
 	stubDiscovery(t, nil, nil)
+	originalProbe := openrcProbeFn
+	openrcProbeFn = func() bool { return false }
+	t.Cleanup(func() { openrcProbeFn = originalProbe })
 	installDefaultUserUnitForTest(t)
 	originalCutShort := systemdDiscoveryCutShort
 	systemdDiscoveryCutShort = true
@@ -56,6 +59,9 @@ func TestCmdStartDoesNotGuessAfterDiscoveryTimeout(t *testing.T) {
 		t.Skip("systemd fallback is Linux-only")
 	}
 	stubDiscovery(t, nil, nil)
+	originalProbe := openrcProbeFn
+	openrcProbeFn = func() bool { return false }
+	t.Cleanup(func() { openrcProbeFn = originalProbe })
 	originalInstalled := defaultUserUnitInstalledFn
 	defaultUserUnitInstalledFn = func() bool { return false }
 	t.Cleanup(func() { defaultUserUnitInstalledFn = originalInstalled })
