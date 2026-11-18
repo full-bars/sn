@@ -275,6 +275,13 @@ func (m *topModel) throughputTitle(name string, sr topSeries) string {
 		}
 		return title
 	}
+	if m.windowHours > 0 {
+		title := name + ", " + windowTitle(m.windowHours)
+		if m.conn == topDisconnected {
+			title += " (stale)"
+		}
+		return title
+	}
 	h := m.history()
 	if len(h) == 0 {
 		return name

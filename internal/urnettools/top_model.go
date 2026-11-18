@@ -201,6 +201,10 @@ type topModel struct {
 	scaleB, scaleT         topScale
 	zoomScaleB, zoomScaleT topScale
 
+	windowHours                int
+	windowB, windowT           topWindow
+	windowScaleB, windowScaleT topScale
+
 	// rt is the runtime (Internals) panel's state.
 	rt topRuntime
 
@@ -417,8 +421,16 @@ func (m *topModel) apply(gen int, snap *NodeSnapshot, err error) {
 	m.snap = snap
 	m.lastErr = ""
 	m.scaleB.update(seriesPeak(snap.Rate.HistoryBps), now, true)
+	m.windowB.push(snap.Rate.NowBps, now)
 	if snap.Traffic != nil {
 		m.scaleT.update(seriesPeak(snap.Traffic.TotalHistoryBps), now, true)
+		m.windowT.push(snap.Traffic.TotalNowBps, now)
+	}
+	if m.windowHours > 0 {
+		m.windowScaleB.update(seriesPeak(m.windowB.windowFor(m.windowHours, now)), now, true)
+		if snap.Traffic != nil {
+			m.windowScaleT.update(seriesPeak(m.windowT.windowFor(m.windowHours, now)), now, true)
+		}
 	}
 }
 
@@ -625,6 +637,15 @@ func (m *topModel) handle(ev tcellui.Event) topEffect {
 			m.menu, m.help, m.menuNote = true, false, ""
 		case 'M':
 			m.mouse = !m.mouse
+		case 't':
+			switch m.windowHours {
+			case 0:
+				m.windowHours = 1
+			case 1:
+				m.windowHours = 24
+			default:
+				m.windowHours = 0
+			}
 		// Like btop: + lengthens the update interval (slower), - shortens it.
 		case '+', '=':
 			m.stepInterval(1)
@@ -666,6 +687,10 @@ func (m *topModel) selectProvider(delta int) topEffect {
 	m.scaleT.reset()
 	m.zoomScaleB.reset()
 	m.zoomScaleT.reset()
+	m.windowB.reset()
+	m.windowT.reset()
+	m.windowScaleB.reset()
+	m.windowScaleT.reset()
 	showing := m.rt.showing
 	m.rt.reset()
 	m.rt.showing = showing // the view choice is the user's, not the provider's
@@ -777,6 +802,25 @@ func (m *topModel) series() topSeries {
 			// Non-nil even while the ring is empty: nil would read as "this
 			// provider has no total graph" and drop the second panel.
 			out.total = append([]float64{}, m.zoom.total...)
+		}
+		return out
+	}
+	if m.windowHours > 0 {
+		out.scaleB, out.scaleT = &m.windowScaleB, &m.windowScaleT
+		now := m.now()
+		switch m.windowHours {
+		case 1:
+			out.anchor = now.Unix() / 60
+		case 24:
+			out.anchor = now.Unix() / 900
+		}
+		out.billable = m.windowB.windowFor(m.windowHours, now)
+		out.capacity = len(out.billable)
+		if m.snap.Traffic != nil {
+			out.total = m.windowT.windowFor(m.windowHours, now)
+		}
+		if m.conn == topConnected {
+			out.tailBillable, out.tailTotal, out.live = m.live.rates()
 		}
 		return out
 	}
