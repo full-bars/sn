@@ -73,6 +73,15 @@ func extenderPortReasonText(reason string) (text string, informational bool) {
 	}
 }
 
+// ExtenderDiscovery holds discovery fields only when the provider reports them.
+type ExtenderDiscovery struct {
+	State                 string  `json:"state,omitempty"`
+	Requested             string  `json:"requested,omitempty"`
+	ActiveRecords         *int    `json:"active_records,omitempty"`
+	MessagesAccepted      *uint64 `json:"messages_accepted,omitempty"`
+	LastAcceptedUnixMilli *int64  `json:"last_accepted_unix_milli,omitempty"`
+}
+
 // ExtenderReading holds the provider's live control-socket observation.
 type ExtenderReading struct {
 	Source                string
@@ -97,6 +106,7 @@ type ExtenderReading struct {
 	CarrierBytes          []ExtenderCarrierBytes
 	Ports                 []ExtenderPort
 	Dns53State            string
+	Discovery             *ExtenderDiscovery
 
 	// BindRoute says how an unprivileged provider gets TCP 443 on this host.
 	// It is a host reading set by the printing commands, not by the provider.
@@ -193,6 +203,7 @@ func queryExtenderFromSocket(p Provider) (*ExtenderReading, error) {
 		LastPeerPingTime: ex.LastPeerPingTime, LimitedBySubnetsCount: ex.LimitedBySubnetsCount,
 		LimitedBySourceCount: ex.LimitedBySourceCount, Carriers: ex.Carriers, CarrierBytes: ex.CarrierBytes,
 		Ports: ex.Ports, Dns53State: ex.Dns53State,
+		Discovery: ex.Discovery,
 	}, nil
 }
 

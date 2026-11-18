@@ -145,6 +145,7 @@ type ExtenderObservation struct {
 	CarrierBytes          []ExtenderCarrierBytes `json:"carrier_bytes,omitempty"`
 	Ports                 []ExtenderPort         `json:"ports,omitempty"`
 	Dns53State            string                 `json:"dns53_state,omitempty"`
+	Discovery             *ExtenderDiscovery     `json:"discovery,omitempty"`
 }
 
 // pendingOp is an entry in ~/.urnetwork/pending_overrides.json.
