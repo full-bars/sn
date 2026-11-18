@@ -121,6 +121,11 @@ type controlResponse struct {
 	ProxyAudit *proxyAuditStatus               `json:"proxy_audit,omitempty"`
 	Audit      *proxyAuditStatus               `json:"audit,omitempty"`
 	Extender   *providerExtenderControlReading `json:"extender,omitempty"`
+	// ProxyCells is the compact per-proxy grid payload answered by "proxy_cells".
+	ProxyCells []byte `json:"proxy_cells,omitempty"`
+	// ProxyCellDetail is the full per-proxy record for the grid's popup,
+	// answered by "proxy_cell_detail".
+	ProxyCellDetail []ProxyCellDetail `json:"proxy_cell_detail,omitempty"`
 }
 
 // startControlSocket opens the control socket and serves it until ctx is
@@ -1181,6 +1186,14 @@ func handleControlRequest(state *controlState, req controlRequest) (response con
 			}
 		}()
 		return controlResponse{OK: true, Value: "hotswap triggered"}
+
+	case "proxy_cells":
+		cells := getProxyCellStore().Cells(time.Now())
+		return controlResponse{OK: true, ProxyCells: cells}
+
+	case "proxy_cell_detail":
+		detail := getProxyCellStore().Detail(time.Now())
+		return controlResponse{OK: true, ProxyCellDetail: detail}
 
 	default:
 		return controlResponse{OK: false, Error: fmt.Sprintf("unknown command %q", req.Cmd)}
