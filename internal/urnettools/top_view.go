@@ -355,7 +355,8 @@ func (m *topModel) proxiesRows() int {
 // eventsRows is the height of the Events panel: its content, at least one row
 // (which says there are none) and at most topEventsMax.
 func (m *topModel) eventsRows() int {
-	return 2 + min(max(len(m.events), topEventsMin), topEventsMax)
+	views := collapseEvents(filterEvents(m.sortedEvents(), m.eventFilter))
+	return 2 + min(max(len(views), topEventsMin), topEventsMax)
 }
 
 // drawProxiesCompact is the one-line pool summary: every state with its count,
@@ -419,20 +420,34 @@ func (m *topModel) drawProxies(b *tui.Buffer) {
 func (m *topModel) drawEvents(b *tui.Buffer) {
 	th := m.theme
 	now := m.now()
+	m.eventHeight = b.Height()
 	if len(m.events) == 0 {
 		b.Put("no events yet", 0, 0, th.Dim)
 		return
 	}
-	for i, e := range m.sortedEvents() {
-		if i >= b.Height() {
+	views := collapseEvents(filterEvents(m.sortedEvents(), m.eventFilter))
+	if len(views) == 0 {
+		b.Put("no events match filter", 0, 0, th.Dim)
+		m.eventScroll = 0
+		return
+	}
+	m.eventScroll = min(m.eventScroll, max(0, len(views)-b.Height()))
+	start := m.eventScroll
+	for i, v := range views {
+		if i < start {
+			continue
+		}
+		if i-start >= b.Height() {
 			break
 		}
-		at := e.At.Format("15:04")
-		if !sameDay(e.At, now) {
-			at = e.At.Format("01-02 15:04")
+		y := i - start
+		x := b.Put(eventTime(v.At, now, m.eventZoom)+" ", 0, y, th.Dim)
+		x = b.Put(string(eventIcon(v.Level, th))+" ", x, y, m.style(v.Level))
+		text := v.Text
+		if v.Count > 1 {
+			text += "  x" + strconv.Itoa(v.Count)
 		}
-		x := b.Put(at+" ", 0, i, th.Dim)
-		b.Put(tui.Truncate(e.Text, b.Width()-x, th.ASCII), x, i, m.style(e.Level))
+		b.Put(tui.Truncate(text, b.Width()-x, th.ASCII), x, y, m.style(v.Level))
 	}
 }
 

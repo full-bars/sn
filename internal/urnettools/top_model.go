@@ -161,12 +161,15 @@ type topModel struct {
 	retry         time.Duration // pause between attempts on a silent provider
 	now           func() time.Time
 
-	conn      topConn
-	snap      *NodeSnapshot // last good snapshot of the current provider
-	downSince time.Time
-	nextRetry time.Time
-	lastErr   string
-	events    []topEvent
+	conn                     topConn
+	snap                     *NodeSnapshot // last good snapshot of the current provider
+	downSince                time.Time
+	nextRetry                time.Time
+	lastErr                  string
+	events                   []topEvent
+	eventZoom                bool
+	eventScroll, eventHeight int
+	eventFilter              eventFilter
 
 	// gen names the current provider selection. A fetch started for an earlier
 	// selection can finish after Tab and must not be applied to the new one.
@@ -681,6 +684,7 @@ func (m *topModel) selectProvider(delta int) topEffect {
 	m.cur = ((m.cur+delta)%n + n) % n
 	m.gen++
 	m.conn, m.snap, m.events = topConnecting, nil, nil
+	m.eventScroll = 0
 	m.downSince, m.nextRetry, m.lastErr = time.Time{}, time.Time{}, ""
 	m.fetching, m.lastFetch = false, time.Time{}
 	m.live.reset()
