@@ -16,8 +16,9 @@ import (
 // Panel geometry. The right column is fixed so the numbers in it do not jump
 // as the window is resized; the left column takes the rest.
 const (
-	topSideWidth   = 30
-	topProxiesRows = 6 // frame plus four bars
+	topSideWidth    = 30
+	topSideMaxWidth = 46
+	topProxiesRows  = 6 // frame plus four bars
 	// topProxiesCompactRows is the Proxies panel for a small pool: frame plus one
 	// line. Four bars for one proxy is a lot of box for one number.
 	topProxiesCompactRows = 3
@@ -63,6 +64,17 @@ func (m *topModel) render(b *tui.Buffer) {
 	}
 }
 
+// topSideCols sizes the right column from the terminal width: 30 cells up to
+// 120 columns so narrow and standard screens keep their layout, then growing
+// by half the extra width up to topSideMaxWidth so wide terminals fit IPv6
+// addresses and longer values without cutting them.
+func topSideCols(width int) int {
+	if width <= 120 {
+		return topSideWidth
+	}
+	return min(topSideWidth+(width-120)/2, topSideMaxWidth)
+}
+
 func (m *topModel) drawFull(b *tui.Buffer) {
 	th := m.theme
 	footerRows, _ := m.footerPlan(b.Width(), b.Height())
@@ -70,7 +82,7 @@ func (m *topModel) drawFull(b *tui.Buffer) {
 	m.drawHeader(b.Sub(rows[0]))
 	m.drawFooter(b.Sub(rows[2]))
 
-	cols := tui.SplitCols(rows[1], tui.Flex(1), tui.Fixed(topSideWidth))
+	cols := tui.SplitCols(rows[1], tui.Flex(1), tui.Fixed(topSideCols(rows[1].W)))
 	left := tui.SplitRows(cols[0], tui.Flex(1), tui.Fixed(m.proxiesRows()), tui.Fixed(m.eventsRows()))
 	nowRows := topNowRows
 	if m.hasTraffic() {
@@ -220,6 +232,13 @@ func (m *topModel) footerKeys(compact bool) string {
 		keys += sep + "g goroutines"
 	}
 	keys += sep + "- " + topIntervalText(m.interval) + " +"
+	if !compact {
+		if m.mouse {
+			keys += sep + "M mouse on"
+		} else {
+			keys += sep + "M mouse off"
+		}
+	}
 	return keys
 }
 
@@ -422,10 +441,11 @@ func (m *topModel) kv(b *tui.Buffer, y int, key, value string, valueStyle tui.St
 }
 
 // kvAt is kv with the value starting at column col, so a panel's plain rows
-// line up with the labels of the bars beside them.
+// line up with the labels of the bars beside them. Long values keep both ends
+// and join them with an ellipsis so addresses and units stay readable.
 func (m *topModel) kvAt(b *tui.Buffer, col, y int, key, value string, valueStyle tui.Style) {
 	b.Put(key, 0, y, m.theme.Dim)
-	b.Put(tui.Truncate(value, b.Width()-col, m.theme.ASCII), col, y, valueStyle)
+	b.Put(tui.TruncateMiddle(value, b.Width()-col, m.theme.ASCII), col, y, valueStyle)
 }
 
 func (m *topModel) drawNow(b *tui.Buffer) {
@@ -877,6 +897,7 @@ var helpLines = []string{
 	"w                zoom the graphs to the last 15 seconds",
 	"u                switch units between GiB (binary) and GB (decimal)",
 	"m                menu: color theme and graph style",
+	"M                mouse on/off (Shift+drag selects text in most terminals)",
 	"g                list where goroutines are parked",
 	"billed, moved    billable and total bytes this session",
 	"?                show or hide this help",

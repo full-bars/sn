@@ -109,6 +109,9 @@ func cmdTop(args []string) error {
 	} else if hiddenStopped > 0 {
 		m.discoveryNote = stoppedHiddenNote(hiddenStopped)
 	}
+	if hasNoMouseFlag(args) {
+		m.mouse = false
+	}
 	src := topSourceFn()
 	if demo {
 		src = newDemoTopSource(time.Now)
@@ -259,14 +262,26 @@ func applySavedTopSettings(m *topModel) {
 	m.applySettings(loadTopSettings(m.settingsPath))
 }
 
-// parseTopFlags pulls --interval out of args, leaving the target flags for the
-// strict target parser. It accepts a Go duration (500ms, 2s) or plain seconds.
+func hasNoMouseFlag(args []string) bool {
+	for _, a := range args {
+		if a == "--no-mouse" || a == "--no-mouse=true" || a == "--no-mouse=1" {
+			return true
+		}
+	}
+	return false
+}
+
+// parseTopFlags pulls --interval and --no-mouse out of args, leaving the target
+// flags for the strict target parser. It accepts a Go duration (500ms, 2s) or
+// plain seconds.
 func parseTopFlags(args []string) (interval time.Duration, rest []string, err error) {
 	interval = topDefaultInterval
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		var val string
 		switch {
+		case a == "--no-mouse" || a == "--no-mouse=true" || a == "--no-mouse=false" || a == "--no-mouse=1" || a == "--no-mouse=0":
+			continue
 		case a == "--interval":
 			if i+1 >= len(args) {
 				return 0, nil, errors.New("--interval needs a value, for example --interval 500ms")

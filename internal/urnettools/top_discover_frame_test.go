@@ -34,6 +34,8 @@ func newFrameScreenAt(w, h int) *frameScreen {
 
 func (s *frameScreen) Size() (int, int) { return s.width, s.height }
 
+func (s *frameScreen) SetMouse(bool) {}
+
 func (s *frameScreen) Draw(b *tui.Buffer) {
 	s.mu.Lock()
 	s.frames = append(s.frames, b.String())
