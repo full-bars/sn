@@ -226,8 +226,21 @@ func TestWaitForIdleMissingMetricReportsMissingDuration(t *testing.T) {
 }
 
 func TestIdleUpdateDryRun(t *testing.T) {
+	oldDiscover := updateDiscoverFn
+	updateDiscoverFn = func() []Provider { return []Provider{{Unit: "urnetwork.service"}} }
+	t.Cleanup(func() { updateDiscoverFn = oldDiscover })
+	latestReleaseMu.Lock()
+	oldRelease, oldTime := cachedLatest, cachedLatestTime
+	cachedLatest = &releaseInfo{Tag: "v9.9.9-test"}
+	cachedLatestTime = time.Now()
+	latestReleaseMu.Unlock()
+	t.Cleanup(func() {
+		latestReleaseMu.Lock()
+		cachedLatest, cachedLatestTime = oldRelease, oldTime
+		latestReleaseMu.Unlock()
+	})
 	err := Run([]string{"idle-update", "--dry-run", "--unit=urnetwork.service"})
-	if err != nil && err.Error() != "no providers found on this box" && !strings.Contains(err.Error(), "matches no provider") {
+	if err != nil {
 		t.Fatalf("unexpected idle-update dry-run error: %v", err)
 	}
 }
