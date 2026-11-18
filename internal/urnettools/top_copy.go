@@ -10,25 +10,37 @@ import (
 	"github.com/urfoundation/sn/internal/tui"
 )
 
+// top_copy.go turns the screen into plain text an operator can paste into a
+// chat or a ticket: no styles, trailing spaces trimmed, box characters kept,
+// or replaced by + - | when --plain is asked for. The copy is written to the
+// tool's state dir on exit, and printed to stdout when --copy asks for it.
+
+// boxToASCII swaps the box drawing set for the ASCII one, so a screen pasted
+// into a chat that eats unicode still lines up.
 var boxToASCII = strings.NewReplacer(
-	"─", "-", "│", "|",
+	"─", "-",
+	"│", "|",
 	"┌", "+", "┐", "+", "└", "+", "┘", "+",
 	"├", "+", "┤", "+", "┬", "+", "┴", "+", "┼", "+",
 	"╭", "+", "╮", "+", "╰", "+", "╯", "+",
 )
 
-// copyText removes styles and optionally replaces box characters with ASCII.
+// copyText renders b as the plain text form of the screen. Buffer.String
+// already drops styles, skips continuation cells and trims trailing spaces, so
+// all that is left is the box-character decision.
 func copyText(b *tui.Buffer, plain bool) string {
 	s := b.String()
-	if plain {
-		return boxToASCII.Replace(s)
+	if !plain {
+		return s
 	}
-	return s
+	return boxToASCII.Replace(s)
 }
 
+// topStateDir is the tool's state dir: $XDG_STATE_HOME/urnet-tools, or
+// ~/.local/state/urnet-tools when that is unset.
 func topStateDir() string {
-	if dir := os.Getenv("XDG_STATE_HOME"); dir != "" {
-		return filepath.Join(dir, "urnet-tools")
+	if d := os.Getenv("XDG_STATE_HOME"); d != "" {
+		return filepath.Join(d, "urnet-tools")
 	}
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
@@ -37,13 +49,23 @@ func topStateDir() string {
 	return filepath.Join(home, ".local", "state", "urnet-tools")
 }
 
-// writeTopCopy uses owner-only permissions because the screen can contain addresses.
+// topCopyPath names the copy file for one run: top-<time>.txt.
+func topCopyPath(now time.Time) string {
+	return filepath.Join(topStateDir(), "top-"+now.Format("20060102-150405")+".txt")
+}
+
+// writeTopCopy writes text to the state dir. The dir is created 0700 and the
+// file 0600: a copy can carry addresses and versions, so it stays private to
+// the user. It returns the path it wrote.
 func writeTopCopy(text string, now time.Time) (string, error) {
 	dir := topStateDir()
 	if dir == "" {
-		return "", fmt.Errorf("no state dir to write the copy to")
+		return "", fmt.Errorf("cannot resolve state directory")
 	}
 	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", err
+	}
+	if err := os.Chmod(dir, 0o700); err != nil {
 		return "", err
 	}
 	f, err := os.CreateTemp(dir, "top-"+now.Format("20060102-150405")+"-*.txt")
@@ -51,17 +73,28 @@ func writeTopCopy(text string, now time.Time) (string, error) {
 		return "", err
 	}
 	path := f.Name()
-	_, writeErr := f.WriteString(text)
+	_, werr := f.WriteString(text)
+	cerr := f.Chmod(0o600)
 	closeErr := f.Close()
-	if writeErr != nil {
-		return "", writeErr
+	if werr != nil {
+		_ = os.Remove(path)
+		return "", werr
+	}
+	if cerr != nil {
+		_ = os.Remove(path)
+		return "", cerr
 	}
 	if closeErr != nil {
+		_ = os.Remove(path)
 		return "", closeErr
 	}
 	return path, nil
 }
 
+// copyOnExit renders the last frame of the screen, writes it to the state
+// dir and remembers the text so the caller can print it once the terminal is
+// back. The terminal is still in raw mode when this runs, so nothing is
+// written to stdout here.
 func (m *topModel) copyOnExit(b *tui.Buffer) {
 	text := copyText(b, m.copyPlain)
 	m.copyText = text
@@ -70,5 +103,5 @@ func (m *topModel) copyOnExit(b *tui.Buffer) {
 		m.copyPath, m.copyErr = "", err
 		return
 	}
-	m.copyPath, m.copyErr = path, nil
+	m.copyPath, m.copyText, m.copyErr = path, text, nil
 }

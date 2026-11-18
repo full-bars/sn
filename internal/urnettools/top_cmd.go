@@ -33,8 +33,7 @@ func cmdTop(args []string) error {
 	// on a box with no provider. It is peeled off before the real parsers.
 	demo, args := stripDemoFlag(args)
 	showAll, args := stripAllFlag(args)
-	copyOnQuit, plain, topArgs := stripTopCopyFlags(args)
-	interval, targetArgs, err := parseTopFlags(topArgs)
+	interval, copyOnQuit, plain, targetArgs, err := parseTopFlags(args)
 	if err != nil {
 		return err
 	}
@@ -117,6 +116,13 @@ func cmdTop(args []string) error {
 	src := topSourceFn()
 	if demo {
 		src = newDemoTopSource(time.Now)
+		// Fill the demo heatmap at typical terminal sizes so the visualization
+		// shows how a large proxy pool uses the available panel space.
+		cells := make([]proxyCell, 4400)
+		for i := range cells {
+			cells[i] = proxyCell{index: i, state: uint8(i % 5), bucket: uint8(i % 8), clients: uint8(i % 4)}
+		}
+		m.applyProxyCells(m.gen, cells, nil)
 	} else {
 		// Wire the saved menu settings into a real run. The demo deliberately
 		// stays out of it — it is a sample, not the user's box.
@@ -301,10 +307,10 @@ func hasNoMouseFlag(args []string) bool {
 	return false
 }
 
-// parseTopFlags pulls --interval and --no-mouse out of args, leaving the target
-// flags for the strict target parser. It accepts a Go duration (500ms, 2s) or
-// plain seconds.
-func parseTopFlags(args []string) (interval time.Duration, rest []string, err error) {
+// parseTopFlags pulls --interval, --no-mouse, --copy and --plain out of args, leaving the
+// target flags for the strict target parser. It accepts a Go duration (500ms,
+// 2s) or plain seconds for --interval.
+func parseTopFlags(args []string) (interval time.Duration, copyOnQuit, plain bool, rest []string, err error) {
 	interval = topDefaultInterval
 	for i := 0; i < len(args); i++ {
 		a := args[i]
@@ -314,12 +320,18 @@ func parseTopFlags(args []string) (interval time.Duration, rest []string, err er
 			continue
 		case a == "--interval":
 			if i+1 >= len(args) {
-				return 0, nil, errors.New("--interval needs a value, for example --interval 500ms")
+				return 0, false, false, nil, errors.New("--interval needs a value, for example --interval 500ms")
 			}
 			i++
 			val = args[i]
 		case strings.HasPrefix(a, "--interval="):
 			val = strings.TrimPrefix(a, "--interval=")
+		case a == "--copy":
+			copyOnQuit = true
+			continue
+		case a == "--plain":
+			plain = true
+			continue
 		default:
 			rest = append(rest, a)
 			continue
@@ -328,14 +340,14 @@ func parseTopFlags(args []string) (interval time.Duration, rest []string, err er
 		if perr != nil {
 			secs, ferr := strconv.ParseFloat(val, 64)
 			if ferr != nil {
-				return 0, nil, fmt.Errorf("--interval %q is not a duration (try 500ms or 2s)", val)
+				return 0, false, false, nil, fmt.Errorf("--interval %q is not a duration (try 500ms or 2s)", val)
 			}
 			d = time.Duration(secs * float64(time.Second))
 		}
 		if d < topMinInterval {
-			return 0, nil, fmt.Errorf("--interval must be at least %s", topMinInterval)
+			return 0, false, false, nil, fmt.Errorf("--interval must be at least %s", topMinInterval)
 		}
 		interval = d
 	}
-	return interval, rest, nil
+	return interval, copyOnQuit, plain, rest, nil
 }

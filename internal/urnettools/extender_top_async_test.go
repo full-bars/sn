@@ -35,11 +35,11 @@ func TestTopExtenderPollIsAsyncAndGenerationGuarded(t *testing.T) {
 	if calls != 0 {
 		t.Fatalf("selecting a provider read the socket %d times", calls)
 	}
-	if m.showExtender || m.extenderBusy {
+	if m.hasExtender() || m.extenderBusy {
 		t.Fatal("selection kept the previous provider's extender state")
 	}
 	m.applyExtender(gen, ExtenderReading{Source: SourceControlSocket, RoleState: "active"})
-	if m.showExtender || m.extender.Source != "" {
+	if m.hasExtender() || m.extender.Source != "" {
 		t.Fatal("a reading fetched for the previous selection was applied")
 	}
 	gen2, _, ok := m.wantExtender(clock.Now())
@@ -47,7 +47,7 @@ func TestTopExtenderPollIsAsyncAndGenerationGuarded(t *testing.T) {
 		t.Fatal("new selection did not request a poll")
 	}
 	m.applyExtender(gen2, ExtenderReading{Source: SourceControlSocket, RoleState: "active"})
-	if !m.showExtender || m.extender.RoleState != "active" {
+	if !m.hasExtender() || m.extender.RoleState != "active" {
 		t.Fatalf("current reading not applied: %+v", m.extender)
 	}
 	clock.Advance(100 * time.Millisecond)

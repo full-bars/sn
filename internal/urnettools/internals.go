@@ -31,6 +31,10 @@ type NodeInternals struct {
 	GCPauseP99Ms    float64 `json:"gc_pause_p99_ms"`
 	SchedLatP99Ms   float64 `json:"sched_latency_p99_ms"`
 	GCCPUFraction   float64 `json:"gc_cpu_fraction"`
+
+	// SigpipeRisk indicates whether the provider's unit is not protected against
+	// SIGPIPE restarts. Set by the model off the render path.
+	SigpipeRisk bool `json:"-"`
 }
 
 // GoroutineGroup is the goroutines parked in one place.

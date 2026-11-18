@@ -511,7 +511,7 @@ func TestParseTopFlags(t *testing.T) {
 		{[]string{"--interval"}, 0, nil, "needs a value"},
 	}
 	for _, c := range cases {
-		iv, rest, err := parseTopFlags(c.args)
+		iv, _, _, rest, err := parseTopFlags(c.args)
 		if c.err != "" {
 			if err == nil || !strings.Contains(err.Error(), c.err) {
 				t.Errorf("%v: err = %v, want %q", c.args, err, c.err)

@@ -24,6 +24,17 @@ const (
 	topProxiesCompactRows = 3
 	// topProxiesCompactMax is the largest pool drawn as one line.
 	topProxiesCompactMax = 3
+	// topProxiesGridRows is the total height of the Proxies box when the proxy
+	// heatmap grid replaces the bars: frame plus grid rows plus the legend.
+	topProxiesGridRows = 15
+	// proxyGridMinH is the minimum box height at which the grid is used; below
+	// it the bars stay.
+	proxyGridMinH = 8
+	// proxyGridMinW is the minimum box width at which the grid is used.
+	proxyGridMinW = 20
+	// topGraphMinRows is the height the throughput graphs must keep even when
+	// the Proxies box grows to show the grid.
+	topGraphMinRows = 4
 	// topEventsMin and topEventsMax bound the Events panel's content rows: it
 	// takes what the events need, so a quiet node does not reserve blank rows.
 	topEventsMin = 1
@@ -51,10 +62,24 @@ const (
 
 // render draws the whole screen into b.
 func (m *topModel) render(b *tui.Buffer) {
+	m.regions = m.regions[:0]
+	if m.overview {
+		m.drawOverview(b)
+		return
+	}
 	if !topMin.FitsRect(b.Rect()) {
 		m.drawCompact(b)
-	} else {
-		m.drawFull(b)
+		if m.help {
+			m.drawHelp(b)
+		}
+		if m.menu {
+			m.drawMenu(b)
+		}
+		return
+	}
+	m.drawFull(b)
+	if m.panel != "" {
+		m.drawDetails(b)
 	}
 	if m.help {
 		m.drawHelp(b)
@@ -81,9 +106,17 @@ func (m *topModel) drawFull(b *tui.Buffer) {
 	rows := tui.SplitRows(b.Rect(), tui.Fixed(1), tui.Flex(1), tui.Fixed(footerRows))
 	m.drawHeader(b.Sub(rows[0]))
 	m.drawFooter(b.Sub(rows[2]))
+	// The footer hints are clickable: record one region per hint.
+	for _, r := range footerHintRects(rows[2], m.footerHints()) {
+		if r.Rect.W > 0 {
+			m.record(r.Name, r.Rect)
+		}
+	}
 
-	cols := tui.SplitCols(rows[1], tui.Flex(1), tui.Fixed(topSideCols(rows[1].W)))
-	left := tui.SplitRows(cols[0], tui.Flex(1), tui.Fixed(m.proxiesRows()), tui.Fixed(m.eventsRows()))
+	m.contentRect = rows[1]
+	sideW := m.sideCols(rows[1].W)
+	cols := tui.SplitCols(rows[1], tui.Flex(1), tui.Fixed(sideW))
+	left := m.splitLeft(cols[0])
 	nowRows := topNowRows
 	if m.hasTraffic() {
 		nowRows = topNowRowsTraffic
@@ -92,7 +125,7 @@ func (m *topModel) drawFull(b *tui.Buffer) {
 	// internals and the column is tall enough, Resources shrinks to its three
 	// rows and Internals takes the rest.
 	resRows := m.resourceRows() + 2
-	withExtender := m.showExtender || m.extender.Source != ""
+	withExtender := m.hasExtender()
 	// The Extender box has priority over Internals: whether the extender is up and
 	// listening is what an operator opens top to check, so it never gives way. It
 	// gets its full height, or all the room there is, and Resources gives up rows
@@ -102,55 +135,88 @@ func (m *topModel) drawFull(b *tui.Buffer) {
 		resRows = max(cols[1].H-nowRows-topExtenderMinRows, topResourcesMinRows)
 	}
 	avail := max(cols[1].H-nowRows-resRows, 0)
-	extH := 0
+	extRows := 0
 	if withExtender && avail >= topExtenderMinRows {
-		extH = min(m.extenderRows(), avail)
+		extRows = min(m.extenderRows(), avail)
 	}
-	showExtender := extH > 0
-	withInternals := m.hasInternals() && avail-extH >= topInternalsRows
-	var side []tui.Rect
-	switch {
-	case showExtender:
-		side = tui.SplitRows(cols[1], tui.Fixed(nowRows), tui.Fixed(resRows), tui.Fixed(extH), tui.Flex(1))
-	case withInternals:
-		side = tui.SplitRows(cols[1], tui.Fixed(nowRows), tui.Fixed(resRows), tui.Flex(1))
-	default:
-		// Resources takes its content, not the rest of the column: a box of blank
-		// rows says nothing. What is left stays empty.
-		side = tui.SplitRows(cols[1], tui.Fixed(nowRows), tui.Fixed(min(resRows, max(cols[1].H-nowRows, 0))), tui.Flex(1))
+	showExtender := extRows >= topMinBoxRows
+	if !showExtender {
+		extRows = 0
 	}
-	box := func(r tui.Rect, title string) *tui.Buffer {
-		return tui.DrawBox(b.Sub(r), title, th.Frame, th.Border, th.Accent, th.ASCII)
+	withInternals := m.hasInternals() && avail-extRows >= topInternalsRows
+	m.nowRows, m.resRows, m.extRows = nowRows, resRows, extRows
+	m.showExtender, m.withInternals = showExtender, withInternals
+	side := m.splitSide(cols[1])
+	box := func(r tui.Rect, name, title string) *tui.Buffer {
+		return tui.DrawBox(b.Sub(r), title, th.Frame, th.Border, m.hoverStyle("title:"+name, th.Accent), th.ASCII)
 	}
 
 	sr := m.series()
+	secondGraphTitle := -1
 	if sr.total != nil && left[0].H >= topTwoGraphsMinRows {
 		graphs := tui.SplitRows(left[0], tui.Flex(1), tui.Flex(1))
-		m.drawGraph(box(graphs[0], m.throughputTitle("Billable", sr)), sr, sr.billable, sr.scaleB, sr.tailBillable, th.Graph)
-		m.drawGraph(box(graphs[1], m.throughputTitle("Total traffic", sr)), sr, sr.total, sr.scaleT, sr.tailTotal, th.Accent)
+		m.drawGraph(box(graphs[0], "graph", m.throughputTitle("Billable", sr)), sr, sr.billable, sr.scaleB, sr.tailBillable, th.Graph)
+		m.drawGraph(box(graphs[1], "graph", m.throughputTitle("Total traffic", sr)), sr, sr.total, sr.scaleT, sr.tailTotal, th.Accent)
+		secondGraphTitle = graphs[1].Y
 	} else {
 		title := "Throughput"
 		if sr.total != nil {
 			title = "Billable"
 		}
-		m.drawGraph(box(left[0], m.throughputTitle(title, sr)), sr, sr.billable, sr.scaleB, sr.tailBillable, th.Graph)
+		m.drawGraph(box(left[0], "graph", m.throughputTitle(title, sr)), sr, sr.billable, sr.scaleB, sr.tailBillable, th.Graph)
 	}
-	m.drawProxies(box(left[1], "Proxies"))
-	m.drawEvents(box(left[2], "Events"))
-	m.drawNow(box(side[0], "Now"))
-	m.drawResources(box(side[1], "Resources"))
-	at := 2
+	m.drawProxies(box(left[1], "proxies", "Proxies"))
+	m.drawEvents(box(left[2], "events", "Events"))
+	m.drawNow(box(side[0], "now", "Now"))
+	m.drawResources(box(side[1], "resources", "Resources"))
+	internalsAt := 2
 	if showExtender {
-		m.drawExtender(box(side[2], "Extender"))
-		at = 3
+		m.drawExtender(box(side[2], "extender", "Extender"))
+		internalsAt = 3
 	}
 	if withInternals {
 		title := "Internals"
 		if m.rt.showing {
 			title = "Goroutines"
 		}
-		m.drawInternals(box(side[at], title))
+		m.drawInternals(box(side[internalsAt], "internals", title))
 	}
+
+	// Hit regions: every box, its title row, and the dividers between them.
+	m.recordBox("graph", left[0])
+	if secondGraphTitle >= 0 {
+		m.record("title:graph", tui.Rect{X: left[0].X, Y: secondGraphTitle, W: left[0].W, H: 1})
+	}
+	m.recordBox("proxies", left[1])
+	m.recordBox("events", left[2])
+	m.recordBox("now", side[0])
+	m.recordBox("resources", side[1])
+	if showExtender {
+		m.recordBox("extender", side[2])
+	}
+	if withInternals {
+		m.recordBox("internals", side[internalsAt])
+	}
+	// The vertical divider between the main column and the side column.
+	m.record("side", tui.Rect{X: cols[1].X, Y: rows[1].Y, W: 1, H: rows[1].H})
+	// The horizontal dividers between the boxes of each column.
+	m.record("left:proxies", tui.Rect{X: left[0].X, Y: left[1].Y - 1, W: left[0].W, H: 1})
+	m.record("left:events", tui.Rect{X: left[0].X, Y: left[2].Y - 1, W: left[0].W, H: 1})
+	m.record("side:resources", tui.Rect{X: side[0].X, Y: side[1].Y - 1, W: side[0].W, H: 1})
+	if showExtender {
+		m.record("side:extender", tui.Rect{X: side[0].X, Y: side[2].Y - 1, W: side[0].W, H: 1})
+	}
+	if withInternals {
+		m.record("side:internals", tui.Rect{X: side[0].X, Y: side[internalsAt].Y - 1, W: side[0].W, H: 1})
+	}
+	// An operator hovering a divider sees it is draggable.
+	m.drawHover(b)
+}
+
+// recordBox adds the box and title regions of one drawn panel.
+func (m *topModel) recordBox(name string, r tui.Rect) {
+	m.record("box:"+name, r)
+	m.record("title:"+name, tui.Rect{X: r.X, Y: r.Y, W: r.W, H: 1})
 }
 
 func (m *topModel) drawHeader(h *tui.Buffer) {
@@ -174,8 +240,12 @@ func (m *topModel) drawHeader(h *tui.Buffer) {
 	h.Put("    "+clock+" ", x, 0, th.Dim)
 
 	// The node details give way (ellipsis) when the terminal is narrow; the
-	// verdict and clock keep their place.
+	// verdict and clock keep their place. The details area is the clickable
+	// provider tab, so a click cycles providers.
 	left := h.Put(" urnet-tools top", 0, 0, th.Accent)
+	if n := len(m.providers); n > 1 {
+		m.record("tab:provider", tui.Rect{X: left, Y: 0, W: max(rx-left, 0), H: 1})
+	}
 	details := "   " + topNodeLabel(m.provider())
 	if n := len(m.providers); n > 1 {
 		details += fmt.Sprintf(" [%d/%d]", m.cur+1, n)
@@ -183,7 +253,7 @@ func (m *topModel) drawHeader(h *tui.Buffer) {
 	if m.snap != nil {
 		details += "   " + orDash(m.snap.Version) + "   up " + tui.Duration(time.Duration(m.snap.UptimeSeconds*float64(time.Second)))
 	}
-	h.Put(tui.Truncate(details, rx-left-1, th.ASCII), left, 0, th.Dim)
+	h.Put(tui.Truncate(details, rx-left-1, th.ASCII), left, 0, m.hoverStyle("tab:provider", th.Dim))
 }
 
 func (m *topModel) drawFooter(f *tui.Buffer) {
@@ -210,7 +280,16 @@ func (m *topModel) drawFooter(f *tui.Buffer) {
 		}
 		return
 	}
-	f.Put(tui.Truncate(m.footerKeys(false), f.Width(), m.theme.ASCII), 0, 0, m.theme.Dim)
+	hints := m.footerHints()
+	// The drawn line and the hit map come from the same list, so a click lands
+	// where the operator sees the label.
+	x := 1
+	for i, h := range hints {
+		if i > 0 {
+			x += 3 // the gap between hints
+		}
+		x = f.Put(h.label, x, 0, m.hoverStyle(h.name, m.theme.Dim))
+	}
 }
 
 // footerKeys is the key line. compact uses single spaces so a one-line warning
@@ -352,6 +431,30 @@ func (m *topModel) proxiesRows() int {
 	return topProxiesRows
 }
 
+// hasProxyGridData reports whether the provider answered proxy_cells with a
+// non-empty grid. Without it the heatmap cannot draw and the panel keeps the
+// bars (a provider that predates the command, or a direct-only node).
+func (m *topModel) hasProxyGridData() bool {
+	return len(m.proxyCells) > 0
+}
+
+// proxiesBoxMode reports how the Proxies box of h rows by w cols should be
+// drawn: proxyBoxGrid (compact legend plus the heatmap grid) or proxyBoxBars
+// (the classic four bars). The box must be tall and wide enough for the grid
+// to read; anything smaller keeps the bars.
+func proxiesBoxMode(h, w int) int {
+	if h >= proxyGridMinH && w >= proxyGridMinW {
+		return proxyBoxGrid
+	}
+	return proxyBoxBars
+}
+
+// The two Proxies panel modes.
+const (
+	proxyBoxBars = iota
+	proxyBoxGrid
+)
+
 // eventsRows is the height of the Events panel: its content, at least one row
 // (which says there are none) and at most topEventsMax.
 func (m *topModel) eventsRows() int {
@@ -393,6 +496,11 @@ func (m *topModel) drawProxies(b *tui.Buffer) {
 	}
 	if b.Height() < topProxiesRows-2 {
 		m.drawProxiesCompact(b)
+		return
+	}
+	// Grid mode: the provider feeds proxy_cells and the box is tall enough.
+	if m.hasProxyGridData() && proxiesBoxMode(b.Height(), b.Width()) == proxyBoxGrid {
+		m.drawProxyGrid(b)
 		return
 	}
 	p := m.snap.Proxies
@@ -474,7 +582,7 @@ func (m *topModel) drawNow(b *tui.Buffer) {
 	th := m.theme
 	s := m.snap
 	if s == nil {
-		if !m.showExtender && m.extender.Source == "" {
+		if !m.hasExtender() {
 			b.Put("no data", 0, 0, th.Dim)
 			return
 		}
@@ -582,7 +690,7 @@ func (m *topModel) resourceRows() int {
 func (m *topModel) drawResources(b *tui.Buffer) {
 	th := m.theme
 	if m.snap == nil {
-		if !m.showExtender && m.extender.Source == "" {
+		if !m.hasExtender() {
 			b.Put("no data", 0, 0, th.Dim)
 			return
 		}
@@ -728,7 +836,11 @@ func (m *topModel) drawGoroutineGroups(b *tui.Buffer) {
 	}
 	b.Put(tui.Truncate(fmt.Sprintf("%d total", g.Total), b.Width(), th.ASCII), 0, 0, th.Dim)
 	const countW = 7
-	for i, grp := range g.Groups {
+	// The wheel moves the window down the list; the largest group stays on top.
+	m.gorHeight = max(b.Height()-1, 0)
+	m.gorScroll = min(m.gorScroll, max(0, len(g.Groups)-m.gorHeight))
+	start := m.gorScroll
+	for i, grp := range g.Groups[start:] {
 		y := i + 1
 		if y >= b.Height() {
 			break
@@ -889,7 +1001,7 @@ func (m *topModel) drawCompact(b *tui.Buffer) {
 			in.Put(tui.Spark(vals, in.Width(), th.ASCII), 0, 2, th.Graph)
 		}
 	}
-	if (m.showExtender || m.extender.Source != "") && in.Height() > 3 {
+	if m.hasExtender() && in.Height() > 3 {
 		in.Put(tui.Truncate(fmt.Sprintf("extender: %s (%s)", m.extender.RoleState, m.extender.Source), in.Width(), th.ASCII), 0, in.Height()-2, th.Dim)
 	}
 	if in.Height() > 3 {
@@ -920,6 +1032,9 @@ var helpLines = []string{
 	"u                switch units between GiB (binary) and GB (decimal)",
 	"m                menu: color theme and graph style",
 	"M                mouse on/off (Shift+drag selects text in most terminals)",
+	"t                cycle graph history: 10m, 1h, 24h",
+	"o                show all providers",
+	"a / i / v        alerts / resource gauges / carriers",
 	"g                list where goroutines are parked",
 	"billed, moved    billable and total bytes this session",
 	"?                show or hide this help",

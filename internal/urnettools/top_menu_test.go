@@ -3,6 +3,7 @@ package urnettools
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -210,13 +211,13 @@ func TestTopMenuNoPathMeansNoPersistence(t *testing.T) {
 func TestTopSettingsRoundTripAndForgiveness(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "a", "top.conf")
-	if got := loadTopSettings(path); got != (topSettings{}) {
+	if got := loadTopSettings(path); !reflect.DeepEqual(got, topSettings{}) {
 		t.Fatalf("missing file = %+v", got)
 	}
 	if err := saveTopSettings(path, topSettings{Theme: "dracula", Graph: "tty"}); err != nil {
 		t.Fatal(err)
 	}
-	if got := loadTopSettings(path); got != (topSettings{Theme: "dracula", Graph: "tty"}) {
+	if got := loadTopSettings(path); !reflect.DeepEqual(got, topSettings{Theme: "dracula", Graph: "tty"}) {
 		t.Fatalf("round trip = %+v", got)
 	}
 	// No temp files left beside it.
@@ -226,11 +227,11 @@ func TestTopSettingsRoundTripAndForgiveness(t *testing.T) {
 	}
 	// Garbage, stale names and comments are ignored, valid lines kept.
 	os.WriteFile(path, []byte("# hi\n\nnonsense\ntheme = vaporwave\ngraph = \"block\"\nunknown = 1\ntheme=nord\n"), 0o644)
-	if got := loadTopSettings(path); got != (topSettings{Theme: "nord", Graph: "block"}) {
+	if got := loadTopSettings(path); !reflect.DeepEqual(got, topSettings{Theme: "nord", Graph: "block"}) {
 		t.Fatalf("forgiving read = %+v", got)
 	}
 	os.WriteFile(path, []byte{0xff, 0x00, '='}, 0o644)
-	if got := loadTopSettings(path); got != (topSettings{}) {
+	if got := loadTopSettings(path); !reflect.DeepEqual(got, topSettings{}) {
 		t.Fatalf("binary garbage = %+v", got)
 	}
 }
