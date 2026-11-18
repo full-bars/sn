@@ -33,7 +33,8 @@ func cmdTop(args []string) error {
 	// on a box with no provider. It is peeled off before the real parsers.
 	demo, args := stripDemoFlag(args)
 	showAll, args := stripAllFlag(args)
-	interval, targetArgs, err := parseTopFlags(args)
+	copyOnQuit, plain, topArgs := stripTopCopyFlags(args)
+	interval, targetArgs, err := parseTopFlags(topArgs)
 	if err != nil {
 		return err
 	}
@@ -104,6 +105,7 @@ func cmdTop(args []string) error {
 		}
 	}
 	m := newTopModel(providers, cur, interval, tui.ThemeFromEnv(os.Getenv), time.Now)
+	m.copyOnQuit, m.copyPlain = copyOnQuit, plain
 	if !demo && systemdDiscoveryCutShort {
 		m.discoveryNote = discoveryCutShortWarning(len(providers))
 	} else if hiddenStopped > 0 {
@@ -120,7 +122,35 @@ func cmdTop(args []string) error {
 		// stays out of it — it is a sample, not the user's box.
 		applySavedTopSettings(m)
 	}
-	return runTop(ctx, scr, m, src, topTick)
+	if err := runTop(ctx, scr, m, src, topTick); err != nil {
+		return err
+	}
+	if m.copyText != "" {
+		fmt.Println(m.copyText)
+	}
+	if m.copyErr != nil {
+		fmt.Fprintln(os.Stderr, "could not write the copy:", m.copyErr)
+	}
+	if m.copyPath != "" {
+		fmt.Fprintf(os.Stderr, "copy written to %s\n", m.copyPath)
+	}
+	return nil
+}
+
+// stripTopCopyFlags removes copy flags before target parsing while leaving the
+// original argument list intact for cross-user re-execution.
+func stripTopCopyFlags(args []string) (copyOnQuit, plain bool, rest []string) {
+	for _, arg := range args {
+		switch arg {
+		case "--copy":
+			copyOnQuit = true
+		case "--plain":
+			plain = true
+		default:
+			rest = append(rest, arg)
+		}
+	}
+	return copyOnQuit, plain, rest
 }
 
 // stripAllFlag removes --all from args and reports whether it was there. It runs

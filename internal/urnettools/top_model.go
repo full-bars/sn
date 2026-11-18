@@ -205,6 +205,10 @@ type topModel struct {
 	windowB, windowT           topWindow
 	windowScaleB, windowScaleT topScale
 
+	copyOnQuit, copyPlain bool
+	copyText, copyPath    string
+	copyErr               error
+
 	// rt is the runtime (Internals) panel's state.
 	rt topRuntime
 
