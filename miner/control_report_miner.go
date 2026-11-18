@@ -338,6 +338,7 @@ func collectMinerResources() snapshotResources {
 		resources.OpenFDs = &openCopy
 		resources.FDLimit = &limitCopy
 	}
+	collectMinerPlatformResources(&resources)
 	return resources
 }
 

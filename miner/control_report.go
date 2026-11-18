@@ -145,6 +145,10 @@ type snapshotResources struct {
 	Goroutines     int     `json:"goroutines"`
 	OpenFDs        *int    `json:"open_fds,omitempty"`
 	FDLimit        *int    `json:"fd_limit,omitempty"`
+	Threads        *uint64 `json:"threads,omitempty"`
+	TasksMax       *uint64 `json:"tasks_max,omitempty"`
+	SwapUsedBytes  *uint64 `json:"swap_used_bytes,omitempty"`
+	SwapTotalBytes *uint64 `json:"swap_total_bytes,omitempty"`
 }
 
 // nodeInternals is the reply to "internals".
