@@ -161,6 +161,9 @@ func cmdStart(args []string, force, dryRun bool) error {
 	}
 	p, err := selectLifecycleTarget("start", args, force, dryRun)
 	if err != nil {
+		if handled, startErr := startInstalledDefaultAfterDiscoveryTimeout(args, dryRun, err); handled {
+			return startErr
+		}
 		return err
 	}
 	// -n/--dry-run is documented "safe anywhere": print the plan, do
@@ -189,6 +192,65 @@ func cmdStart(args []string, force, dryRun bool) error {
 	fmt.Printf("started %s\n", providerLabel(p))
 	return nil
 }
+
+// startInstalledDefaultAfterDiscoveryTimeout handles the case where the
+// bounded systemd inventory scan timed out before finding any providers. The
+// installer has a stable default user unit name, so a plain `start` can still
+// act on it when its unit file is present. This is deliberately limited to
+// Linux, no explicit target, and the known installed unit; other commands
+// retain the incomplete-inventory error rather than guessing at a target.
+func startInstalledDefaultAfterDiscoveryTimeout(args []string, dryRun bool, selectionErr error) (bool, error) {
+	if runtime.GOOS != "linux" || !systemdDiscoveryCutShort || selectionErr == nil || selectionErr.Error() != noProvidersError().Error() {
+		return false, nil
+	}
+	target, err := guardLifecycleArgs("start", args)
+	if err != nil || hasExplicitTarget(target) || !defaultUserUnitInstalledFn() {
+		return false, nil
+	}
+	if dryRun {
+		fmt.Println("[dry-run] would start urnetwork.service (user unit; systemd discovery timed out)")
+		return true, nil
+	}
+	fmt.Println("starting urnetwork.service (systemd discovery timed out)...")
+	if err := startDefaultUserUnitFn(); err != nil {
+		fmt.Printf("FAILED to start urnetwork.service: %v\n", err)
+		return true, err
+	}
+	fmt.Println("started urnetwork.service")
+	return true, nil
+}
+
+var startDefaultUserUnitFn = func() error {
+	cmd := exec.Command("systemctl", "--user", "start", "urnetwork.service")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+var defaultUserUnitInstalledFn = defaultUserUnitInstalled
+
+func defaultUserUnitInstalled() bool {
+	configHome := os.Getenv("XDG_CONFIG_HOME")
+	if configHome == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return false
+		}
+		configHome = filepath.Join(home, ".config")
+	}
+	for _, dir := range []string{
+		filepath.Join(configHome, "systemd", "user"),
+		"/etc/systemd/user",
+		"/usr/lib/systemd/user",
+		"/lib/systemd/user",
+	} {
+		if info, err := os.Stat(filepath.Join(dir, "urnetwork.service")); err == nil && info.Mode().IsRegular() {
+			return true
+		}
+	}
+	return false
+}
+
 func cmdStop(args []string, force, dryRun bool) error {
 	if handled, err := openrcRouteLifecycle("stop", args, force, dryRun); handled {
 		return err
