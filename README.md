@@ -36,12 +36,31 @@ Windows (PowerShell):
 irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 | iex
 ```
 
-FreeBSD has its own installer, `scripts/Provider_Install_FreeBSD.sh`, described in [FreeBSD](docs/FreeBSD.md). OpenBSD has `scripts/Provider_Install_OpenBSD.sh`, described in [OpenBSD](docs/OpenBSD.md). Alpine with OpenRC uses the Linux command from a root shell, see [OpenRC](docs/OpenRC.md).
+**😈 FreeBSD (rc.d)**
+
+```sh
+fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_FreeBSD.sh && \
+  sudo sh urnet-install.sh install
+```
+
+The installer installs the provider and an `rc.d` service. See [FreeBSD](docs/FreeBSD.md).
+
+**🐡 OpenBSD (rc.d)**
+
+Install `jq` or `python3` first. Run this as a regular user with configured `doas` or `sudo` access.
+
+```sh
+ftp -o urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_OpenBSD.sh && \
+  sh urnet-install.sh install
+```
+
+The installer installs the provider and an `rc.d` service managed by `rcctl`. See [OpenBSD](docs/OpenBSD.md).
+
+Alpine with OpenRC uses the Linux command from a root shell. See [OpenRC](docs/OpenRC.md).
 
 After installing, authenticate and load a proxy list:
 
-```bash
-source ~/.bashrc
+```sh
 urnetwork auth
 urnet-tools proxy add ~/proxies.txt
 urnet-tools proxy refresh
