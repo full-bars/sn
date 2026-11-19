@@ -11,6 +11,8 @@ A proxied identity sends its traffic through a SOCKS5 proxy. TCP works through a
 
 The network's quality checks include an HTTP/3 leg. An identity whose proxy cannot relay UDP can fail that leg and fall back to TCP. It can still look healthy over TCP. It can also fall out of the quality bucket and receive less traffic. A proxy that relays UDP keeps the identity eligible for that traffic.
 
+This is a financial incentive. A connection that fails the UDP check does not qualify for the quality bucket. The network promotes quality bucket nodes and sends them more traffic than an otherwise equal node that fails the check. More traffic means more earnings. Supporting UDP is worth money.
+
 ### What the provider checks
 
 The provider checks the relay the first time an identity tries HTTP/3 or client UDP. It remembers the result and checks again later. The check reports one of four states:
@@ -24,7 +26,7 @@ For `ok` and `unknown`, the provider allows HTTP/3 and client UDP. For `no-relay
 
 ### Choosing a proxy
 
-Choose a SOCKS5 proxy that relays UDP and uses the same exit address for UDP and TCP. Proxied identities do not carry UDP to IPv6 destinations.
+Choose a SOCKS5 proxy that relays UDP and uses the same exit address for UDP and TCP. If the logs show `no-relay` for a proxy, ask the proxy provider for UDP ASSOCIATE support, or replace the proxy. Proxied identities do not carry UDP to IPv6 destinations.
 
 ### Seeing the result
 
