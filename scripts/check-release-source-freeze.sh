@@ -28,7 +28,9 @@ release_repos=(sn server connect sdk glog goidenticons proxy userwireguard warp 
 # A module is live when a released binary or library builds from it: a release
 # build's main module, or a module whose packages one links. connect/sctp backs
 # every github.com/pion/sctp replacement, and SN's substrate RPC fork backs
-# SN's and the server's replacement of the centrifuge client.
+# SN's and the server's replacement of the centrifuge client. SN's patched
+# go-yamux copy backs the replacement of the libp2p yamux module that
+# connect's gossip node links.
 live_modules=(
   connect
   connect/sctp
@@ -42,6 +44,7 @@ live_modules=(
   server
   sn
   sn/third_party/go-substrate-rpc-client
+  sn/third_party/go-yamux
   sn/third_party/npipe
   userwireguard
   warp
