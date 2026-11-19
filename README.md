@@ -179,4 +179,4 @@ Top-level files: `WHITEPAPER.md`, `VALIDATOR.md`, `SUBTENSOR-COMPATIBILITY.md`, 
 
 This repository tracks [`urfoundation/sn`](https://github.com/urfoundation/sn), and the subnet design, contracts, miner and validator originate there. The changes this fork makes on top are listed in [FORK_CHANGES.md](FORK_CHANGES.md).
 
-Upstream's [`LICENSE`](https://github.com/urfoundation/sn/blob/main/LICENSE) applies to the code inherited from it. Third-party code under `third_party/` keeps its own license.
+Upstream's [`LICENSE`](https://github.com/urfoundation/sn/blob/main/LICENSE) applies to the code inherited from it. Third-party code under `third_party/` keeps its own license. The patched `third_party/go-yamux` module retains its MPL-2.0 and BSD license files.

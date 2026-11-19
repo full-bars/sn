@@ -13,6 +13,10 @@ This document tracks all modifications made to the upstream `sn` (connect v2026)
 
 ---
 
+## Gossip stream memory refusals
+
+`third_party/go-yamux` contains a patched yamux v5.1.0 module. A refused incoming stream memory reservation resets that stream while the session stays open.
+
 ## Current extender setup
 
 The host setup command lives in `internal/urnettools/`; the provider is built from `cli/miner/` and `miner/`. Setup previews platform and firewall actions before confirmation, checks for plan drift and preserves existing file capabilities when adding Linux bind privilege. On Linux, setup also offers a sysctl route (`net.ipv4.ip_unprivileged_port_start=443` in a drop-in) as an alternative to the file capability. It keeps a prior drop-in as `.pre-urnetwork`, reads persistence in systemd order and binds a sudo re-run to the provider it inspected. Status reports the active route, and the updater skips the capability check while the route is active. Notes: [releases/v2026.11.9-1094091330-sn.md](releases/v2026.11.9-1094091330-sn.md). FreeBSD setup is untested this release and prints manual commands only. UDP 53 is optional and user-managed. See [Extender](docs/Extender.md).

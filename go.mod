@@ -230,6 +230,9 @@ replace github.com/urnetwork/glog => github.com/urnetwork/glog v1.2.10-0.2026092
 
 replace github.com/urnetwork/goidenticons => github.com/urnetwork/goidenticons v0.0.0-20260925081816-06eb779a691e
 
+// Keep yamux stream refusals isolated to the affected stream.
+replace github.com/libp2p/go-yamux/v5 => ./third_party/go-yamux
+
 // Retain pending RPC replies when a disconnect precedes write completion.
 // The local source and its upstream provenance are tracked in this repository.
 replace github.com/centrifuge/go-substrate-rpc-client/v4 => ./third_party/go-substrate-rpc-client
