@@ -26,7 +26,7 @@ func newExtenderSwitchCmd(action string) *cobra.Command {
 	if action == "off" {
 		aliases = []string{"disable"}
 	}
-	return &cobra.Command{Use: action + " [target]", Aliases: aliases, Short: "turn the extender role " + action, DisableFlagParsing: true, RunE: func(cmd *cobra.Command, args []string) error {
+	return &cobra.Command{Use: action + " [target]", Aliases: aliases, Short: "turn the extender role " + action, Long: "Turn the direct slot extender role " + action + " and save the setting for later starts.", Example: "  urnet-tools extender " + action, DisableFlagParsing: true, RunE: func(cmd *cobra.Command, args []string) error {
 		if hasHelpFlag(args) {
 			return cmd.Help()
 		}

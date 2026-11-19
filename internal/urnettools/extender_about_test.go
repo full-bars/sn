@@ -29,7 +29,7 @@ func TestExtenderRootHelpListsAbout(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out.String(), "extender <status|setup|about>") {
+	if !strings.Contains(out.String(), "extender <status|setup|about|on|off>") {
 		t.Errorf("root help does not list extender about: %s", out.String())
 	}
 }
