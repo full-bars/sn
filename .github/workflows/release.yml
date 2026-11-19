@@ -446,8 +446,9 @@ jobs:
 
           # Universal tarball — scripts match this via ^urnetwork-provider-
           cp scripts/Provider_Install_Linux.sh release_tmp/urnet-tools
+          scripts/stage-licenses.sh release_tmp/LICENSES
           cd release_tmp
-          tar -czf ../urnetwork-provider-${VERSION}.tar.gz linux/ darwin/ windows/ freebsd/ openbsd/ urnet-tools
+          tar -czf ../urnetwork-provider-${VERSION}.tar.gz linux/ darwin/ windows/ freebsd/ openbsd/ urnet-tools LICENSES
           cd ..
 
           # Per-platform tarballs — flat (no subdirs), each with its own script
@@ -456,6 +457,7 @@ jobs:
           for plat in linux-amd64 linux-arm64; do
             arch="${plat#linux-}"
             mkdir -p "per-platform/${plat}"
+            cp -R release_tmp/LICENSES "per-platform/${plat}/"
             cp "release_tmp/linux/${arch}/provider" "per-platform/${plat}/"
             cp scripts/Provider_Install_Linux.sh "per-platform/${plat}/urnet-tools"
             cd "per-platform/${plat}" && tar -czf "../../urnetwork-provider-${VERSION}-${plat}.tar.gz" * && cd ../..
@@ -464,6 +466,7 @@ jobs:
           for plat in darwin-amd64 darwin-arm64; do
             arch="${plat#darwin-}"
             mkdir -p "per-platform/${plat}"
+            cp -R release_tmp/LICENSES "per-platform/${plat}/"
             cp "release_tmp/darwin/${arch}/provider" "per-platform/${plat}/"
             cp scripts/Provider_Install_Mac.sh "per-platform/${plat}/urnet-tools"
             cd "per-platform/${plat}" && tar -czf "../../urnetwork-provider-${VERSION}-${plat}.tar.gz" * && cd ../..
@@ -472,6 +475,7 @@ jobs:
           for plat in windows-amd64 windows-arm64; do
             arch="${plat#windows-}"
             mkdir -p "per-platform/${plat}"
+            cp -R release_tmp/LICENSES "per-platform/${plat}/"
             cp "release_tmp/windows/${arch}/provider.exe" "per-platform/${plat}/"
             cp "tool_tmp/windows/${arch}/urnet-tools" "per-platform/${plat}/urnet-tools.exe"
             cd "per-platform/${plat}" && tar -czf "../../urnetwork-provider-${VERSION}-${plat}.tar.gz" * && cd ../..
@@ -480,6 +484,7 @@ jobs:
           for plat in freebsd-amd64 freebsd-arm64; do
             arch="${plat#freebsd-}"
             mkdir -p "per-platform/${plat}"
+            cp -R release_tmp/LICENSES "per-platform/${plat}/"
             cp "release_tmp/freebsd/${arch}/provider" "per-platform/${plat}/"
             cp scripts/Provider_Install_FreeBSD.sh "per-platform/${plat}/urnet-tools"
             cd "per-platform/${plat}" && tar -czf "../../urnetwork-provider-${VERSION}-${plat}.tar.gz" * && cd ../..
@@ -488,6 +493,7 @@ jobs:
           for plat in openbsd-amd64 openbsd-arm64; do
             arch="${plat#openbsd-}"
             mkdir -p "per-platform/${plat}"
+            cp -R release_tmp/LICENSES "per-platform/${plat}/"
             cp "release_tmp/openbsd/${arch}/provider" "per-platform/${plat}/"
             cp scripts/Provider_Install_OpenBSD.sh "per-platform/${plat}/urnet-tools"
             cd "per-platform/${plat}" && tar -czf "../../urnetwork-provider-${VERSION}-${plat}.tar.gz" * && cd ../..
@@ -496,7 +502,7 @@ jobs:
           rm -rf per-platform
 
           # Monitoring bundle: Prometheus + Grafana compose stack and dashboard
-          tar -czf urnetwork-monitoring-${VERSION}.tar.gz monitoring
+          tar -czf urnetwork-monitoring-${VERSION}.tar.gz monitoring -C release_tmp LICENSES
 
           echo "Created release assets:"
           ls -lh urnetwork-provider-*.tar.gz urnetwork-monitoring-*.tar.gz
@@ -519,8 +525,11 @@ jobs:
             cp "$src" "per-miner/${plat}/${member}"
             chmod +x "per-miner/${plat}/${member}"
             archive="urnetwork-miner-${VERSION}-${plat}.tar.gz"
-            tar -czf "$archive" -C "per-miner/${plat}" "${member}"
-            test "$(tar -tzf "$archive")" = "${member}" || { echo "unexpected members in ${archive}" >&2; exit 1; }
+            cp -R release_tmp/LICENSES "per-miner/${plat}/"
+            tar -czf "$archive" -C "per-miner/${plat}" "${member}" LICENSES
+            tar -tzf "$archive" | sort > "per-miner/${plat}.members"
+            (printf "%s\n" "${member}"; tar -cf - -C release_tmp LICENSES | tar -tf -) | sort > "per-miner/${plat}.expected"
+            cmp "per-miner/${plat}.members" "per-miner/${plat}.expected"
           done
           rm -rf per-miner
           echo "Created miner assets:"
