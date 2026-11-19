@@ -121,6 +121,33 @@ func providerExtenderControlLatest() *providerExtenderControlReading {
 	return &providerExtenderControlReading{providerExtenderObservation: extenderObservationState, providerExtenderDetail: detail}
 }
 
+// providerExtenderControlForState includes operator intent even before the
+// direct slot has published an observation.
+func providerExtenderControlForState(state *controlState) *providerExtenderControlReading {
+	reason := ""
+	if !extenderSettingEnabled(state) {
+		reason = "turned off by the extender setting. Turn it back on with: urnet-tools extender on"
+	} else if !isDirectEnabled() {
+		reason = "direct providing is disabled, and the extender only runs on the direct slot. Turn direct back on with: provider direct on"
+	} else if globalExtenderToggle.budgetWithheld() {
+		reason = "activation budget is holding the extender role"
+	}
+	reading := providerExtenderControlLatest()
+	if reason == "" {
+		return reading
+	}
+	if reading == nil {
+		reading = &providerExtenderControlReading{}
+	}
+	reading.Known = true
+	reading.Enabled = false
+	reading.Listening = false
+	reading.ActivatedV4 = false
+	reading.ActivatedV6 = false
+	reading.OffReason = reason
+	return reading
+}
+
 func providerExtenderControlCarriers() []extenderCarrierReading {
 	extenderObservationLock.Lock()
 	var base []extenderCarrierReading

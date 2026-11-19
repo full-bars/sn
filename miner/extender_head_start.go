@@ -246,7 +246,7 @@ func extenderHeadStartWait(ctx context.Context, sources extenderHeadStartSources
 		// A known disabled extender never activates, and the direct launch
 		// publishes the budget's withheld verdict before the role is off for
 		// the same reason: neither will complete an attempt.
-		if observation.Known && !observation.Enabled {
+		if !extenderSettingEnabled(globalControlState) || (observation.Known && !observation.Enabled) {
 			return extenderHeadStartResult{end: extenderHeadStartDisabled, elapsed: time.Since(start)}.finish()
 		}
 		if extenderHeadStartRole.Load() == extenderHeadStartRoleWithheld {

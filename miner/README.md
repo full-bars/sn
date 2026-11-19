@@ -98,7 +98,10 @@ checks again every five minutes.
 - `--port` serves the status of every operator. The providers themselves run
   without a status port.
 - With `--all-operators`, the first provider process to take TCP 443 serves the
-  extender for the host.
+  extender for the host. The role is on by default. `urnet-tools extender off`
+  stops it live and saves the choice; `urnet-tools extender on` starts it again
+  when direct providing and the activation budget allow it. Other slots keep
+  providing.
 
 
 ## Hotkey payout across operators

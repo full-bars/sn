@@ -118,6 +118,7 @@ type controlResponse struct {
 
 // ExtenderObservation matches the provider's observation wire format.
 type ExtenderObservation struct {
+	OffReason             string                 `json:"off_reason,omitempty"`
 	Known                 bool                   `json:"known"`
 	Enabled               bool                   `json:"enabled"`
 	Listening             bool                   `json:"listening"`
@@ -154,6 +155,7 @@ type pendingOp struct {
 // controlKeyCanonical maps user-facing CLI keys (both kebab-case and snake_case)
 // to the canonical key name accepted by the provider's control socket.
 var controlKeyCanonical = map[string]string{
+	"extender":                    "extender",
 	"node-name":                   "node_name",
 	"node_name":                   "node_name",
 	"fast-auth":                   "fast_auth",
@@ -251,7 +253,7 @@ func validateControlValue(canonicalKey, value string) error {
 		if !validPprofControlValue(value) {
 			return fmt.Errorf("pprof: must be on, off or a loopback ip:port such as 127.0.0.1:6060 (got %q)", value)
 		}
-	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send":
+	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send":
 		switch strings.ToLower(value) {
 		case "on", "off":
 		default:

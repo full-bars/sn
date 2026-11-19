@@ -52,6 +52,7 @@ type extenderCarrierBytesReading struct {
 }
 
 type providerExtenderDetail struct {
+	OffReason             string                   `json:"off_reason,omitempty"`
 	Ipv4                  string                   `json:"ipv4,omitempty"`
 	Ipv6                  string                   `json:"ipv6,omitempty"`
 	LastActivationError   string                   `json:"last_activation_error,omitempty"`

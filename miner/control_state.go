@@ -74,6 +74,7 @@ type controlState struct {
 // write can actually do in this build, and node_name/ip_version in particular
 // are persisted but have no consumer here.
 var controlKeys = map[string]bool{
+	"extender":                    true,
 	"node_name":                   true,
 	"fast_auth":                   true,
 	"baseline":                    true,

@@ -47,6 +47,7 @@ type ExtenderCarrierStats struct {
 type ExtenderReading struct {
 	Source                string
 	RoleState             string
+	OffReason             string
 	Bound                 bool
 	ActivatedV4           bool
 	ActivatedV6           bool
@@ -151,7 +152,7 @@ func queryExtenderFromSocket(p Provider) (*ExtenderReading, error) {
 		}
 	}
 	return &ExtenderReading{
-		Source: SourceControlSocket, RoleState: roleState, Bound: ex.Listening,
+		Source: SourceControlSocket, RoleState: roleState, OffReason: ex.OffReason, Bound: ex.Listening,
 		ActivatedV4: ex.ActivatedV4, ActivatedV6: ex.ActivatedV6,
 		Ipv4: ex.Ipv4, Ipv6: ex.Ipv6, LastRefusal: ex.LastActivationError,
 		DnsPorts: ex.DnsPorts, ConnectionCount: ex.ConnectionCount,
@@ -187,6 +188,9 @@ func formatExtenderBlock(w io.Writer, reading ExtenderReading) {
 		return
 	}
 	fmt.Fprintf(w, "\nExtender:\n  Source:            %s\n  Role state:        %s\n", reading.Source, reading.RoleState)
+	if reading.OffReason != "" {
+		fmt.Fprintf(w, "  Reason:            %s\n", reading.OffReason)
+	}
 	if reading.BindRoute != "" {
 		fmt.Fprintf(w, "  Port route:        %s\n", reading.BindRoute)
 	}

@@ -1521,7 +1521,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	var extenderGate *extenderActivationGate
 	if _, directPresent := directSlotIndex(providers); directPresent {
 		extenderGate = newExtenderActivationGate()
-		if isDirectEnabled() {
+		if isDirectEnabled() && extenderSettingEnabled(globalControlState) {
 			extenderGate.decideAtStart()
 		}
 	}
@@ -1892,19 +1892,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// it as soon as the budget allows a post (sdk HoldProvideExtenderSession).
 		extenderRoleCapable := proxySettings == nil && extenderGate != nil
 		settings.ProvideExtenderEnabled = extenderRoleCapable
+		// The toggle applies the budget before allowing the role to start.
+		settings.DefaultProvideExtender = false
 		if extenderRoleCapable {
 			// The activation loop's pacing survives a restart in the provider
 			// state store (extender_pacing_store.go), so a restarted process
 			// does not post every family at once.
 			settings.ExtenderPacingStore = extenderPacingStore{}
 		}
-		extenderRoleAllowed := !extenderRoleCapable || extenderGate.allowLaunch()
-		if proxySettings == nil {
-			// The startup head start is waiting on this verdict: a role the
-			// activation budget withheld will never complete an attempt, so
-			// the hold ends now instead of running out its cap
-			// (extender_head_start.go).
-			publishExtenderHeadStartRole(extenderRoleCapable && extenderRoleAllowed)
+		if proxySettings == nil && (!extenderRoleCapable || !extenderSettingEnabled(globalControlState)) {
+			publishExtenderHeadStartRole(false)
 		}
 		// A proxied identity runs one family-agnostic transport, not the
 		// v4-pinned/v6-pinned/standby group: a pinned transport dials from
@@ -1963,17 +1960,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			}
 			return err
 		}
-		if extenderRoleCapable && !extenderRoleAllowed {
-			// The budget withheld the post at launch. Hold the role and ask
-			// again on a timer: otherwise this launch keeps the extender off
-			// for the whole process, which a start inside the window would
-			// turn into hours.
-			device.HoldProvideExtenderSession(true)
-			defer startExtenderBudgetRecheck(proxyCtx, device, extenderGate.allowLaunch)()
-		}
 		defer func() {
 			returnErr = errors.Join(returnErr, device.CloseAndWait(context.Background()))
 		}()
+		if extenderRoleCapable {
+			defer globalExtenderToggle.attach(device, extenderGate)()
+		}
 		if extenderRoleCapable {
 			// A hot swap releases the carrier ports for its successor, in place
 			// or by baton (extender_handover.go). Registered after the close
@@ -2360,14 +2352,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if directLaunch != nil {
 		launchSlot(*directLaunch)
 	}
-	extenderHeadStartWait(ctx, extenderHeadStartSources{
-		directSlot:       directLaunch != nil,
-		directEnabled:    directLaunch != nil && isDirectEnabled(),
-		hotSwapCandidate: self.hotSwapCandidate,
-		proxies:          len(proxyLaunchSlots),
-		legacyAdopted:    len(legacyImport.adopted),
-		storeOpen:        providerStoreOpenDuration(),
-	})
+	if extenderSettingEnabled(globalControlState) {
+		extenderHeadStartWait(ctx, extenderHeadStartSources{
+			directSlot:       directLaunch != nil,
+			directEnabled:    directLaunch != nil && isDirectEnabled(),
+			hotSwapCandidate: self.hotSwapCandidate,
+			proxies:          len(proxyLaunchSlots),
+			legacyAdopted:    len(legacyImport.adopted),
+			storeOpen:        providerStoreOpenDuration(),
+		})
+	} else {
+		extenderHeadStartSkip(extenderHeadStartDisabled, "extender role off")
+	}
 	for _, slot := range proxyLaunchSlots {
 		launchSlot(slot)
 	}

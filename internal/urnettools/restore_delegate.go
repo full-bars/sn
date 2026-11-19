@@ -245,6 +245,7 @@ var setKeyFiles = map[string]string{
 
 // setKeyHelps describes each key for `set help` / usage.
 var setKeyHelps = []string{
+	"  extender             on|off   extender role (default on)",
 	"  node-name           <string>      node name reported to the fleet (default: hostname). The miner has no node label: it persists this value but never sends it, so it has no effect there",
 	"  fast-auth           on|off        bypass auth rate limiter",
 	"  self-heal           on|off        dead proxy auto-cleanup & load gate",
@@ -283,7 +284,7 @@ var setKeyHelps = []string{
 // every identity instead of disabling it.
 func treatsOffAsClear(canonicalKey string) bool {
 	switch canonicalKey {
-	case "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3", "pprof":
+	case "extender", "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3", "pprof":
 		return false
 	}
 	return true

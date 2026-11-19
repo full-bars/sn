@@ -352,6 +352,7 @@ func formerValue(old string, had bool) string {
 // derives its answer from this membership, so a key cannot be live here and
 // restart-required there.
 var controlLiveEffectKeys = map[string]bool{
+	"extender":                    true,
 	"gomemlimit":                  true,
 	"gogc":                        true,
 	"h1_plus":                     true,
@@ -461,6 +462,7 @@ func controlNeedsRestart(key string) bool {
 // restore the same off that a state with no opinion resolves to, so it is
 // declared here rather than in a second table with the same value.
 var controlLiveDefaults = map[string]string{
+	"extender": "on",
 	// Zero is a zero-byte limit to the Go runtime, not "unlimited": the apply
 	// path maps any non-positive value to math.MaxInt64.
 	"gomemlimit": "0",
@@ -579,7 +581,7 @@ func validateControlValue(key, value string) error {
 		default:
 			return fmt.Errorf("ip-version: must be dual, ipv4, ipv6 or legacy (got %q)", value)
 		}
-	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "h1_plus":
+	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "h1_plus":
 		switch valLower {
 		case "on", "off":
 		default:
@@ -876,10 +878,10 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		// Status only: an unreadable measurement is reported as the zero
 		// value here and nowhere written back.
 		hostCap, _ := readHostCapability()
-		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap, HostCapability: &hostCap, Extender: providerExtenderControlLatest()}
+		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap, HostCapability: &hostCap, Extender: providerExtenderControlForState(state)}
 
 	case "extender":
-		return controlResponse{OK: true, Extender: providerExtenderControlLatest()}
+		return controlResponse{OK: true, Extender: providerExtenderControlForState(state)}
 
 	case "audit":
 		switch req.Action {
@@ -1163,6 +1165,8 @@ func applyControlLiveSideEffect(key, value string) error {
 		case target.Clear:
 			tlog("⚙️ [control] applied gogc=%d (off restores the startup value)\n", percent)
 		}
+	case "extender":
+		globalExtenderToggle.reconcile(strings.EqualFold(value, "on"))
 	case "baseline":
 		// Sampling is a goroutine that checks the flag each tick, so turning it
 		// off takes effect on the next tick and needs no restart and no signal.

@@ -17,8 +17,42 @@ func newExtenderCmd() *cobra.Command {
 		Long:    "Inspect the live extender role or configure host privileges once.",
 		Example: "  urnet-tools extender status\n  urnet-tools extender setup",
 	}
-	cmd.AddCommand(newExtenderStatusCmd(), newExtenderSetupCmd(), newExtenderAboutCmd())
+	cmd.AddCommand(newExtenderStatusCmd(), newExtenderSetupCmd(), newExtenderAboutCmd(), newExtenderSwitchCmd("on"), newExtenderSwitchCmd("off"))
 	return cmd
+}
+
+func newExtenderSwitchCmd(action string) *cobra.Command {
+	aliases := []string{"enable"}
+	if action == "off" {
+		aliases = []string{"disable"}
+	}
+	return &cobra.Command{Use: action + " [target]", Aliases: aliases, Short: "turn the extender role " + action, DisableFlagParsing: true, RunE: func(cmd *cobra.Command, args []string) error {
+		if hasHelpFlag(args) {
+			return cmd.Help()
+		}
+		dryRun := false
+		filtered := make([]string, 0, len(args))
+		for _, arg := range args {
+			if arg == "-n" || arg == "--dry-run" {
+				dryRun = true
+			} else {
+				filtered = append(filtered, arg)
+			}
+		}
+		target, rest, err := parseTargetFlags(filtered)
+		if err != nil {
+			return err
+		}
+		if len(rest) != 0 {
+			return fmt.Errorf("unexpected argument %q", rest[0])
+		}
+		providers := Discover()
+		p, _, err := selectTargetOrSoleAccessible(providers, target, false)
+		if err != nil {
+			return err
+		}
+		return applySetOverride(p, "extender", action, dryRun)
+	}}
 }
 
 func newExtenderStatusCmd() *cobra.Command {
