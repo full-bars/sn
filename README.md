@@ -24,6 +24,8 @@ Linux:
 curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Linux.sh | sh
 ```
 
+Alpine with OpenRC uses the Linux command from a root shell. See [OpenRC](docs/OpenRC.md).
+
 macOS:
 
 ```sh
@@ -36,27 +38,7 @@ Windows (PowerShell):
 irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 | iex
 ```
 
-**😈 FreeBSD (rc.d)**
-
-```sh
-fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_FreeBSD.sh && \
-  sudo sh urnet-install.sh install
-```
-
-The installer installs the provider and an `rc.d` service. See [FreeBSD](docs/FreeBSD.md).
-
-**🐡 OpenBSD (rc.d)**
-
-Install `jq` or `python3` first. Run this as a regular user with configured `doas` or `sudo` access.
-
-```sh
-ftp -o urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_OpenBSD.sh && \
-  sh urnet-install.sh install
-```
-
-The installer installs the provider and an `rc.d` service managed by `rcctl`. See [OpenBSD](docs/OpenBSD.md).
-
-Alpine with OpenRC uses the Linux command from a root shell. See [OpenRC](docs/OpenRC.md).
+Windows Defender sometimes flags the Windows one-liner and the unsigned binaries. The workaround is in [Installation](docs/Installation.md).
 
 After installing, authenticate and load a proxy list:
 
@@ -66,8 +48,6 @@ urnet-tools proxy add ~/proxies.txt
 urnet-tools proxy refresh
 urnet-tools status
 ```
-
-Windows Defender sometimes flags the Windows one-liner and the unsigned binaries. The workaround is in [Installation](docs/Installation.md).
 
 ### Container and `urnet-docker`
 
@@ -103,6 +83,26 @@ urnet-docker status --unit urnet-miner
 urnet-docker logs --unit urnet-miner 100
 urnet-docker update --unit urnet-miner
 ```
+
+**😈 FreeBSD (rc.d)**
+
+```sh
+fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_FreeBSD.sh && \
+  sudo sh urnet-install.sh install
+```
+
+The installer installs the provider and an `rc.d` service. See [FreeBSD](docs/FreeBSD.md).
+
+**🐡 OpenBSD (rc.d)**
+
+Install `jq` or `python3` first. Run this as a regular user with configured `doas` or `sudo` access.
+
+```sh
+ftp -o urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_OpenBSD.sh && \
+  sh urnet-install.sh install
+```
+
+The installer installs the provider and an `rc.d` service managed by `rcctl`. See [OpenBSD](docs/OpenBSD.md).
 
 ### Extender setup
 
