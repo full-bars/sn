@@ -50,3 +50,15 @@ func TestSlotAddressSinksDoNotPrintMalformedAddress(t *testing.T) {
 		check("udp check line", out)
 	}
 }
+
+func TestProxySecretUDPErrorLog(t *testing.T) {
+	const secret = "canary-pass-9042"
+	settings := &connect.ProxySettings{Network: "socks5", Address: "example.com:1080"}
+	out := captureTlog(t, func() {
+		logProxyUDPResult(settings, nil, proxyUDPResult{Status: proxyUDPNoRelay, Err: errors.New(secret)})
+		logProxyUDPResult(settings, nil, proxyUDPResult{Status: proxyUDPUnknown, Err: errors.New(secret)})
+	})
+	if strings.Contains(out, secret) || !strings.Contains(out, "example.com:1080") {
+		t.Fatal("UDP log exposes a canary or omits the address")
+	}
+}

@@ -626,9 +626,9 @@ func logProxyUDPResult(settings *connect.ProxySettings, previous *proxyUDPResult
 	case proxyUDPExitMismatch:
 		tlog("[proxy][udp] slot=%s udp relay exits from %s but tcp from %s; h3 and client udp disabled for this slot, tcp only; action: check where udp and tcp egress diverge on this proxy\n", slot, result.UDPExit, result.TCPExit)
 	case proxyUDPNoRelay:
-		tlog("[proxy][udp] slot=%s udp relay unavailable (%v); h3 and client udp disabled for this slot, tcp only; action: check proxy credentials\n", slot, result.Err)
+		tlog("[proxy][udp] slot=%s udp relay unavailable (%s); h3 and client udp disabled for this slot, tcp only; action: check proxy credentials\n", slot, dialFailureClass(result.Err))
 	default:
-		tlog("[proxy][udp] slot=%s udp relay works (exit %s) but the tcp exit could not be learned (%v); h3 allowed, checking again soon\n", slot, result.UDPExit, result.Err)
+		tlog("[proxy][udp] slot=%s udp relay works (exit %s) but the tcp exit could not be learned (%s); h3 allowed, checking again soon\n", slot, result.UDPExit, dialFailureClass(result.Err))
 	}
 }
 
