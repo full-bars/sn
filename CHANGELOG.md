@@ -11,6 +11,7 @@ Everything merged after `v2026.11.15-1099306820-sn`.
 - **A refused gossip stream no longer closes its yamux session.** The patched yamux module resets the refused stream when its memory reservation fails. [redeploy]
 
 - Proxy audit, rejected input and URL errors keep credential values out of output. Proxy configuration files are written with owner-only permissions.
+- Proxy audit status and the control socket report the last completed audit tick.
 - **A hot swap on a miner node no longer aborts on the provider key lock** (`miner/hotswap.go`, `miner/hotswap_key_custody.go`, `clientauth/provider_key.go`). The new process opens the provider key right after the takeover message and takes its owner lock without waiting. The old process still held that lock, so the new process exited with `startup_recovery_required` and the handoff aborted. The old process now releases the lock when it sends the takeover message, next to `provider_state.db`, and takes it back if the handoff aborts. The fix is in the old process, so the first update that carries it still needs a restart. [redeploy]
 
 ### Changed
