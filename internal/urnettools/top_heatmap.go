@@ -2,11 +2,25 @@ package urnettools
 
 import (
 	"fmt"
+	"math"
+	"net"
+	"net/url"
 	"path/filepath"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/urfoundation/sn/internal/tui"
 )
+
+// The proxy grid: one colored dot per proxy, drawn into the Proxies panel.
+//
+// The provider answers the compact "proxy_cells" command with 4 packed bytes
+// per proxy (index, state, throughput bucket, clients). This file decodes
+// that payload and draws it as a heatmap. Sparse grids use one cell per proxy.
+// Dense grids use two dot-rows per text cell.
+
+// proxyCell is one decoded grid cell from the provider's proxy_cells reply.
 
 // Proxy grid cell state codes. They are the wire values the provider sends for
 // each proxy and the client decodes; keep them in step with proxyCellStateName.
@@ -18,16 +32,6 @@ const (
 	ProxyCellParked
 )
 
-// The proxy grid: one colored dot per proxy, drawn into the Proxies panel.
-//
-// The provider answers the compact "proxy_cells" command with 4 packed bytes
-// per proxy (index, state, throughput bucket, clients). This file decodes
-// that payload and draws it as a heatmap: each text cell holds two dot-rows,
-// represented by a small or large dot depending on occupancy. Proxies
-// are laid out column-major by index, so a contiguous run of dead proxies
-// reads as a red column at a glance.
-
-// proxyCell is one decoded grid cell from the provider's proxy_cells reply.
 type proxyCell struct {
 	index   int
 	state   uint8 // ProxyCellUp .. ProxyCellParked
@@ -156,23 +160,74 @@ func (m *topModel) applyProxyCells(gen int, cells []proxyCell, err error) {
 	m.proxyCellsAt = now
 }
 
-// proxyGridLayout says where proxy index i lands in the grid. The grid is
-// column-major: consecutive indices stack down a column, so a contiguous dead
-// range draws as a red column. Each text cell holds two dot-rows (upper and
-// lower half), shown as a small or large dot depending on occupancy.
+// proxyGridLayout maps text cells to proxy positions. Sparse grids give each
+// proxy a text cell. Dense grids retain the two dot-rows per text cell.
 type proxyGridLayout struct {
-	cols    int // text columns
-	dotRows int // dot-rows = 2 * text rows
+	width, height, cols, rows int
+	sparse                    bool
 }
 
-// cellFor maps a proxy index to its text cell and which half of it.
-func (l proxyGridLayout) cellFor(index int) (x, y int, upper bool) {
-	if index < 0 || index >= l.cols*l.dotRows {
-		return 0, 0, false
+func newProxyGridLayout(n, w, h int) proxyGridLayout {
+	l := proxyGridLayout{width: w, height: h}
+	if n <= 0 || w <= 0 || h <= 0 {
+		return l
 	}
-	col := index / l.dotRows
-	dotRow := index % l.dotRows
-	return col, dotRow / 2, dotRow%2 == 0
+	if n < w*h {
+		l.sparse = true
+		l.cols = min(w, max(1, int(math.Ceil(math.Sqrt(float64(n)*float64(w)/float64(h))))))
+		l.rows = (n + l.cols - 1) / l.cols
+		if l.rows > h {
+			l.rows = h
+			l.cols = (n + h - 1) / h
+		}
+	} else {
+		l.cols, l.rows = w, 2*h
+	}
+	return l
+}
+
+func gridCoordinate(i, count, size int) int {
+	if count <= 1 {
+		return (size - 1) / 2
+	}
+	return i * (size - 1) / (count - 1)
+}
+
+// indices returns the two dense dot positions or the single sparse position.
+func (l proxyGridLayout) indices(x, y int) (int, int) {
+	if x < 0 || y < 0 || x >= l.width || y >= l.height || l.cols == 0 {
+		return -1, -1
+	}
+	if !l.sparse {
+		return x*l.rows + 2*y, x*l.rows + 2*y + 1
+	}
+	col, row := -1, -1
+	for i := 0; i < l.cols; i++ {
+		if gridCoordinate(i, l.cols, l.width) == x {
+			col = i
+			break
+		}
+	}
+	for i := 0; i < l.rows; i++ {
+		if gridCoordinate(i, l.rows, l.height) == y {
+			row = i
+			break
+		}
+	}
+	if col < 0 || row < 0 {
+		return -1, -1
+	}
+	return row*l.cols + col, -1
+}
+
+func (l proxyGridLayout) cellFor(index int) (x, y int, upper bool) {
+	if index < 0 || index >= l.cols*l.rows || l.cols == 0 {
+		return -1, -1, false
+	}
+	if l.sparse {
+		return gridCoordinate(index%l.cols, l.cols, l.width), gridCoordinate(index/l.cols, l.rows, l.height), true
+	}
+	return index / l.rows, (index % l.rows) / 2, index%2 == 0
 }
 
 // drawProxyGrid draws the proxy heatmap into b: a grid of colored cells plus a
@@ -192,8 +247,8 @@ func (m *topModel) drawProxyGrid(b *tui.Buffer) {
 	}
 	// record the drawn grid size for hit testing
 	m.proxyGridW, m.proxyGridH = w, gridH
-	layout := proxyGridLayout{cols: w, dotRows: 2 * gridH}
-	capacity := layout.cols * layout.dotRows
+	layout := newProxyGridLayout(len(cells), w, gridH)
+	capacity := layout.cols * layout.rows
 	// Grouping: when there are more proxies than dot-positions, several
 	// proxies share one dot-position and the cell shows the worst state.
 	group := (len(cells) + capacity - 1) / capacity
@@ -205,14 +260,19 @@ func (m *topModel) drawProxyGrid(b *tui.Buffer) {
 	now := m.now()
 	for y := 0; y < gridH; y++ {
 		for x := 0; x < w; x++ {
-			upperIdx := x*layout.dotRows + 2*y
-			lowerIdx := upperIdx + 1
+			upperIdx, lowerIdx := layout.indices(x, y)
 			var worst uint8 = ProxyCellUp
 			var worstBucket uint8
+			upperState, lowerState := uint8(ProxyCellUp), uint8(ProxyCellUp)
+			var upperBucket, lowerBucket uint8
 			hasUpper, hasLower := false, false
 			for k := 0; k < group; k++ {
-				if ui := upperIdx + k*capacity; ui < len(cells) {
+				if ui := upperIdx + k*capacity; upperIdx >= 0 && ui < len(cells) {
 					hasUpper = true
+					if proxyCellSeverity(cells[ui].state) > proxyCellSeverity(upperState) {
+						upperState = cells[ui].state
+					}
+					upperBucket = max(upperBucket, m.proxyGlowBucket(cells[ui], now))
 					if proxyCellSeverity(cells[ui].state) > proxyCellSeverity(worst) {
 						worst = cells[ui].state
 					}
@@ -220,8 +280,12 @@ func (m *topModel) drawProxyGrid(b *tui.Buffer) {
 						worstBucket = bucket
 					}
 				}
-				if li := lowerIdx + k*capacity; li < len(cells) {
+				if li := lowerIdx + k*capacity; lowerIdx >= 0 && li < len(cells) {
 					hasLower = true
+					if proxyCellSeverity(cells[li].state) > proxyCellSeverity(lowerState) {
+						lowerState = cells[li].state
+					}
+					lowerBucket = max(lowerBucket, m.proxyGlowBucket(cells[li], now))
 					if proxyCellSeverity(cells[li].state) > proxyCellSeverity(worst) {
 						worst = cells[li].state
 					}
@@ -234,7 +298,7 @@ func (m *topModel) drawProxyGrid(b *tui.Buffer) {
 				continue
 			}
 			st := m.proxyCellStyle(worst, worstBucket)
-			if ascii {
+			if ascii && (th.Name != "mono" || layout.sparse) {
 				glyph := proxyCellASCII(worst)
 				if worst == ProxyCellUp {
 					glyph = []rune{'.', ':', '+', '*'}[min(int(worstBucket)/2, 3)]
@@ -242,13 +306,26 @@ func (m *topModel) drawProxyGrid(b *tui.Buffer) {
 				b.Set(x, y, tui.Cell{Rune: glyph, Style: st})
 				continue
 			}
-			// These dots have East Asian width Neutral, unlike • and ●,
-			// which some terminals render two cells wide.
-			dot := '∙'
-			if hasUpper && hasLower {
-				dot = '⦁'
+			if layout.sparse {
+				b.Set(x, y, tui.Cell{Rune: '∙', Style: st})
+				continue
 			}
-			b.Set(x, y, tui.Cell{Rune: dot, Style: st})
+			upperStyle := m.proxyCellStyle(upperState, upperBucket)
+			lowerStyle := m.proxyCellStyle(lowerState, lowerBucket)
+			glyph := '▀'
+			if !hasUpper {
+				glyph = '▄'
+				upperStyle = lowerStyle
+			}
+			if hasUpper && hasLower {
+				if th.Name == "colorblind" || th.Name == "mono" || upperStyle.FG.Kind == tui.ColorDefault || lowerStyle.FG.Kind == tui.ColorDefault {
+					glyph = '█'
+					upperStyle = st
+				} else {
+					upperStyle.BG = lowerStyle.FG
+				}
+			}
+			b.Set(x, y, tui.Cell{Rune: glyph, Style: upperStyle})
 		}
 	}
 
@@ -256,7 +333,9 @@ func (m *topModel) drawProxyGrid(b *tui.Buffer) {
 	counts := [5]int{}
 	for _, c := range cells {
 		if int(c.state) < len(counts) {
-			counts[c.state]++
+			if c.index != 0 {
+				counts[c.state]++
+			}
 		}
 	}
 	names := []string{"up", "dropped", "connecting", "dead", "parked"}
@@ -265,6 +344,12 @@ func (m *topModel) drawProxyGrid(b *tui.Buffer) {
 		names = []string{"up", "drop", "conn", "dead", "park"}
 	}
 	x := 0
+	for _, c := range cells {
+		if c.index == 0 {
+			x = b.Put("direct "+proxyCellStateName(c.state)+"  ", x, gridH, th.Dim)
+			break
+		}
+	}
 	for i, name := range names {
 		st := th.OK
 		switch i {
@@ -391,7 +476,7 @@ func (m *topModel) applyProxyCellDetail(gen int, detail map[int]ProxyCellDetail,
 // it. Hit testing is by text cell: a cell holding two dot-rows returns the
 // upper proxy's index (the first of its group when grouped). ok is false when
 // the position holds no proxy. Pure: reads only the model.
-func (m *topModel) proxyCellAt(x, y int) (int, bool) {
+func (m *topModel) proxyCellFirstAt(x, y int) (int, bool) {
 	cells := m.proxyCells
 	if len(cells) == 0 || m.proxyGridW <= 0 || m.proxyGridH <= 0 {
 		return 0, false
@@ -399,14 +484,9 @@ func (m *topModel) proxyCellAt(x, y int) (int, bool) {
 	if x < 0 || x >= m.proxyGridW || y < 0 || y >= m.proxyGridH {
 		return 0, false
 	}
-	layout := proxyGridLayout{cols: m.proxyGridW, dotRows: 2 * m.proxyGridH}
-	capacity := layout.cols * layout.dotRows
-	group := (len(cells) + capacity - 1) / capacity
-	if group < 1 {
-		group = 1
-	}
-	upperIdx := x*layout.dotRows + 2*y
-	if upperIdx >= len(cells) {
+	layout := newProxyGridLayout(len(cells), m.proxyGridW, m.proxyGridH)
+	upperIdx, _ := layout.indices(x, y)
+	if upperIdx < 0 || upperIdx >= len(cells) {
 		return 0, false
 	}
 	return cells[upperIdx].index, true
@@ -432,10 +512,13 @@ func (m *topModel) proxyCellInfo(index int) []string {
 	addr, intervalBytes, age := "?", "?", "?"
 	clients := int64(c.clients)
 	if d, ok := m.proxyDetail[c.index]; ok {
-		addr = d.Addr
+		addr = proxyDisplayAddress(d.Addr)
 		intervalBytes = fmt.Sprint(d.IntervalBytes)
 		clients = d.Clients
 		age = tui.Duration(time.Duration(d.AgeSeconds) * time.Second)
+	}
+	if index == 0 {
+		addr = "direct (this host)"
 	}
 	return []string{
 		fmt.Sprintf("proxy[%d] %s", c.index, addr),
@@ -444,4 +527,103 @@ func (m *topModel) proxyCellInfo(index int) []string {
 		fmt.Sprintf("bytes in interval %s", intervalBytes),
 		fmt.Sprintf("age %s", age),
 	}
+}
+
+// proxyCellIndices returns all proxies represented by a text cell.
+func (m *topModel) proxyCellAt(x, y int) []int {
+	if m.proxyGridW <= 0 || m.proxyGridH <= 0 || len(m.proxyCells) == 0 {
+		return nil
+	}
+	l := newProxyGridLayout(len(m.proxyCells), m.proxyGridW, m.proxyGridH)
+	upper, lower := l.indices(x, y)
+	capacity := l.cols * l.rows
+	if capacity == 0 {
+		return nil
+	}
+	var positions []int
+	for _, pos := range []int{upper, lower} {
+		if pos < 0 {
+			continue
+		}
+		for i := pos; i < len(m.proxyCells); i += capacity {
+			positions = append(positions, i)
+		}
+	}
+	// In grouped cells the most severe entries are shown first.
+	if len(positions) > 2 {
+		sort.SliceStable(positions, func(i, j int) bool {
+			return proxyCellSeverity(m.proxyCells[positions[i]].state) > proxyCellSeverity(m.proxyCells[positions[j]].state)
+		})
+	}
+	out := make([]int, 0, len(positions))
+	for _, i := range positions {
+		out = append(out, m.proxyCells[i].index)
+	}
+	return out
+}
+
+func (m *topModel) proxyPopupAt(x, y int) bool {
+	r := m.proxyPopupRect
+	indices := m.proxyCellAt(x-r.X, y-r.Y)
+	if len(indices) == 0 {
+		m.proxyPopup = false
+		return false
+	}
+	if !m.proxyPopup || x != m.proxyPopupX || y != m.proxyPopupY {
+		m.proxyPopupFetch = true
+	}
+	m.proxyPopup, m.proxyPopupX, m.proxyPopupY, m.proxyPopupIndices = true, x, y, indices
+	return true
+}
+
+func (m *topModel) drawProxyPopup(b *tui.Buffer) {
+	r := m.proxyPopupRect.Intersect(b.Rect())
+	if r.W < 3 || r.H < 3 {
+		return
+	}
+	lines := []string{}
+	if len(m.proxyPopupIndices) > 2 {
+		lines = append(lines, fmt.Sprintf("%d proxies. Worst first", len(m.proxyPopupIndices)))
+	}
+	for _, index := range m.proxyPopupIndices {
+		info := m.proxyCellInfo(index)
+		if len(info) < 2 {
+			continue
+		}
+		lines = append(lines, info[0]+" "+info[1])
+		if len(m.proxyPopupIndices) == 1 {
+			lines = append(lines, info[2:]...)
+		}
+		if len(lines) >= 5 {
+			break
+		}
+	}
+	if len(lines) == 0 {
+		return
+	}
+	w := 0
+	for _, line := range lines {
+		w = max(w, tui.StringWidth(line))
+	}
+	w, h := min(r.W, w+2), min(r.H, len(lines)+2)
+	x := min(max(m.proxyPopupX+1, r.X), r.X+r.W-w)
+	y := min(max(m.proxyPopupY+1, r.Y), r.Y+r.H-h)
+	panel := b.Sub(tui.Rect{X: x, Y: y, W: w, H: h})
+	panel.Fill(panel.Rect(), ' ', tui.Style{})
+	in := tui.DrawBox(panel, "Proxy", m.theme.Frame, m.theme.Border, m.theme.Accent, m.theme.ASCII)
+	for i, line := range lines {
+		in.Put(tui.Truncate(line, in.Width(), m.theme.ASCII), 0, i, tui.Style{})
+	}
+}
+
+// proxyDisplayAddress also protects the screen when an older provider sends a URL.
+func proxyDisplayAddress(raw string) string {
+	if !strings.Contains(raw, "://") {
+		raw = "//" + raw
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Hostname() == "" || u.Port() == "" || strings.ContainsAny(u.Hostname(), "\r\n\t ") {
+		return "?"
+	}
+	return net.JoinHostPort(u.Hostname(), u.Port())
 }

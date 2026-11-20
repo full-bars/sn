@@ -2,7 +2,10 @@ package miner
 
 import (
 	"math/bits"
+	"net"
+	"net/url"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -234,7 +237,7 @@ func (c *proxyCellStore) Detail(now time.Time) []ProxyCellDetail {
 		}
 		out = append(out, ProxyCellDetail{
 			Index:         p.Index,
-			Addr:          p.Addr,
+			Addr:          proxyCellSafeAddress(p.Index, p.Addr),
 			State:         p.State,
 			Clients:       clients,
 			IntervalBytes: deltas[p.Index],
@@ -242,6 +245,26 @@ func (c *proxyCellStore) Detail(now time.Time) []ProxyCellDetail {
 		})
 	}
 	return out
+}
+
+// proxyCellSafeAddress limits the detail response to a dial host and port.
+func proxyCellSafeAddress(index int, address string) string {
+	if index == 0 {
+		return "direct (this host)"
+	}
+	raw := strings.TrimSpace(address)
+	if !strings.Contains(raw, "://") {
+		raw = "//" + raw
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Hostname() == "" || u.Port() == "" {
+		return "?"
+	}
+	host := u.Hostname()
+	if strings.ContainsAny(host, "\r\n\t ") {
+		return "?"
+	}
+	return net.JoinHostPort(host, u.Port())
 }
 
 // proxyBytesPerSecond scales without overflowing even for very large counters.

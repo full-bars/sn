@@ -19,7 +19,7 @@ func TestProxyCellStoreDetail(t *testing.T) {
 	}
 
 	rawPool := []proxyCellRaw{
-		{Index: 0, Key: "10.0.0.1:1080", Addr: "10.0.0.1:1080", State: ProxyCellUp},
+		{Index: 2, Key: "10.0.0.1:1080", Addr: "10.0.0.1:1080", State: ProxyCellUp},
 		{Index: 1, Key: "10.0.0.2:1080", Addr: "10.0.0.2:1080", State: ProxyCellDegraded},
 	}
 
@@ -50,7 +50,7 @@ func TestProxyCellStoreDetail(t *testing.T) {
 	for _, d := range detail {
 		byIndex[d.Index] = d
 	}
-	if byIndex[0].Addr != "10.0.0.1:1080" || byIndex[1].Addr != "10.0.0.2:1080" {
+	if byIndex[2].Addr != "10.0.0.1:1080" || byIndex[1].Addr != "10.0.0.2:1080" {
 		t.Fatalf("detail addrs wrong: %+v", detail)
 	}
 	for _, d := range detail {
@@ -71,8 +71,8 @@ func TestProxyCellStoreDetail(t *testing.T) {
 		byIndex[d.Index] = d
 	}
 	wantBytes := uint64(512<<10) + uint64(256<<10)
-	if byIndex[0].IntervalBytes != wantBytes {
-		t.Fatalf("proxy 0 interval bytes = %d, want %d", byIndex[0].IntervalBytes, wantBytes)
+	if byIndex[2].IntervalBytes != wantBytes {
+		t.Fatalf("proxy 0 interval bytes = %d, want %d", byIndex[2].IntervalBytes, wantBytes)
 	}
 	// the bucket for ~768 KiB in the interval must be >= 4 (512KiB..4MiB band)
 	bucket := cells2[2] & 0x07
@@ -280,5 +280,23 @@ func TestProxyCellControlSocketResponse(t *testing.T) {
 	d := respDetail.ProxyCellDetail[0]
 	if d.Index != 42 || d.Addr != "10.0.0.1:1080" || d.State != ProxyCellUp || d.Clients != 3 {
 		t.Fatalf("unexpected detail: %+v", d)
+	}
+}
+
+func TestProxyCellDetailAddressPrivacy(t *testing.T) {
+	resetProxyCellStoreForTest()
+	rawPool := []proxyCellRaw{
+		{Index: 0, Key: "198.51.100.1:1234", Addr: "198.51.100.1:1234", State: ProxyCellUp},
+		{Index: 1, Key: "proxy1", Addr: "socks5://alice:secret@proxy.example:1080/path?token=hidden", State: ProxyCellUp},
+	}
+	prevFunc := readProxyCellsRawFunc
+	readProxyCellsRawFunc = func(t time.Time) []proxyCellRaw {
+		return rawPool
+	}
+	defer func() { readProxyCellsRawFunc = prevFunc }()
+
+	detail := (&proxyCellStore{prev: map[int]uint64{}}).Detail(time.Unix(100, 0))
+	if len(detail) != 2 || detail[0].Addr != "direct (this host)" || detail[1].Addr != "proxy.example:1080" {
+		t.Fatalf("unsafe detail: %+v", detail)
 	}
 }
