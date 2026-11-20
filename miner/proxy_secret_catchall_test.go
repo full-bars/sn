@@ -1,7 +1,9 @@
 package miner
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -41,6 +43,20 @@ func TestProxySecretCatchAllFlow(t *testing.T) {
 	if len(config.Servers) == 0 {
 		t.Fatal("proxy was not added")
 	}
+	args, err := json.Marshal([]string{"provide", "--api_url=http://127.0.0.1:1", "--connect_url=ws://127.0.0.1:1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	child := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestProxyAddCredentialsCLIChild$")
+	child.Env = append(os.Environ(), "SN_PROXY_ADD_CHILD=1", "SN_PROXY_ADD_ARGS="+string(args), "HOME="+dir, "URNETWORK_STATE_DIR="+dir, "WARP_VERSION=synthetic")
+	startup, startErr := child.CombinedOutput()
+	var exitErr *exec.ExitError
+	if startErr != nil && ctx.Err() == nil && !errors.As(startErr, &exitErr) {
+		t.Fatalf("start provider child: %v", startErr)
+	}
+	output += string(startup)
 	resetProxyAuditStatus(t)
 	resetProxyEarnBandwidthForTest()
 	t.Cleanup(resetProxyEarnBandwidthForTest)
@@ -68,7 +84,7 @@ func TestProxySecretCatchAllFlow(t *testing.T) {
 			t.Fatal("output contains canary")
 		}
 	}
-	err := filepath.WalkDir(dir, func(path string, entry os.DirEntry, walkErr error) error {
+	err = filepath.WalkDir(dir, func(path string, entry os.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
 		}
