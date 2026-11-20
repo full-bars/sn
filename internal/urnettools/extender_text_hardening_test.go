@@ -7,7 +7,7 @@ import (
 
 func TestExtenderSetupHelpManualDNSAndFreeBSD(t *testing.T) {
 	text := newExtenderSetupCmd().Long
-	for _, want := range []string{"UDP 53", "user-managed", "FreeBSD", "untested", "manual"} {
+	for _, want := range []string{"UDP 53", "--udp53", "firewall access separately", "FreeBSD", "untested", "manual"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("setup help missing %q: %s", want, text)
 		}
