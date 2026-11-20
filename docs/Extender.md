@@ -123,6 +123,19 @@ Expected result: one line per carrier that bound, for example (the log may prefi
 
 The miner also tries UDP 53 for the DNS carrier. A `port=53` line appears when that port binds.
 
+`urnet-tools extender status` and `urnet-tools top` always show a `dns 53` line, so you can tell why UDP 53 is not serving:
+
+| Shown | Meaning |
+|---|---|
+| `bound` | UDP 53 is open. |
+| `not bound (address already in use)` | Another service holds UDP 53. |
+| `not bound (permission denied)` | The provider may not bind a port below 1024. |
+| `not bound (bind failed, cause unknown)` | The bind failed for another reason. The provider log has the error. |
+| `not requested` | `URNETWORK_EXTENDER_DNS53=off` turned UDP 53 off. |
+| `disabled by setting` | `extender-udp53 off` turned it off. |
+
+Providers that predate this show `not reported` in `top` when UDP 53 is not bound.
+
 A carrier that failed to bind logs `[extender] bind failed transport=<tcp or udp> port=<port> carrier=<carrier> error=<reason>` instead. A failed UDP carrier leaves only that carrier down. If the TCP carrier fails, the role stays off while the provider keeps providing.
 
 Then, from a machine on a different network, check that the port answers:
