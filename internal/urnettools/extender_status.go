@@ -43,6 +43,36 @@ type ExtenderCarrierStats struct {
 	RefusalsByStage map[string]uint64 `json:"refusals_by_stage,omitempty"`
 }
 
+// ExtenderPort is one carrier port.
+type ExtenderPort struct {
+	Name     string `json:"name"`
+	Up       bool   `json:"up"`
+	Error    string `json:"error,omitempty"`
+	Disabled bool   `json:"disabled,omitempty"`
+	// Reason says why a port that is not up is down: address_in_use,
+	// permission_denied, unknown or not_requested. Providers that predate it
+	// leave it empty.
+	Reason string `json:"reason,omitempty"`
+}
+
+// extenderPortReasonText is the plain-words form of a port's Reason. The
+// second result is true when the reason is no fault, so a renderer can show it
+// as information and not as a warning.
+func extenderPortReasonText(reason string) (text string, informational bool) {
+	switch reason {
+	case "":
+		return "", false
+	case "address_in_use":
+		return "address already in use", false
+	case "permission_denied":
+		return "permission denied", false
+	case "not_requested":
+		return "not requested", true
+	default:
+		return "bind failed, cause unknown", false
+	}
+}
+
 // ExtenderReading holds the provider's live control-socket observation.
 type ExtenderReading struct {
 	Source                string
@@ -65,6 +95,8 @@ type ExtenderReading struct {
 	LimitedBySourceCount  int
 	Carriers              []ExtenderCarrierStats
 	CarrierBytes          []ExtenderCarrierBytes
+	Ports                 []ExtenderPort
+	Dns53State            string
 
 	// BindRoute says how an unprivileged provider gets TCP 443 on this host.
 	// It is a host reading set by the printing commands, not by the provider.
@@ -160,6 +192,7 @@ func queryExtenderFromSocket(p Provider) (*ExtenderReading, error) {
 		PeerPingRejectedCount: ex.PeerPingRejectedCount, PeerPingUnknownCount: ex.PeerPingUnknownCount,
 		LastPeerPingTime: ex.LastPeerPingTime, LimitedBySubnetsCount: ex.LimitedBySubnetsCount,
 		LimitedBySourceCount: ex.LimitedBySourceCount, Carriers: ex.Carriers, CarrierBytes: ex.CarrierBytes,
+		Ports: ex.Ports, Dns53State: ex.Dns53State,
 	}, nil
 }
 
@@ -201,7 +234,27 @@ func formatExtenderBlock(w io.Writer, reading ExtenderReading) {
 	if reading.Ipv6 != "" {
 		fmt.Fprintf(w, "  IPv6:              %s\n", reading.Ipv6)
 	}
-	if reading.DnsPorts != "" {
+	if len(reading.Ports) > 0 {
+		var ports []string
+		for _, port := range reading.Ports {
+			switch {
+			case port.Disabled:
+				ports = append(ports, port.Name+" disabled by setting")
+			case port.Up:
+				ports = append(ports, port.Name+" bound")
+			case port.Reason == "not_requested":
+				ports = append(ports, port.Name+" not requested")
+			case port.Reason != "":
+				text, _ := extenderPortReasonText(port.Reason)
+				ports = append(ports, fmt.Sprintf("%s not bound (%s)", port.Name, text))
+			case port.Error != "":
+				ports = append(ports, fmt.Sprintf("%s not bound (%s)", port.Name, port.Error))
+			default:
+				ports = append(ports, port.Name+" not bound")
+			}
+		}
+		fmt.Fprintf(w, "  Ports:             %s\n", strings.Join(ports, ", "))
+	} else if reading.DnsPorts != "" {
 		fmt.Fprintf(w, "  DNS ports:         %s\n", reading.DnsPorts)
 	}
 	if reading.LastRefusal != "" {

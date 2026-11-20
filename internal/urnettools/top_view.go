@@ -752,6 +752,43 @@ func (m *topModel) extenderLines() []extenderLine {
 	if ex.DnsPorts != "" {
 		lines = append(lines, extenderLine{"dns", ex.DnsPorts, th.Dim})
 	}
+	ports := ex.Ports
+	if len(ports) == 0 && ex.Dns53State != "" {
+		p := ExtenderPort{Name: "dns 53"}
+		switch ex.Dns53State {
+		case "bound":
+			p.Up = true
+		case "disabled":
+			p.Disabled = true
+		default:
+			p.Reason = ex.Dns53State
+		}
+		ports = []ExtenderPort{p}
+	}
+	seen53 := false
+	for _, port := range ports {
+		if port.Name == "dns 53" || port.Name == "udp 53" {
+			seen53 = true
+			value, style := "bound", th.OK
+			if port.Disabled {
+				value, style = "off by setting", th.Dim
+			} else if !port.Up {
+				value, style = "DOWN", th.Warn
+				if text, informational := extenderPortReasonText(port.Reason); text != "" {
+					if informational {
+						value, style = text, th.Dim
+					} else {
+						value = "DOWN: " + text
+						style = th.Warn
+					}
+				}
+			}
+			lines = append(lines, extenderLine{"dns 53", value, style})
+		}
+	}
+	if !seen53 && len(ports) > 0 {
+		lines = append(lines, extenderLine{"dns 53", "not reported", th.Dim})
+	}
 	if ex.LastRefusal != "" && ex.LastRefusal != "none" {
 		lines = append(lines, extenderLine{"error", ex.LastRefusal, th.Warn})
 	}
