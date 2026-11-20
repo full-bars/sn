@@ -2,6 +2,8 @@ package miner
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 	"testing"
 
@@ -49,19 +51,26 @@ func TestControlIdentityKeyedBandwidthUsesTheIdentityIndex(t *testing.T) {
 	var b strings.Builder
 	writeTrafficMetrics(&b)
 	out := b.String()
+	labels := proxyMetricLabels(slices.Sorted(maps.Keys(series)))
 	for _, settings := range []*connect.ProxySettings{plain, alice, bob} {
 		key := settings.Key()
-		label := prometheusLabelValue(key)
+		label := prometheusLabelValue(labels[key])
 		if !strings.Contains(out, "urnet_proxy_bytes_total{proxy="+label+`,direction="in"}`) {
 			t.Fatalf("no bytes series for running slot %q:\n%s", key, out)
 		}
 	}
 	// The two accounts behind one gateway are distinct identities and must
 	// remain distinct series, not one merged address series.
-	aliceLabel := prometheusLabelValue(alice.Key())
-	bobLabel := prometheusLabelValue(bob.Key())
+	aliceLabel := prometheusLabelValue(labels[alice.Key()])
+	bobLabel := prometheusLabelValue(labels[bob.Key()])
 	if aliceLabel == bobLabel || !strings.Contains(out, aliceLabel) || !strings.Contains(out, bobLabel) {
 		t.Fatalf("the two accounts behind one gateway must have distinct series:\n%s", out)
+	}
+	// No user name reaches the output.
+	for _, settings := range []*connect.ProxySettings{alice, bob} {
+		if settings.Auth != nil && settings.Auth.User != "" && strings.Contains(out, settings.Auth.User) {
+			t.Fatalf("metrics output contains the user %q:\n%s", settings.Auth.User, out)
+		}
 	}
 }
 

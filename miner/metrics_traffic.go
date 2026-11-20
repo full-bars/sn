@@ -55,12 +55,14 @@ func writeTrafficMetrics(b *strings.Builder) {
 		// one family interleaved with another's. Sorted keys keep the output
 		// stable between scrapes.
 		var proxyBytes, proxyBillable, proxyClients, proxyAge strings.Builder
-		for _, key := range slices.Sorted(maps.Keys(perProxy)) {
+		sortedKeys := slices.Sorted(maps.Keys(perProxy))
+		labels := proxyMetricLabels(sortedKeys)
+		for _, key := range sortedKeys {
 			bw := perProxy[key]
 			if bw == nil {
 				continue
 			}
-			proxyID := prometheusLabelValue(key)
+			proxyID := prometheusLabelValue(labels[key])
 			fmt.Fprintf(&proxyBytes, "urnet_proxy_bytes_total{proxy=%s,direction=\"in\"} %d\n", proxyID, bw.TotalRx.Load())
 			fmt.Fprintf(&proxyBytes, "urnet_proxy_bytes_total{proxy=%s,direction=\"out\"} %d\n", proxyID, bw.TotalTx.Load())
 			fmt.Fprintf(&proxyBillable, "urnet_proxy_billable_bytes_total{proxy=%s,direction=\"in\"} %d\n", proxyID, bw.BillableRx.Load())
@@ -132,4 +134,22 @@ func controlIdentityKeyedBandwidth() map[string]*bandwidth.ProxyBandwidth {
 		}
 	}
 	return out
+}
+
+// proxyMetricLabels names each proxy identity for the metrics output without its
+// user name. Two accounts behind one gateway share a display label, so the
+// later ones in key order get a "#2", "#3" suffix and stay distinct series.
+func proxyMetricLabels(sortedKeys []string) map[string]string {
+	labels := make(map[string]string, len(sortedKeys))
+	seen := make(map[string]int, len(sortedKeys))
+	for _, key := range sortedKeys {
+		base := proxyKeyDisplay(key)
+		seen[base]++
+		if n := seen[base]; n > 1 {
+			labels[key] = fmt.Sprintf("%s #%d", base, n)
+		} else {
+			labels[key] = base
+		}
+	}
+	return labels
 }

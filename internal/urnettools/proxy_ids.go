@@ -3,11 +3,16 @@ package urnettools
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
+	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 // clientJWTEntryMinimal mirrors the subset of clientJWTEntry fields we read
@@ -42,10 +47,7 @@ func renderProxyIDs(w *tabwriter.Writer, entries map[string]clientJWTEntryMinima
 	fmt.Fprintln(w, "PROXY	CLIENT_ID	NETWORK_ID	AGE")
 	for _, k := range keys {
 		e := entries[k]
-		label := k
-		if label == "direct" {
-			label = "(direct)"
-		}
+		label := proxyIDLabel(k)
 		// Show full client_id — this subcommand exists specifically to
 		// inspect and correlate client identities.
 		cid := e.ClientID
@@ -133,4 +135,53 @@ func cmdProxyIDsTarget(p Provider) error {
 		return err
 	}
 	return nil
+}
+
+// proxyIDLabel shows a store key without its user name: the address when it is a
+// plain host and port, and a user marker when the key carries a user.
+func proxyIDLabel(key string) string {
+	if key == "direct" {
+		return "(direct)"
+	}
+	address, user := connect.SplitProxyKey(key)
+	if !plainProxyHostPort(address) {
+		address = "<unparsable proxy address>"
+	}
+	if user != "" {
+		address += " (user ***)"
+	}
+	return address
+}
+
+// plainProxyHostPort reports whether s is a host name, IPv4 address or bracketed
+// IPv6 literal with a decimal port in 1-65535.
+func plainProxyHostPort(s string) bool {
+	host, port, err := net.SplitHostPort(s)
+	if err != nil || host == "" || port == "" {
+		return false
+	}
+	nameChar := func(c rune) bool {
+		return 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || '0' <= c && c <= '9' || c == '.' || c == '-' || c == '_'
+	}
+	if !strings.Contains(host, ":") {
+		for _, c := range host {
+			if !nameChar(c) {
+				return false
+			}
+		}
+	} else {
+		if net.ParseIP(host) == nil {
+			return false
+		}
+	}
+	n, err := strconv.Atoi(port)
+	if err != nil || len(port) > 5 || n < 1 || n > 65535 {
+		return false
+	}
+	for _, c := range port {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }

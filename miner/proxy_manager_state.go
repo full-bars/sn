@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -253,28 +253,48 @@ func redactedProxyAddress(address string) string {
 }
 
 // plainHostPort reports whether s is a bare host:port that cannot carry
-// credentials: a host of letters, digits and . - _ : (an IPv6 literal may be
-// bracketed), and a decimal port in 1-65535.
+// credentials: a host name, an IPv4 address or an IPv6 literal (bracketed), and
+// a decimal port in 1-65535.
 func plainHostPort(s string) bool {
 	host, port, err := net.SplitHostPort(s)
-	if err != nil || host == "" || port == "" {
+	return err == nil && proxyHostAllowed(host) && proxyPortAllowed(port)
+}
+
+// proxyHostAllowed reports whether host can be shown as a proxy host. A host
+// name or an IPv4 address uses letters, digits and . - _ only. A host with a
+// colon must be an IPv6 literal without a zone (a zone is free text), so text
+// like user:pass between brackets is refused.
+func proxyHostAllowed(host string) bool {
+	if host == "" {
 		return false
 	}
-	for _, c := range host {
-		switch {
-		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9',
-			c == '.', c == '-', c == '_', c == ':':
-		default:
-			return false
-		}
+	nameChar := func(c rune) bool {
+		return 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || '0' <= c && c <= '9' || c == '.' || c == '-' || c == '_'
 	}
-	n, err := strconv.Atoi(port)
+	if !strings.Contains(host, ":") {
+		for _, c := range host {
+			if !nameChar(c) {
+				return false
+			}
+		}
+		return true
+	}
+	return net.ParseIP(host) != nil
+}
+
+// proxyPortAllowed reports whether port is a decimal port in 1-65535.
+func proxyPortAllowed(port string) bool {
+	if port == "" || len(port) > 5 {
+		return false
+	}
+	n := 0
 	for _, c := range port {
-		if c < '0' || '9' < c {
+		if c < '0' || c > '9' {
 			return false
 		}
+		n = n*10 + int(c-'0')
 	}
-	return err == nil && 1 <= n && n <= 65535
+	return n >= 1 && n <= 65535
 }
 
 // resolveProxyID returns the stable ID for an address.
