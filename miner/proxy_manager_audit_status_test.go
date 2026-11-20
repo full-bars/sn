@@ -94,8 +94,8 @@ func TestProxyAuditStatus_ParkedIdentityKeyPublishedAsAddressAndUser(t *testing.
 		t.Fatalf("expected one parked proxy, got %+v", st)
 	}
 	p := st.Parked[0]
-	if p.Addr != "gw.example:1080" || p.User != "al***01" {
-		t.Fatalf("parked = %+v, want addr gw.example:1080 and obfuscated user al***01", p)
+	if p.Addr != "gw.example:1080" || p.User != "***" {
+		t.Fatalf("parked = %+v, want addr gw.example:1080 and obfuscated user ***", p)
 	}
 	b, err := json.Marshal(st)
 	if err != nil {

@@ -221,7 +221,7 @@ func TestReserveAddressRefusalOmitsOwnerKey(t *testing.T) {
 	if strings.ContainsRune(err.Error(), '\x1f') || strings.Contains(err.Error(), "sppmr4vcnj") {
 		t.Fatalf("refusal leaks the owner key: %q", err.Error())
 	}
-	if !strings.Contains(err.Error(), "198.51.100.52:443 (user sp***nj)") {
+	if !strings.Contains(err.Error(), "198.51.100.52:443 (user ***)") {
 		t.Fatalf("refusal does not name the redacted owner: %q", err.Error())
 	}
 }

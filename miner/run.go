@@ -3542,21 +3542,15 @@ func parseProxyAddress(proxyAddress string) (address string, user string, passwo
 func obfuscateUser(user string) string {
 	if user == "" {
 		return "<no user>"
-	} else if len(user) < 6 {
-		return "***"
-	} else {
-		return fmt.Sprintf("%s***%s", user[:2], user[len(user)-2:])
 	}
+	return "***"
 }
 
 func obfuscatePassword(password string) string {
 	if password == "" {
 		return "<no password>"
-	} else if len(password) < 6 {
-		return "***"
-	} else {
-		return fmt.Sprintf("%s***%s", password[:2], password[len(password)-2:])
 	}
+	return "***"
 }
 
 // Proxy selection follows the same state directory as its provider credentials.
@@ -3595,7 +3589,7 @@ func writeProxyConfig(proxyConfig *ProxyConfig) {
 		panic(err)
 	}
 
-	err = os.WriteFile(proxyPath, b, 0700)
+	err = atomicWriteFile(proxyPath, b, 0600)
 	if err != nil {
 		panic(err)
 	}

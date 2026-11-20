@@ -30,7 +30,7 @@ func TestProxyKeyDisplayRedactsUser(t *testing.T) {
 	if strings.Contains(got, "hunter2hunter2") {
 		t.Fatalf("display leaks the password: %q", got)
 	}
-	want := "dc.decodo.com:10072 (user sp***nj)"
+	want := "dc.decodo.com:10072 (user ***)"
 	if got != want {
 		t.Fatalf("display = %q, want %q", got, want)
 	}
@@ -51,8 +51,8 @@ func TestObfuscateUserShortName(t *testing.T) {
 	if got := obfuscateUser("ab1"); got != "***" {
 		t.Fatalf("short user = %q, want %q", got, "***")
 	}
-	if got := obfuscateUser("abcdef"); got != "ab***ef" {
-		t.Fatalf("six char user = %q, want %q", got, "ab***ef")
+	if got := obfuscateUser("abcdef"); got != "***" {
+		t.Fatalf("six char user = %q, want %q", got, "***")
 	}
 }
 

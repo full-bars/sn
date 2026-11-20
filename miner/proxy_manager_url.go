@@ -187,7 +187,7 @@ func copyURLBlacklist(in map[string]time.Time) map[string]time.Time {
 // content that nothing will ever make parse.
 type proxyURLParseError struct{ err error }
 
-func (e *proxyURLParseError) Error() string { return "parse proxy_url.json: " + e.err.Error() }
+func (e *proxyURLParseError) Error() string { return "parse proxy_url.json: invalid content" }
 func (e *proxyURLParseError) Unwrap() error { return e.err }
 
 // isProxyURLStateCorrupt reports whether err from readProxyURLState means the
@@ -312,15 +312,15 @@ var proxyURLHTTPClient = &http.Client{
 	Transport: sourceURLTransport(),
 }
 
-// stripURLFromError returns the underlying cause of a *net/url.Error, whose own
-// message repeats the request URL (credentials and query tokens included). Any
-// other error is returned unchanged.
+// stripURLFromError keeps cancellation and timeout while hiding error details.
 func stripURLFromError(err error) error {
-	var ue *neturl.Error
-	if errors.As(err, &ue) && ue.Err != nil {
-		return ue.Err
+	if errors.Is(err, context.Canceled) {
+		return context.Canceled
 	}
-	return err
+	if errors.Is(err, context.DeadlineExceeded) {
+		return context.DeadlineExceeded
+	}
+	return errors.New("URL request failed")
 }
 
 // fetchProxyURLLines fetches a proxy list from a URL and splits it into

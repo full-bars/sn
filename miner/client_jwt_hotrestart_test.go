@@ -1400,7 +1400,7 @@ func TestProvideClientJWTCustodyMismatchLogOmitsProxyKey(t *testing.T) {
 	if strings.ContainsRune(out, '\x1f') || strings.Contains(out, user) {
 		t.Fatalf("hot-restart log leaks the proxy key: %q", out)
 	}
-	if !strings.Contains(out, "dc.decodo.com:10072 (user sp***nj)") {
+	if !strings.Contains(out, "dc.decodo.com:10072 (user ***)") {
 		t.Fatalf("hot-restart log does not name the redacted proxy: %q", out)
 	}
 }
@@ -1430,7 +1430,7 @@ func TestProvideClientJWTStorePutErrorOmitsProxyKey(t *testing.T) {
 			t.Fatalf("%s leaks the proxy key: %q", name, text)
 		}
 	}
-	if !strings.Contains(err.Error(), "dc.decodo.com:10072 (user sp***nj)") {
+	if !strings.Contains(err.Error(), "dc.decodo.com:10072 (user ***)") {
 		t.Fatalf("error does not name the redacted proxy: %v", err)
 	}
 }
