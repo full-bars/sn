@@ -49,7 +49,7 @@ docker run -d \
   --cap-add=NET_ADMIN \
   --cap-add=NET_RAW \
   --sysctl net.ipv4.ip_forward=1 \
-  -v urnetwork_config:/root/.urnetwork \
+  -v urnetwork_data:/root/.urnetwork \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
   ghcr.io/full-bars/sn:latest YOUR_AUTH_CODE_HERE
 ```

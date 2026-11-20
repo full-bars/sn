@@ -99,7 +99,7 @@ docker run -d \
   -e URNETWORK_AUTH_CODE=YOUR_AUTH_CODE_HERE \
   -e ALLOW_CLIENT_REGISTRATION=Y \
   -e HOST_HOSTNAME=$(hostname) \
-  -v urnetwork_config:/root/.urnetwork \
+  -v urnetwork_data:/root/.urnetwork \
   ghcr.io/full-bars/sn:latest
 ```
 
