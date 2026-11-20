@@ -4,7 +4,9 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Everything merged after `v2026.11.15-1099306820-sn`.
+## [v2026.11.20-1103642930-sn] - 2026-11-20
+
+Changes after `v2026.11.15-1099306820-sn`. Notes: `releases/v2026.11.20-1103642930-sn.md`.
 
 ### Fixed
 
@@ -21,6 +23,8 @@ Everything merged after `v2026.11.15-1099306820-sn`.
 
 ### Added
 
+- **`urnet-tools top` shows a proxy's address on hover or click and explains the heatmap.** The miner reports proxy cells and their detail feeds, interface counters, and thread and swap resources. A host that looks like a credential is refused in the popup address. The container image runs `urnet-docker top`.
+- **`urnet-tools top` adds one graph column per refresh at fast intervals, accessible themes, event filtering, longer history windows, a copy of the screen and configurable glow tracks.**
 - Extender setup offers the UDP port 53 sysctl threshold as an explicit opt-in. The default remains 443.
 
 - `urnet-tools extender on|off` controls the direct slot extender role live and persists the setting. The role is on by default.

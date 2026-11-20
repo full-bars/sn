@@ -21,6 +21,10 @@ This document tracks all modifications made to the upstream `sn` (connect v2026)
 
 The host setup command lives in `internal/urnettools/`; the provider is built from `cli/miner/` and `miner/`. Setup previews platform and firewall actions before confirmation, checks for plan drift and preserves existing file capabilities when adding Linux bind privilege. On Linux, setup also offers a sysctl route (`net.ipv4.ip_unprivileged_port_start=443` in a drop-in) as an alternative to the file capability. It keeps a prior drop-in as `.pre-urnetwork`, reads persistence in systemd order and binds a sudo re-run to the provider it inspected. Status reports the active route, and the updater skips the capability check while the route is active. Notes: [releases/v2026.11.9-1094091330-sn.md](releases/v2026.11.9-1094091330-sn.md). FreeBSD setup is untested this release and prints manual commands only. UDP 53 is optional and user-managed. See [Extender](docs/Extender.md).
 
+## Release v2026.11.20-1103642930-sn
+
+Proxy credential redaction in output, metrics and the control socket. UDP port 53 and live carrier settings for the extender, with per-carrier relayed traffic. The `top` dashboard gains proxy cells, a proxy address popup, themes, event filtering and longer history windows. The hotswap releases the provider key lock for the new process. A refused gossip stream no longer closes its yamux session. Notes: [releases/v2026.11.20-1103642930-sn.md](releases/v2026.11.20-1103642930-sn.md).
+
 ## Porting Status
 
 This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature set carried over from the mature `full-bars/urnetwork-3.23-fix` fork. All ported modules were adapted to the v2026 connect API (H3/QUIC, IPv6-first, `go mod` manifest system).
