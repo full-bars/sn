@@ -18,11 +18,8 @@ func TestRedactedProxyAddressMasksEncodedUserinfo(t *testing.T) {
 			t.Fatalf("redacted address leaks %q: %q", leak, got)
 		}
 	}
-	if !strings.HasPrefix(got, "s") || !strings.HasSuffix(got, "0") {
-		t.Fatalf("redacted address should keep first and last character: %q", got)
-	}
-	if strings.Count(got, "*") != len(address)-2 {
-		t.Fatalf("redacted address should mask the middle with one * per character: %q", got)
+	if got != "<unparsable proxy address>" {
+		t.Fatalf("redacted address = %q", got)
 	}
 }
 
@@ -36,24 +33,6 @@ func TestRedactedProxyAddressKeepsPlainHostPort(t *testing.T) {
 	}
 }
 
-// Everything that is not a plain host:port renders as first character, a run of
-// * for the middle, and the last character.
-func TestMaskSecretShape(t *testing.T) {
-	cases := map[string]string{
-		"":        "",
-		"a":       "*",
-		"ab":      "**",
-		"abc":     "a*c",
-		"alice":   "a***e",
-		"hunter2": "h*****2",
-	}
-	for in, want := range cases {
-		if got := maskSecret(in); got != want {
-			t.Fatalf("maskSecret(%q) = %q, want %q", in, got, want)
-		}
-	}
-}
-
 // An IPv6 zone identifier carries '%', so it no longer qualifies as a plain
 // address and is masked. The proxy still works; only the log line changes.
 func TestRedactedProxyAddressMasksZoneIdentifier(t *testing.T) {
@@ -62,7 +41,7 @@ func TestRedactedProxyAddressMasksZoneIdentifier(t *testing.T) {
 	if got == address {
 		t.Fatalf("zone identifier address printed verbatim: %q", got)
 	}
-	if !strings.HasPrefix(got, "[") || !strings.HasSuffix(got, "0") {
-		t.Fatalf("masked zone address should keep first and last character: %q", got)
+	if got != "<unparsable proxy address>" {
+		t.Fatalf("redacted zone address = %q", got)
 	}
 }
