@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"bytes"
 	"os"
 	"strings"
 	"testing"
@@ -82,5 +83,20 @@ func TestProxySecretCanariesInRejectedLines(t *testing.T) {
 				t.Fatal("rejected line contains a canary")
 			}
 		}
+	}
+}
+
+func TestProxySecretMalformedSchemeLog(t *testing.T) {
+	const secret = "canary-user-7731"
+	var output bytes.Buffer
+	previous := proxyManagerLogWriter
+	proxyManagerLogWriter = &output
+	t.Cleanup(func() { proxyManagerLogWriter = previous })
+	parseProxyURLLine(secret + "://example.com:1080?token=canary-token-5518")
+	if strings.Contains(output.String(), secret) || strings.Contains(output.String(), "canary-token-5518") {
+		t.Fatal("unsupported scheme log contains a canary")
+	}
+	if !strings.Contains(output.String(), "unsupported scheme") {
+		t.Fatal("unsupported scheme was not logged")
 	}
 }
