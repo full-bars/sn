@@ -176,12 +176,11 @@ func TestTopZoomFillsAtThePollRateAndStopsAtTheWindow(t *testing.T) {
 
 func TestTopZoomCapacityFollowsTheInterval(t *testing.T) {
 	m, _ := liveModel(t, time.Second)
-	if got := m.zoomCapacity(); got != 15 {
-		t.Fatalf("capacity at 1s = %d, want 15", got)
-	}
-	m.interval = 10 * time.Second
-	if got := m.zoomCapacity(); got != topZoomMinCols {
-		t.Fatalf("capacity at 10s = %d, want the floor %d", got, topZoomMinCols)
+	for _, interval := range topIntervalSteps {
+		m.interval = interval
+		if got := m.zoomCapacity(); got != 150 {
+			t.Fatalf("capacity at %v = %d, want 150", interval, got)
+		}
 	}
 }
 
@@ -284,22 +283,22 @@ func TestTopZoomKeyTogglesTheGraphs(t *testing.T) {
 		t.Fatalf("zoom before any reading: %+v", sr.zoom)
 	}
 	txt, _ := showOnSim(t, m, 120, 40)
-	if !strings.Contains(txt, "Billable, last 15s (collecting)") || !strings.Contains(txt, "collecting live readings") {
+	if !strings.Contains(txt, "Billable (collecting)") || !strings.Contains(txt, "collecting live readings") {
 		t.Fatalf("empty zoom must say it is collecting:\n%s", txt)
 	}
 
 	feedTraffic(t, m, clock, 30, 1_000_000, &at, &bytes)
 	txt, _ = showOnSim(t, m, 120, 40)
-	if !strings.Contains(txt, "Billable, last 15s") || strings.Contains(txt, "(collecting)") {
+	if !strings.Contains(txt, "Billable, 2s") || strings.Contains(txt, "(collecting)") {
 		t.Fatalf("zoom title:\n%s", txt)
 	}
-	if !strings.Contains(txt, "Total traffic, last 15s") {
+	if !strings.Contains(txt, "Total traffic, 2s") {
 		t.Fatalf("total graph did not zoom:\n%s", txt)
 	}
 
 	pressKey(m, 'w')
 	txt, _ = showOnSim(t, m, 120, 40)
-	if !strings.Contains(txt, "Billable, 10m") || strings.Contains(txt, "last 15s") {
+	if !strings.Contains(txt, "Billable,") || strings.Contains(txt, "collecting") {
 		t.Fatalf("zoom did not toggle off:\n%s", txt)
 	}
 }
@@ -700,15 +699,14 @@ func TestTopInternalsNeverOverflowsAnySize(t *testing.T) {
 	}
 }
 
-// At a 100ms poll the goroutine trend still takes one point a second, so it keeps
-// its two minutes; a trend of 100ms points would cover twelve seconds.
-func TestTopInternalsTrendIsOnePointPerSecondAtAnyPollRate(t *testing.T) {
+// At a 100ms poll the goroutine trend keeps each accepted reading.
+func TestTopInternalsTrendFollowsFastPollRate(t *testing.T) {
 	m, _ := liveModel(t, 100*time.Millisecond)
 	for i := 0; i < 100; i++ { // ten seconds of 100ms readings
 		m.applyInternals(m.gen, &NodeInternals{AtUnixNano: int64(i) * int64(100*time.Millisecond), Goroutines: uint64(1000 + i)}, nil)
 	}
-	if n := len(m.rt.gor); n != 10 {
-		t.Fatalf("ten seconds of readings gave %d trend points, want 10", n)
+	if n := len(m.rt.gor); n != 100 {
+		t.Fatalf("ten seconds of readings gave %d trend points, want 100", n)
 	}
 }
 

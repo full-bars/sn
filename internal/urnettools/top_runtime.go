@@ -2,6 +2,7 @@ package urnettools
 
 import (
 	"errors"
+	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -93,28 +94,116 @@ func seriesPeak(v []float64) float64 {
 	return p
 }
 
-// topZoom is the client-side ring behind the zoom graph: one rate per traffic
-// poll, newest last. seq counts every column ever pushed and anchors the graph,
-// so a column keeps its place as older ones fall off the left.
+// topTrafficHistory keeps sampled rates and the time represented by each column.
+// Slow polling uses one-second slots and leaves missing seconds unknown.
+type topTrafficHistory struct {
+	billable, total []float64
+	second          int64
+	spans           []time.Duration
+	seq             int64
+}
+
+func (h *topTrafficHistory) push(at int64, b, t float64) {
+	h.pushSlot(at, b, t)
+}
+
+func (h *topTrafficHistory) pushSlot(at int64, b, t float64) {
+	second := at / int64(time.Second)
+	if len(h.billable) > 0 && second < h.second {
+		return
+	}
+	if len(h.billable) == 0 {
+		h.second = second
+		h.billable, h.total = []float64{b}, []float64{t}
+		h.spans = []time.Duration{time.Second}
+		h.seq++
+		return
+	}
+	gap := second - h.second
+	if gap >= topGraphCapacity {
+		h.billable, h.total, h.spans = nil, nil, nil
+		gap = topGraphCapacity
+	}
+	for i := int64(0); i < gap; i++ {
+		h.billable = append(h.billable, math.NaN())
+		h.total = append(h.total, math.NaN())
+		h.spans = append(h.spans, time.Second)
+		h.seq++
+	}
+	if len(h.billable) > topGraphCapacity {
+		h.billable = h.billable[len(h.billable)-topGraphCapacity:]
+		h.total = h.total[len(h.total)-topGraphCapacity:]
+		h.spans = h.spans[len(h.spans)-topGraphCapacity:]
+	}
+	h.second = second
+	h.billable[len(h.billable)-1], h.total[len(h.total)-1] = b, t
+}
+
+// pushColumn retains a reading with its actual elapsed span.
+func (h *topTrafficHistory) pushColumn(at int64, span time.Duration, b, t float64) {
+	const keep = 8192
+	h.billable = append(h.billable, b)
+	h.total = append(h.total, t)
+	h.spans = append(h.spans, span)
+	h.second = at / int64(time.Second)
+	h.seq++
+	if len(h.billable) > keep {
+		h.billable = h.billable[len(h.billable)-keep:]
+		h.total = h.total[len(h.total)-keep:]
+		h.spans = h.spans[len(h.spans)-keep:]
+	}
+}
+
+// topZoom stores rates with the provider time of each accepted poll.
 type topZoom struct {
 	billable, total []float64
+	at              []int64
+	spans           []time.Duration
 	seq             int64
 }
 
 func (z *topZoom) reset() { *z = topZoom{} }
 
-func (z *topZoom) push(b, t float64, capacity int) {
+func (z *topZoom) push(at int64, b, t float64) {
 	z.billable = append(z.billable, b)
 	z.total = append(z.total, t)
-	z.seq++
-	if n := len(z.billable) - capacity; n > 0 {
-		z.billable, z.total = z.billable[n:], z.total[n:]
+	span := time.Second
+	if len(z.at) > 0 {
+		span = time.Duration(at - z.at[len(z.at)-1])
 	}
+	z.at = append(z.at, at)
+	z.spans = append(z.spans, span)
+	z.seq++
+	cut := at - int64(topZoomWindow)
+	n := 0
+	for n < len(z.at) && z.at[n] <= cut {
+		n++
+	}
+	z.at, z.billable, z.total, z.spans = z.at[n:], z.billable[n:], z.total[n:], z.spans[n:]
 }
 
-// zoomCapacity is how many columns the ring holds at the current poll rate.
+// grid places readings on a fixed time axis. Empty slots remain unknown.
+func (z *topZoom) grid() (billable, total []float64, anchor int64) {
+	if len(z.at) == 0 {
+		return nil, nil, 0
+	}
+	const capacity = int(topZoomWindow / topMinInterval)
+	anchor = z.at[len(z.at)-1] / int64(topMinInterval)
+	billable, total = make([]float64, capacity), make([]float64, capacity)
+	for i := range billable {
+		billable[i], total[i] = math.NaN(), math.NaN()
+	}
+	for i, at := range z.at {
+		idx := int(at/int64(topMinInterval) - anchor + int64(capacity) - 1)
+		if idx >= 0 && idx < capacity {
+			billable[idx], total[idx] = z.billable[i], z.total[i]
+		}
+	}
+	return billable, total, anchor
+}
+
 func (m *topModel) zoomCapacity() int {
-	return max(int(topZoomWindow/max(m.interval, topMinInterval)), topZoomMinCols)
+	return int(topZoomWindow / topMinInterval)
 }
 
 // topRuntime is what the Internals panel shows and how it is fed.
@@ -176,9 +265,8 @@ func (m *topModel) applyInternals(gen int, in *NodeInternals, err error) {
 		for len(r.recent) > 2 && time.Duration(in.AtUnixNano-r.recent[1].AtUnixNano) >= topRecentKeep {
 			r.recent = r.recent[1:]
 		}
-		// One trend point a second: at a 100ms poll the trend would otherwise
-		// cover 12 seconds, not two minutes.
-		if len(r.gor) == 0 || time.Duration(in.AtUnixNano-r.gorAt) >= time.Second {
+		// Keep each fast reading, or one point per second with slow polling.
+		if len(r.gor) == 0 || (in.AtUnixNano > r.gorAt && (m.interval <= time.Second || time.Duration(in.AtUnixNano-r.gorAt) >= time.Second)) {
 			r.gor = append(r.gor, float64(in.Goroutines))
 			r.gorAt = in.AtUnixNano
 			if n := len(r.gor) - topRuntimeHistory; n > 0 {
