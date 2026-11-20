@@ -98,18 +98,15 @@ type pinFixture struct {
 	probe      *scriptedProbe
 	controller *v6PinController
 	path       string
-	hostV6     bool
-	hostMu     sync.Mutex
 	stop       func()
 }
 
 func newPinFixture(t *testing.T, path string, verdicts ...v6Verdict) *pinFixture {
 	t.Helper()
 	fixture := &pinFixture{
-		clock:  &testClock{now: time.Date(2026, 10, 25, 12, 0, 0, 0, time.UTC)},
-		probe:  &scriptedProbe{verdicts: verdicts},
-		path:   path,
-		hostV6: true,
+		clock: &testClock{now: time.Date(2026, 10, 25, 12, 0, 0, 0, time.UTC)},
+		probe: &scriptedProbe{verdicts: verdicts},
+		path:  path,
 	}
 	ledger := loadV6Ledger(path, fixture.clock.Now)
 	persister := newV6LedgerPersister(path, ledger, true)
@@ -117,11 +114,6 @@ func newPinFixture(t *testing.T, path string, verdicts ...v6Verdict) *pinFixture
 	controller := newV6PinController(ledger, persister)
 	controller.now = fixture.clock.Now
 	controller.runProbe = fixture.probe.run
-	controller.hostV6 = func() bool {
-		fixture.hostMu.Lock()
-		defer fixture.hostMu.Unlock()
-		return fixture.hostV6
-	}
 	controller.log = func(string, ...any) {}
 	fixture.controller = controller
 	fixture.stop = controller.start(context.Background())
@@ -274,18 +266,14 @@ func TestV6PinRestartSkipsTheProbe(t *testing.T) {
 	}
 }
 
-// A host with no IPv6 path never probes and never builds a pin.
-func TestV6PinNoHostV6PaysNothing(t *testing.T) {
+// The host's own IPv6 is not asked for: the pin dials through the proxy, so a
+// proxy that proved IPv6 gets its pin on a host that has none.
+func TestV6PinDoesNotNeedHostIPv6(t *testing.T) {
 	fixture := newPinFixture(t, testV6Path(t), v6Yes)
-	fixture.hostMu.Lock()
-	fixture.hostV6 = false
-	fixture.hostMu.Unlock()
 	device := &fakePinDevice{}
 	defer fixture.register(t, testProxy("198.51.100.15:1080"), device)()
-	time.Sleep(20 * time.Millisecond)
-	if fixture.probe.count() != 0 || len(device.calls()) != 0 {
-		t.Fatalf("probes %d, device calls %v on a host without IPv6", fixture.probe.count(), device.calls())
-	}
+	waitForPin(t, "the probe", func() bool { return fixture.probe.count() == 1 })
+	waitForPin(t, "the pin to turn on", device.pinOn)
 }
 
 // The direct slot (nil proxy settings) is never registered.
