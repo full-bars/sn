@@ -71,3 +71,16 @@ func TestSourceCommandOutputIsSanitized(t *testing.T) {
 		}
 	}
 }
+
+func TestProxySecretCanariesInRejectedLines(t *testing.T) {
+	secrets := []string{"canary-user-7731", "canary-pass-9042", "canary-token-5518"}
+	line := "http://" + secrets[0] + ":" + secrets[1] + "@example.com:1080?token=" + secrets[2]
+	for _, input := range []string{line, "example.com:1080?token=" + secrets[2], secrets[0] + "://example.com:1080"} {
+		output := redactProxyLine(input)
+		for _, secret := range secrets {
+			if strings.Contains(output, secret) {
+				t.Fatal("rejected line contains a canary")
+			}
+		}
+	}
+}

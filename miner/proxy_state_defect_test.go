@@ -228,8 +228,8 @@ func TestProxyCredentialsRedactedInLogsAndCapture(t *testing.T) {
 	if strings.Contains(logged, user) || strings.Contains(logged, pass) {
 		t.Fatalf("parseProxyURLLine logged raw credentials: %q", logged)
 	}
-	if !strings.Contains(logged, "http://198.51.100.77:8080") || !strings.Contains(logged, "user=present") || !strings.Contains(logged, "password=present") {
-		t.Fatalf("parseProxyURLLine log %q missing redacted scheme/host/port/presence info", logged)
+	if !strings.Contains(logged, "unsupported scheme") {
+		t.Fatalf("parseProxyURLLine log %q missing rejection", logged)
 	}
 
 	// 2. Incident capture redaction: user:pass@host:port without scheme must be redacted.

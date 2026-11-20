@@ -105,3 +105,21 @@ func TestProxyAuditStatus_ParkedIdentityKeyPublishedAsAddressAndUser(t *testing.
 		t.Fatalf("status JSON leaks the raw identity key or the full user: %s", b)
 	}
 }
+
+func TestProxyAuditStatusMalformedAddressWithholdsCanaries(t *testing.T) {
+	resetProxyAuditStatus(t)
+	secrets := []string{"canary-user-7731", "canary-pass-9042", "canary-token-5518"}
+	address := "socks5://" + secrets[0] + ":" + secrets[1] + "@example.com:1080?token=" + secrets[2]
+	h := newGovHarness("a:1")
+	h.g.st.parks[address] = &proxyAuditParkRecord{until: h.now.Add(time.Minute)}
+	h.g.publish(h.now, true, proxyAuditResult{})
+	b, err := json.Marshal(proxyAuditStatusSnapshot())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, secret := range secrets {
+		if strings.Contains(string(b), secret) {
+			t.Fatal("audit status contains a canary")
+		}
+	}
+}
