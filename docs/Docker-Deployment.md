@@ -127,7 +127,6 @@ docker run -d \
   --log-opt max-size=10m \
   --log-opt max-file=3 \
   -e AUTH=authcode \
-  -e ALLOW_CLIENT_REGISTRATION=Y \
   -e HOST_HOSTNAME=$(hostname) \
   -v urnetwork_data:/root/.urnetwork \
   -v /path/to/proxy.txt:/app/proxy.txt \
@@ -184,7 +183,6 @@ docker run -d \
   --log-opt max-size=10m \
   --log-opt max-file=3 \
   -e AUTH=authcode \
-  -e ALLOW_CLIENT_REGISTRATION=Y \
   -e HOST_HOSTNAME=$(hostname) \
   -v urnetwork_data:/root/.urnetwork \
   -v /path/to/proxy.txt:/app/proxy.txt \
@@ -326,7 +324,6 @@ docker run -d \
   -e URNETWORK_RAMLOGS=1 \
   -e URNETWORK_NODE_NAME=urfix \
   -e AUTH=authcode \
-  -e ALLOW_CLIENT_REGISTRATION=Y \
   -e HOST_HOSTNAME=$(hostname) \
   -e PROXY_URL='https://example.com/your-proxy-list.txt' \
   -v urnetwork_data:/root/.urnetwork \

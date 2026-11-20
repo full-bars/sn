@@ -36,7 +36,6 @@ docker run -d --name urnet-miner \
   -e AUTH=authcode \
   -e AUTHCODE='YOUR_AUTH_CODE_HERE' \
   -e ALL_OPERATORS=Y \
-  -e ALLOW_CLIENT_REGISTRATION=Y \
   ghcr.io/full-bars/sn:miner
 ```
 
@@ -50,7 +49,6 @@ docker run -d --name urnet-miner \
   -e AUTHCODE='YOUR_AUTH_CODE_HERE' \
   -e OPERATOR=example.com \
   -e ALL_OPERATORS=Y \
-  -e ALLOW_CLIENT_REGISTRATION=Y \
   ghcr.io/full-bars/sn:miner
 ```
 

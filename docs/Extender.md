@@ -97,7 +97,6 @@ docker run -d \
   -p 443:443/udp \
   -p 4053:4053/udp \
   -e URNETWORK_AUTH_CODE=YOUR_AUTH_CODE_HERE \
-  -e ALLOW_CLIENT_REGISTRATION=Y \
   -e HOST_HOSTNAME=$(hostname) \
   -v urnetwork_data:/root/.urnetwork \
   ghcr.io/full-bars/sn:latest
