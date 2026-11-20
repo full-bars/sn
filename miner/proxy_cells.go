@@ -257,14 +257,10 @@ func proxyCellSafeAddress(index int, address string) string {
 		raw = "//" + raw
 	}
 	u, err := url.Parse(raw)
-	if err != nil || u.Hostname() == "" || u.Port() == "" {
+	if err != nil || !proxyHostAllowed(u.Hostname()) || !proxyPortAllowed(u.Port()) {
 		return "?"
 	}
-	host := u.Hostname()
-	if strings.ContainsAny(host, "\r\n\t ") {
-		return "?"
-	}
-	return net.JoinHostPort(host, u.Port())
+	return net.JoinHostPort(u.Hostname(), u.Port())
 }
 
 // proxyBytesPerSecond scales without overflowing even for very large counters.

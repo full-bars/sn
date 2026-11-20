@@ -622,8 +622,12 @@ func proxyDisplayAddress(raw string) string {
 		raw = "//" + raw
 	}
 	u, err := url.Parse(raw)
-	if err != nil || u.Hostname() == "" || u.Port() == "" || strings.ContainsAny(u.Hostname(), "\r\n\t ") {
+	if err != nil || u.Hostname() == "" || u.Port() == "" {
 		return "?"
 	}
-	return net.JoinHostPort(u.Hostname(), u.Port())
+	address := net.JoinHostPort(u.Hostname(), u.Port())
+	if !plainProxyHostPort(address) {
+		return "?"
+	}
+	return address
 }
