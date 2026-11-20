@@ -107,6 +107,7 @@ func extenderStatusProviders() ([]Provider, error) {
 // socket gives no observation is reported as unavailable and makes the command
 // exit non-zero: nothing is inferred from state files or logs.
 func runExtenderStatus(w io.Writer, provs []Provider) error {
+	fmt.Fprintln(w, udp53ThresholdStatus(portRoutePlatformFn(), portRouteReadFileFn))
 	var firstErr error
 	unavailable := 0
 	for _, p := range provs {
@@ -149,7 +150,7 @@ func runExtenderStatus(w io.Writer, provs []Provider) error {
 
 const extenderLeafHelp = "{{.Long}}\n\nUsage:\n  {{.CommandPath}}\n\nExamples:\n{{.Example}}\n"
 
-const extenderSetupUsage = "usage: urnet-tools extender setup [-y|--yes] [-f|--force] [-n|--dry-run] [--route=sysctl|capability|skip] [target]"
+const extenderSetupUsage = "usage: urnet-tools extender setup [-y|--yes] [-f|--force] [-n|--dry-run] [--route=sysctl|capability|skip] [--udp53] [target]"
 
 // parseExtenderSetupArgs parses flags specific to `urnet-tools extender setup`.
 func parseExtenderSetupArgs(args []string) (yes, dryRun bool, route string, target Target, err error) {
@@ -197,7 +198,22 @@ func parseExtenderSetupArgs(args []string) (yes, dryRun bool, route string, targ
 var runExtenderSetupFn = RunExtenderSetup
 
 func cmdExtenderSetup(args []string) error {
-	yes, dryRun, route, target, err := parseExtenderSetupArgs(args)
+	var filtered []string
+	udp53, explicitYes := false, false
+	for _, arg := range args {
+		if arg == "--udp53" {
+			udp53 = true
+			continue
+		}
+		if arg == "--yes" || arg == "-y" {
+			explicitYes = true
+		}
+		filtered = append(filtered, arg)
+	}
+	yes, dryRun, route, target, err := parseExtenderSetupArgs(filtered)
+	if udp53 {
+		yes = explicitYes
+	}
 	if err != nil {
 		return err
 	}
@@ -209,6 +225,7 @@ func cmdExtenderSetup(args []string) error {
 		argv = append(argv, tok)
 	}
 	return runExtenderSetupFn(ExtenderSetupOptions{
+		UDP53:  udp53,
 		Yes:    yes,
 		Force:  yes,
 		DryRun: dryRun,
@@ -222,9 +239,9 @@ func cmdExtenderSetup(args []string) error {
 
 func newExtenderSetupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                "setup [-y|--yes] [-f|--force] [-n|--dry-run] [--route=sysctl|capability|skip] [target]",
+		Use:                "setup [-y|--yes] [-f|--force] [-n|--dry-run] [--route=sysctl|capability|skip] [--udp53] [target]",
 		Short:              "one-time privileged configuration for extender role",
-		Long:               "Perform one-time privileged host configuration for the extender role. Inspects port 443 occupancy, the route that lets an unprivileged provider bind it (a sysctl drop-in or a file capability on the binary; --route picks one, and a terminal is asked when it is missing) and host firewall rules, prints the exact commands needed, and asks for confirmation before changing anything (use -y/--yes for non-interactive runs). UDP 53 is optional and user-managed; setup does not open it. FreeBSD extender setup is untested and prints manual instructions only.",
+		Long:               "Perform one-time privileged host configuration for the extender role. Inspects port 443 occupancy, the route that lets an unprivileged provider bind it (a sysctl drop-in or a file capability on the binary; --route picks one, and a terminal is asked when it is missing) and host firewall rules, prints the exact commands needed, and asks for confirmation before changing anything (use -y/--yes for non-interactive runs). UDP 53 is optional. On Linux --udp53 with the sysctl route permits all local users to bind ports 53 to 1023. Manage firewall access separately. FreeBSD extender setup is untested and prints manual instructions only.",
 		Example:            "  urnet-tools extender setup\n  urnet-tools extender setup --yes\n  urnet-tools extender setup --dry-run\n  urnet-tools extender setup --route=sysctl --yes",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -1,6 +1,9 @@
 package urnettools
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+)
 
 // Keep this description in step with docs/Extender.md and the SDK's role.
 const extenderAboutText = `The extender helps clients reach URnetwork when its platform addresses are blocked.
@@ -15,7 +18,8 @@ PORTS
             role from starting. Non-root providers need permission to bind it.
   UDP 443   optional QUIC carrier.
   UDP 4053  optional DNS carrier.
-  UDP 53    optional DNS carrier, tried when available.
+  UDP 53    optional DNS carrier, tried when available. Linux setup --udp53
+            can lower the bind threshold for all local users after confirmation.
 
 The platform checks each address family before listing it. A public address and
 inbound access are needed. A provider using proxies cannot be the direct role.
@@ -32,7 +36,7 @@ func newExtenderAboutCmd() *cobra.Command {
 		Example: "  urnet-tools extender about",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			_, err := cmd.OutOrStdout().Write([]byte(extenderAboutText))
+			_, err := fmt.Fprintln(cmd.OutOrStdout(), extenderAboutText, udp53ThresholdStatus(portRoutePlatformFn(), portRouteReadFileFn))
 			return err
 		},
 	}

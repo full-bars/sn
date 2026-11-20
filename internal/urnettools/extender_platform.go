@@ -44,7 +44,8 @@ type SystemPlatformConfigurer struct {
 	// Route selects how an unprivileged provider gets TCP 443 on Linux:
 	// "sysctl", "capability" or "skip". Empty keeps the file-capability
 	// check, with a live low ip_unprivileged_port_start also accepted.
-	Route string
+	Route      string
+	SysctlPort int
 	// SysctlUndo is the recovery command printed with the plan. Setup fills
 	// it before any write so the text matches the state it saw first.
 	SysctlUndo string
@@ -81,6 +82,13 @@ func NewSystemPlatformConfigurer(platform string) *SystemPlatformConfigurer {
 
 func (sp *SystemPlatformConfigurer) Platform() string {
 	return sp.PlatformName
+}
+
+func (sp *SystemPlatformConfigurer) sysctlPort() int {
+	if sp.SysctlPort == 53 {
+		return 53
+	}
+	return 443
 }
 
 // CheckRequirement checks whether the host platform requirement is already satisfied.
@@ -401,11 +409,14 @@ func (sp *SystemPlatformConfigurer) liveUnprivilegedPortStart() (int, bool) {
 
 func (sp *SystemPlatformConfigurer) checkLinuxSysctl() (bool, string, error) {
 	v, ok := sp.liveUnprivilegedPortStart()
-	if !ok || v > 443 {
+	if !ok || v > sp.sysctlPort() {
 		return false, "sysctl route not active", nil
 	}
 	if !sp.sysctlPersisted() {
 		return false, fmt.Sprintf("ip_unprivileged_port_start=%d live, but not persisted; setup can write %s", v, extenderSysctlDropin), nil
+	}
+	if sp.sysctlPort() == 53 {
+		return true, fmt.Sprintf("ports from 53 are available without a file capability (ip_unprivileged_port_start=%d, persisted)", v), nil
 	}
 	if v == 443 {
 		return true, "TCP 443 is available without a file capability (ip_unprivileged_port_start=443, persisted)", nil
@@ -540,7 +551,7 @@ func (sp *SystemPlatformConfigurer) sysctlPersisted() bool {
 			last, found = v, true
 		}
 	}
-	return found && last >= 0 && last <= 443
+	return found && last >= 0 && last <= sp.sysctlPort()
 }
 
 func (sp *SystemPlatformConfigurer) planLinuxSysctl() ([]setupCommand, error) {
@@ -553,7 +564,7 @@ func (sp *SystemPlatformConfigurer) planLinuxSysctl() ([]setupCommand, error) {
 		commands = append(commands, setupCommand{name: "cp", args: []string{"-p", "--", extenderSysctlDropin, extenderSysctlBackup}})
 	}
 	return append(commands,
-		setupCommand{name: "sh", args: []string{"-c", "echo " + extenderSysctlKey + "=443 > " + extenderSysctlDropin}},
+		setupCommand{name: "sh", args: []string{"-c", fmt.Sprintf("echo %s=%d > %s", extenderSysctlKey, sp.sysctlPort(), extenderSysctlDropin)}},
 		setupCommand{name: "sysctl", args: []string{"--system"}},
 	), nil
 }
@@ -600,14 +611,14 @@ func (sp *SystemPlatformConfigurer) applyLinuxSysctl() (applied bool, desc strin
 		}
 	}
 	wrote = true // even a partial write needs recovery guidance
-	if err := sp.WriteFile(extenderSysctlDropin, []byte(extenderSysctlContent), 0o644); err != nil {
+	if err := sp.WriteFile(extenderSysctlDropin, []byte(fmt.Sprintf("%s=%d\n", extenderSysctlKey, sp.sysctlPort())), 0o644); err != nil {
 		return false, "", fmt.Errorf("writing %s: %w", extenderSysctlDropin, err)
 	}
 	if sp.ExecCmd != nil {
 		out, err := sp.ExecCmd("sysctl", "--system")
 		if err != nil {
 			applyErr := fmt.Errorf("sysctl --system failed (%s: %w)", strings.TrimSpace(string(out)), err)
-			out2, err2 := sp.ExecCmd("sysctl", "-w", extenderSysctlKey+"=443")
+			out2, err2 := sp.ExecCmd("sysctl", "-w", fmt.Sprintf("%s=%d", extenderSysctlKey, sp.sysctlPort()))
 			if err2 != nil {
 				return false, "", fmt.Errorf("applying sysctl failed: %v; fallback sysctl -w also failed: %s: %w", applyErr, strings.TrimSpace(string(out2)), err2)
 			}
@@ -619,8 +630,8 @@ func (sp *SystemPlatformConfigurer) applyLinuxSysctl() (applied bool, desc strin
 			return false, "", fmt.Errorf("verifying sysctl live value: %w", err)
 		}
 		val, err := strconv.Atoi(strings.TrimSpace(string(data)))
-		if err != nil || val > 443 {
-			return false, "", fmt.Errorf("sysctl live verification failed: %s is %s (want <= 443)", extenderSysctlKey, strings.TrimSpace(string(data)))
+		if err != nil || val < 0 || val > sp.sysctlPort() {
+			return false, "", fmt.Errorf("sysctl live verification failed: %s is %s (want <= %d)", extenderSysctlKey, strings.TrimSpace(string(data)), sp.sysctlPort())
 		}
 		return true, fmt.Sprintf("applied sysctl drop-in %s (%s=%d); undo with: %s", extenderSysctlDropin, extenderSysctlKey, val, recovery), nil
 	}

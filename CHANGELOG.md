@@ -21,6 +21,8 @@ Everything merged after `v2026.11.15-1099306820-sn`.
 
 ### Added
 
+- Extender setup offers the UDP port 53 sysctl threshold as an explicit opt-in. The default remains 443.
+
 - `urnet-tools extender on|off` controls the direct slot extender role live and persists the setting. The role is on by default.
 
 - **`urnet-tools top` can show decimal units** (`internal/tui/labels.go`, `internal/urnettools/top_model.go`). The `u` key switches every byte and rate label between binary units (KiB, MiB, GiB) and decimal units (kB, MB, GB). The graph axes follow the choice. Binary stays the default, and the choice lasts for the session. [redeploy]
