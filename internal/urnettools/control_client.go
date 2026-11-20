@@ -156,6 +156,12 @@ type pendingOp struct {
 // to the canonical key name accepted by the provider's control socket.
 var controlKeyCanonical = map[string]string{
 	"extender":                    "extender",
+	"extender-udp443":             "extender_udp443",
+	"extender_udp443":             "extender_udp443",
+	"extender-udp4053":            "extender_udp4053",
+	"extender_udp4053":            "extender_udp4053",
+	"extender-udp53":              "extender_udp53",
+	"extender_udp53":              "extender_udp53",
 	"node-name":                   "node_name",
 	"node_name":                   "node_name",
 	"fast-auth":                   "fast_auth",
@@ -253,7 +259,7 @@ func validateControlValue(canonicalKey, value string) error {
 		if !validPprofControlValue(value) {
 			return fmt.Errorf("pprof: must be on, off or a loopback ip:port such as 127.0.0.1:6060 (got %q)", value)
 		}
-	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send":
+	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "extender_udp443", "extender_udp4053", "extender_udp53":
 		switch strings.ToLower(value) {
 		case "on", "off":
 		default:

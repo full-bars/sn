@@ -246,6 +246,9 @@ var setKeyFiles = map[string]string{
 // setKeyHelps describes each key for `set help` / usage.
 var setKeyHelps = []string{
 	"  extender             on|off   extender role (default on)",
+	"  extender-udp443     on|off        QUIC carrier on UDP 443 (default: on)",
+	"  extender-udp4053    on|off        DNS carrier on UDP 4053 (default: on)",
+	"  extender-udp53      on|off        DNS carrier on UDP 53 (default: on; bind permission required)",
 	"  node-name           <string>      node name reported to the fleet (default: hostname). The miner has no node label: it persists this value but never sends it, so it has no effect there",
 	"  fast-auth           on|off        bypass auth rate limiter",
 	"  self-heal           on|off        dead proxy auto-cleanup & load gate",
@@ -284,7 +287,7 @@ var setKeyHelps = []string{
 // every identity instead of disabling it.
 func treatsOffAsClear(canonicalKey string) bool {
 	switch canonicalKey {
-	case "extender", "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3", "pprof":
+	case "extender", "extender_udp443", "extender_udp4053", "extender_udp53", "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3", "pprof":
 		return false
 	}
 	return true
