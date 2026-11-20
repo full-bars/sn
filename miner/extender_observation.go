@@ -118,6 +118,8 @@ func providerExtenderControlLatest() *providerExtenderControlReading {
 	detail := extenderDetailState
 	detail.Carriers = extenderCarrierReadings(detail.Carriers)
 	detail.CarrierBytes = extenderCarrierBytesReadings(time.Now())
+	detail.Dns53State = determineDns53State(&extenderObservationState, &detail, globalControlState)
+	detail.Ports = buildExtenderPortReadings(&extenderObservationState, &detail, globalControlState)
 	return &providerExtenderControlReading{providerExtenderObservation: extenderObservationState, providerExtenderDetail: detail}
 }
 
@@ -133,18 +135,21 @@ func providerExtenderControlForState(state *controlState) *providerExtenderContr
 		reason = "activation budget is holding the extender role"
 	}
 	reading := providerExtenderControlLatest()
-	if reason == "" {
-		return reading
+	if reason != "" {
+		if reading == nil {
+			reading = &providerExtenderControlReading{}
+		}
+		reading.Known = true
+		reading.Enabled = false
+		reading.Listening = false
+		reading.ActivatedV4 = false
+		reading.ActivatedV6 = false
+		reading.OffReason = reason
 	}
-	if reading == nil {
-		reading = &providerExtenderControlReading{}
+	if reading != nil {
+		reading.Dns53State = determineDns53State(&reading.providerExtenderObservation, &reading.providerExtenderDetail, state)
+		reading.Ports = buildExtenderPortReadings(&reading.providerExtenderObservation, &reading.providerExtenderDetail, state)
 	}
-	reading.Known = true
-	reading.Enabled = false
-	reading.Listening = false
-	reading.ActivatedV4 = false
-	reading.ActivatedV6 = false
-	reading.OffReason = reason
 	return reading
 }
 

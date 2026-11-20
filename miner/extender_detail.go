@@ -1,6 +1,8 @@
 package miner
 
 import (
+	"net"
+	"os"
 	"slices"
 	"strings"
 	"sync"
@@ -68,6 +70,98 @@ type providerExtenderDetail struct {
 	Carriers              []extenderCarrierReading `json:"carriers,omitempty"`
 	// CarrierBytes is the traffic this extender relayed, per carrier.
 	CarrierBytes []extenderCarrierBytesReading `json:"carrier_bytes,omitempty"`
+	Ports        []extenderPortReading         `json:"ports,omitempty"`
+	Dns53State   string                        `json:"dns53_state,omitempty"`
+}
+
+// extenderPortReading reports status for one extender carrier port.
+type extenderPortReading struct {
+	Name     string `json:"name"`
+	Up       bool   `json:"up"`
+	Error    string `json:"error,omitempty"`
+	Disabled bool   `json:"disabled,omitempty"`
+	// Reason says why a port that is not up is down: address_in_use,
+	// permission_denied, unknown or not_requested.
+	Reason string `json:"reason,omitempty"`
+}
+
+var dns53States = []string{
+	"bound", "disabled", "address_in_use", "permission_denied", "unknown", "not_requested", "pending",
+}
+
+// dns53ProbeFunc probes whether port 53 can bind on UDP. It can be overridden in tests.
+var dns53ProbeFunc = defaultDns53Probe
+
+func defaultDns53Probe() error {
+	pc, err := net.ListenPacket("udp", ":53")
+	if err == nil {
+		pc.Close()
+		return nil
+	}
+	return err
+}
+
+func dnsPortsContain53(dnsPorts string) bool {
+	fields := strings.FieldsFunc(dnsPorts, func(r rune) bool {
+		return r == ',' || r == ' ' || r == ';'
+	})
+	for _, f := range fields {
+		if f == "53" {
+			return true
+		}
+	}
+	return false
+}
+
+func determineDns53State(obs *providerExtenderObservation, detail *providerExtenderDetail, state *controlState) string {
+	if state != nil {
+		if v, ok := state.get("extender_udp53"); ok && strings.EqualFold(v, "off") {
+			return "disabled"
+		}
+	}
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("URNETWORK_EXTENDER_DNS53"))) {
+	case "off", "0", "false", "no":
+		return "not_requested"
+	}
+	if detail != nil && dnsPortsContain53(detail.DnsPorts) {
+		return "bound"
+	}
+	if obs == nil || !obs.Known || !obs.Enabled || !obs.Listening {
+		return "pending"
+	}
+	if dns53ProbeFunc != nil {
+		err := dns53ProbeFunc()
+		if err != nil {
+			if reason := ClassifyBindError(err); reason != "" {
+				return reason
+			}
+			return BindFailureUnknown
+		}
+	}
+	return "pending"
+}
+
+func buildExtenderPortReadings(obs *providerExtenderObservation, detail *providerExtenderDetail, state *controlState) []extenderPortReading {
+	if obs == nil || !obs.Known {
+		return nil
+	}
+	cfg := extenderCarrierConfigFromState(state)
+	var ports []extenderPortReading
+	ports = append(ports, extenderPortReading{Name: "tcp 443", Up: obs.Listening})
+	ports = append(ports, extenderPortReading{Name: "udp 443", Up: obs.Listening && cfg.udp443, Disabled: !cfg.udp443})
+	ports = append(ports, extenderPortReading{Name: "dns 4053", Up: obs.Listening && cfg.udp4053, Disabled: !cfg.udp4053})
+	dns53 := determineDns53State(obs, detail, state)
+	switch dns53 {
+	case "disabled":
+		ports = append(ports, extenderPortReading{Name: "dns 53", Disabled: true})
+	case "bound":
+		ports = append(ports, extenderPortReading{Name: "dns 53", Up: true})
+	case "pending":
+		// nothing is known until the role finishes binding
+	default:
+		ports = append(ports, extenderPortReading{Name: "dns 53", Reason: dns53})
+	}
+	return ports
 }
 
 // providerExtenderControlReading is the control reply's extender object: the

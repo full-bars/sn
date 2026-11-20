@@ -751,6 +751,17 @@ func writeExtenderMetrics(b *strings.Builder, observation providerExtenderObserv
 		fmt.Fprintf(b, "urnet_extender_carrier_connections{carrier=%s} %d\n", prometheusLabelValue(c.Carrier), c.LiveConns)
 	}
 
+	fmt.Fprintf(b, "# HELP urnet_extender_dns53_state 1 for the current state of dns port 53.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_dns53_state gauge\n")
+	current := currentDns53State()
+	for _, state := range dns53States {
+		value := 0
+		if state == current {
+			value = 1
+		}
+		fmt.Fprintf(b, "urnet_extender_dns53_state{state=%s} %d\n", prometheusLabelValue(state), value)
+	}
+
 	fmt.Fprintf(b, "# HELP urnet_extender_carrier_refused_total Extender requests refused by carrier and stage, cumulative.\n")
 	fmt.Fprintf(b, "# TYPE urnet_extender_carrier_refused_total counter\n")
 	for _, c := range carriers {
@@ -767,4 +778,10 @@ func writeExtenderMetrics(b *strings.Builder, observation providerExtenderObserv
 				prometheusLabelValue(c.Carrier), prometheusLabelValue(stage), c.RefusalsByStage[stage])
 		}
 	}
+}
+
+func currentDns53State() string {
+	extenderObservationLock.Lock()
+	defer extenderObservationLock.Unlock()
+	return determineDns53State(&extenderObservationState, &extenderDetailState, globalControlState)
 }
