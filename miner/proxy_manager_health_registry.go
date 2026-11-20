@@ -505,7 +505,7 @@ func proxyTrafficBandwidth(proxies map[string]ProxyEntry, now time.Time) map[str
 		// identity: the table has a separate PROXY ID column for the account,
 		// and two accounts behind one gateway are still two rows.
 		address, _ := connect.SplitProxyKey(key)
-		out[fmt.Sprintf("proxy[%d] (%s)", entry.ID, address)] = row
+		out[fmt.Sprintf("proxy[%d] (%s)", entry.ID, redactedProxyAddress(address))] = row
 	}
 	return out
 }
