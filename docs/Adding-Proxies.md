@@ -7,6 +7,9 @@ couple of platform-specific pitfalls.
 The command is `urnet-tools proxy add <file>`, where `<file>` points to a text
 file with one proxy per line. Each line is `host:port` or `host:port:user:pass`.
 
+Proxy addresses (`host:port`) may appear in logs and status output. Credentials
+and URL query tokens are redacted from those outputs.
+
 ## The universal sequence
 
 Install the provider and authenticate first. Then load your proxy file:
