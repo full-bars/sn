@@ -32,6 +32,7 @@ func cmdTop(args []string) error {
 	// --demo is hidden: it draws synthetic snapshots so the screen can be seen
 	// on a box with no provider. It is peeled off before the real parsers.
 	demo, args := stripDemoFlag(args)
+	showAll, args := stripAllFlag(args)
 	interval, targetArgs, err := parseTopFlags(args)
 	if err != nil {
 		return err
@@ -64,11 +65,19 @@ func cmdTop(args []string) error {
 	defer stop()
 
 	providers, cur := []Provider{demoProvider()}, 0
+	hiddenStopped := 0
 	if !demo {
 		var ok bool
 		if providers, ok = discoverWhileDrawing(ctx, scr); !ok {
 			return nil
 		}
+		var stoppedHidden int
+		providers, stoppedHidden, err = providersForTop(providers, t, showAll)
+		if err != nil {
+			holdTopError(ctx, scr, err)
+			return err
+		}
+		hiddenStopped = stoppedHidden
 		p, _, err := selectTargetOrSoleAccessible(providers, t, false)
 		if err != nil {
 			// Several providers and no target: status summarizes them, top starts
@@ -97,6 +106,8 @@ func cmdTop(args []string) error {
 	m := newTopModel(providers, cur, interval, tui.ThemeFromEnv(os.Getenv), time.Now)
 	if !demo && systemdDiscoveryCutShort {
 		m.discoveryNote = discoveryCutShortWarning(len(providers))
+	} else if hiddenStopped > 0 {
+		m.discoveryNote = stoppedHiddenNote(hiddenStopped)
 	}
 	src := topSourceFn()
 	if demo {
@@ -107,6 +118,53 @@ func cmdTop(args []string) error {
 		applySavedTopSettings(m)
 	}
 	return runTop(ctx, scr, m, src, topTick)
+}
+
+// stripAllFlag removes --all from args and reports whether it was there. It runs
+// before the real flag parsers so they never see it.
+func stripAllFlag(args []string) (all bool, rest []string) {
+	for _, a := range args {
+		if a == "--all" {
+			all = true
+			continue
+		}
+		rest = append(rest, a)
+	}
+	return all, rest
+}
+
+// providersForTop is the list top shows. A provider that is not running has
+// nothing to draw, and its socket often sits in another account's private home,
+// so top would open on a screen that says permission denied. Stopped providers
+// are left out. They come back with --all, and a provider named on the command
+// line is always kept, since the operator asked for that one. hidden counts the
+// stopped providers that were left out. When every provider found is stopped
+// there is nothing to watch, and the error says which ones and what to do.
+func providersForTop(found []Provider, t Target, showAll bool) (shown []Provider, hidden int, err error) {
+	if showAll || hasExplicitTarget(t) {
+		return found, 0, nil
+	}
+	var stopped []string
+	for _, p := range found {
+		if p.Running {
+			shown = append(shown, p)
+			continue
+		}
+		stopped = append(stopped, providerLabel(p))
+	}
+	if len(shown) == 0 && len(stopped) > 0 {
+		return nil, len(stopped), fmt.Errorf("no running provider found\nstopped: %s\nstart one, name one to watch it anyway (--unit NAME), or use --all",
+			strings.Join(stopped, ", "))
+	}
+	return shown, len(stopped), nil
+}
+
+// stoppedHiddenNote is the footer line saying stopped providers were left out.
+func stoppedHiddenNote(n int) string {
+	if n == 1 {
+		return "1 stopped provider hidden (--all shows it)"
+	}
+	return fmt.Sprintf("%d stopped providers hidden (--all shows them)", n)
 }
 
 // topDiscoverRedraw is how often the discovery frame's elapsed time is redrawn.

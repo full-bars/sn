@@ -105,6 +105,7 @@ What was built differs from the proposal in these ways:
 - **Keys:** `q`, `Esc` and `Ctrl-C` quit; `Tab` and `Shift-Tab` switch provider; `+` and `-` change the refresh rate; `?` shows help. The proposed `p` (proxy detail) is **not** in the first version.
 - **States:** a snapshot state of `starting`, or any state the view does not know, is shown in capitals in a neutral colour rather than as an error.
 - **`--demo`:** a hidden flag that draws synthetic snapshots, computed purely from the clock, so the screen can be seen or captured (for example in `tmux`) on a box with no provider. It skips provider discovery and never touches real state. It is deliberately not in the help text.
+- **`--all`:** by default only running providers are shown. A stopped provider has no live data to draw, and top opening on one would just show DISCONNECTED with a retry countdown. Pass `--all` to include stopped providers in the list and in the Tab cycle. A provider named on the command line (`--unit`, `--user`, `--network`, `--network-id`, `--state-dir`, or a PID) is always kept, stopped or not. When only stopped providers exist, top says so and tells the operator how to start one.
 - **`urtop`:** a link to the `urnet-tools` binary, created by the installer and by `urnet-tools update`; the binary behaves as `top` when started under that name.
 - **Not a terminal:** with no interactive terminal on stdout it refuses before doing anything else and points at `urnet-tools status` and `--json`.
 - **Windows** is still not a first-version target; it builds, but is untested there.

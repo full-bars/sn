@@ -13,6 +13,7 @@ Everything merged after `v2026.11.15-1099306820-sn`.
 - Proxy audit, rejected input and URL errors keep credential values out of output. Proxy configuration files are written with owner-only permissions.
 - Proxy audit status and the control socket report the last completed audit tick.
 - **A hot swap on a miner node no longer aborts on the provider key lock** (`miner/hotswap.go`, `miner/hotswap_key_custody.go`, `clientauth/provider_key.go`). The new process opens the provider key right after the takeover message and takes its owner lock without waiting. The old process still held that lock, so the new process exited with `startup_recovery_required` and the handoff aborted. The old process now releases the lock when it sends the takeover message, next to `provider_state.db`, and takes it back if the handoff aborts. The fix is in the old process, so the first update that carries it still needs a restart. [redeploy]
+- **`urnet-tools top` no longer opens on a stopped provider** (`internal/urnettools/top_cmd.go`). A stopped provider was listed first and top opened on it, showing DISCONNECTED with a countdown. Stopped providers are now left out of the default list and the Tab cycle. `--all` shows them again. When a provider is named on the command line, it is kept even if stopped. When only stopped providers exist, top says so and tells you how to start one. [redeploy]
 
 ### Changed
 

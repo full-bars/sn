@@ -20,13 +20,19 @@ type frameScreen struct {
 	drawn  chan struct{}
 	events chan tcellui.Event
 	closes int
+	width  int
+	height int
 }
 
 func newFrameScreen() *frameScreen {
-	return &frameScreen{drawn: make(chan struct{}, 1), events: make(chan tcellui.Event, 8)}
+	return newFrameScreenAt(60, 10)
 }
 
-func (s *frameScreen) Size() (int, int) { return 60, 10 }
+func newFrameScreenAt(w, h int) *frameScreen {
+	return &frameScreen{drawn: make(chan struct{}, 1), events: make(chan tcellui.Event, 8), width: w, height: h}
+}
+
+func (s *frameScreen) Size() (int, int) { return s.width, s.height }
 
 func (s *frameScreen) Draw(b *tui.Buffer) {
 	s.mu.Lock()
