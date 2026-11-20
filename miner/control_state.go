@@ -99,6 +99,10 @@ var controlKeys = map[string]bool{
 	"ip_version":                  true,
 	"h1_plus":                     true,
 	"oom_cap":                     true,
+	"extender_discovery":          true,
+	"extender_udp443":             true,
+	"extender_udp4053":            true,
+	"extender_udp53":              true,
 }
 
 // globalControlState is the single provider-wide instance, set by

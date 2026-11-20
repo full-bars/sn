@@ -552,6 +552,10 @@ func validateControlValue(key, value string) error {
 		if !validPprofValue(value) {
 			return fmt.Errorf("pprof: must be on, off or a loopback host:port such as 127.0.0.1:6060 (got %q)", value)
 		}
+	case "extender_udp443", "extender_udp4053", "extender_udp53":
+		if valLower != "on" && valLower != "off" {
+			return fmt.Errorf("%s: must be on or off (got %q)", key, value)
+		}
 	case "proxy_url_refresh", "proxy_dead_cleanup_interval":
 		d, err := time.ParseDuration(value)
 		if err != nil {

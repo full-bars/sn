@@ -486,3 +486,66 @@ func TestClearGoRuntimeKeysRestoresStartupValues(t *testing.T) {
 		t.Fatalf("clear gogc left GOGC %d, want the startup 40", got)
 	}
 }
+
+// TestControlSocketCarrierSettings validates and persists the three
+// extender UDP carrier settings. They are on/off only and survive a reload
+// of the control state, so a disabled carrier stays disabled across a
+// provider restart.
+func TestControlSocketCarrierSettings(t *testing.T) {
+	state := newControlState()
+	path, cleanup := testControlSocket(t, state)
+	defer cleanup()
+
+	// Invalid values are refused before any state change.
+	for _, key := range []string{"extender_udp443", "extender_udp4053", "extender_udp53"} {
+		r := controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: key, Value: "invalid"})
+		if r.OK {
+			t.Fatalf("%s accepted invalid", key)
+		}
+	}
+
+	// on and off both validate and persist.
+	for _, key := range []string{"extender_udp443", "extender_udp4053", "extender_udp53"} {
+		for _, value := range []string{"on", "off"} {
+			r := controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: key, Value: value})
+			if !r.OK {
+				t.Fatalf("set %s=%s: %s", key, value, r.Error)
+			}
+			g := controlRequestJSON(t, path, controlRequest{Cmd: "get", Key: key})
+			if !g.OK || !g.Found || g.Value != value {
+				t.Fatalf("get %s after set %s = %+v", key, value, g)
+			}
+		}
+	}
+
+	// The persisted v2 envelope carries every carrier setting.
+	statePath, err := controlStatePath()
+	if err != nil {
+		t.Fatalf("controlStatePath: %v", err)
+	}
+	data, err := os.ReadFile(statePath)
+	if err != nil {
+		t.Fatalf("read state: %v", err)
+	}
+	var envelope controlStateEnvelope
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		t.Fatalf("parse state: %v", err)
+	}
+	for _, key := range []string{"extender_udp443", "extender_udp4053", "extender_udp53"} {
+		if envelope.Values[key] != "off" {
+			t.Fatalf("%s = %q, want \"off\"", key, envelope.Values[key])
+		}
+	}
+
+	// A reload of the control state from disk keeps the values.
+	reloaded, err := loadControlState()
+	if err != nil {
+		t.Fatalf("loadControlState: %v", err)
+	}
+	for _, key := range []string{"extender_udp443", "extender_udp4053", "extender_udp53"} {
+		v, found := reloaded.get(key)
+		if !found || v != "off" {
+			t.Fatalf("%s = %q, %v after reload", key, v, found)
+		}
+	}
+}
