@@ -245,9 +245,10 @@ func TestControlSocketDataCommands(t *testing.T) {
 	if !resp.OK || resp.Goroutines == nil || resp.Goroutines.Total == 0 {
 		t.Fatalf("goroutines = %+v", resp)
 	}
-	// No audit engine: the audit command says so explicitly.
+	// The audit engine is wired: the command answers with its last published
+	// status (empty before the first tick), never an error.
 	resp = controlRequestJSON(t, path, controlRequest{Cmd: "audit", Action: "status"})
-	if resp.OK || !strings.Contains(resp.Error, "audit") {
+	if !resp.OK {
 		t.Fatalf("audit status = %+v", resp)
 	}
 }
