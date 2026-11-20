@@ -26,7 +26,7 @@ For `ok` and `unknown`, the provider allows HTTP/3 and client UDP. For `no-relay
 
 ### Choosing a proxy
 
-Choose a SOCKS5 proxy that relays UDP and uses the same exit address for UDP and TCP. If the logs show `no-relay` for a proxy, ask the proxy provider for UDP ASSOCIATE support, or replace the proxy. Proxied identities do not carry UDP to IPv6 destinations.
+Choose a SOCKS5 proxy that relays UDP and uses the same exit address for UDP and TCP. If the logs show `no-relay` for a proxy, ask the proxy provider for UDP ASSOCIATE support, or replace the proxy. A proxied identity carries UDP to an IPv6 destination only when the proxy passed the IPv6 checks: the IPv6 TCP probe says yes, the IPv4 UDP check is ok, and a STUN request over IPv6 through the relay reports the same IPv6 address as the TCP exit. Every other proxy refuses an IPv6 destination at once. The first refused flow of a proxy that is proven for IPv6 TCP starts the IPv6 UDP check, and later flows use its answer. A yes is kept for 12 hours and a mismatch for 24 hours. `urnet-tools set proxy-udp-ipv6 off` restores the refusal of every IPv6 destination.
 
 ### Seeing the result
 

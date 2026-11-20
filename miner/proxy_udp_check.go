@@ -231,6 +231,12 @@ func parseStunMappedAddress(response []byte, transaction [12]byte) (net.IP, bool
 // udpExitViaProxy asks a STUN server, through the proxy's UDP relay, which
 // address it sees the datagram from.
 func udpExitViaProxy(deps proxyUDPCheckDeps, ctx context.Context, settings *connect.ProxySettings) (string, error) {
+	return udpExitViaProxyOn(deps, ctx, settings, "udp4")
+}
+
+// udpExitViaProxyOn is udpExitViaProxy for one address family of the STUN
+// servers: udp4 asks them over IPv4 as before, udp6 over IPv6 (proxy_ipv6_udp.go).
+func udpExitViaProxyOn(deps proxyUDPCheckDeps, ctx context.Context, settings *connect.ProxySettings, network string) (string, error) {
 	pc, err := deps.dialUDP(ctx, settings)
 	if err != nil {
 		return "", err
@@ -238,7 +244,7 @@ func udpExitViaProxy(deps proxyUDPCheckDeps, ctx context.Context, settings *conn
 	defer pc.Close()
 	buffer := make([]byte, 2048)
 	for _, server := range deps.stunServers {
-		destination, err := net.ResolveUDPAddr("udp4", server)
+		destination, err := resolveStunServer(ctx, network, server)
 		if err != nil {
 			continue
 		}

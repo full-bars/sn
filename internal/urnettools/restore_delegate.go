@@ -270,6 +270,7 @@ var setKeyHelps = []string{
 	"  metrics-listen      auto|<ip:port> /metrics listen address. auto binds loopback plus every Tailscale IPv4 (0.0.0.0 in a container); an explicit address is used as-is, and off clears back to auto. Live; a change rebinds a running listener (default: auto)",
 	"  baseline            on|off        record this box's behaviour into baseline.jsonl every 15 minutes, with the lifetime billable counter, for `urnet-tools baseline show|compare` (default: on)",
 	"  pprof               on|off|<ip:port>  loopback diagnostics for goroutine, heap and thread profiles (default: on at 127.0.0.1:6060)",
+	"  proxy-udp-ipv6      on|off        relay client UDP to IPv6 destinations through proxies that passed the IPv6 checks (default: on; off refuses every IPv6 destination)",
 	"  proxy-audit         on|off        grade proxies and park the ones that prove junk. Observe mode by default (logs verdicts without acting); parking only acts when hot-restart is on (default: off)",
 }
 
@@ -287,7 +288,7 @@ var setKeyHelps = []string{
 // every identity instead of disabling it.
 func treatsOffAsClear(canonicalKey string) bool {
 	switch canonicalKey {
-	case "extender", "extender_udp443", "extender_udp4053", "extender_udp53", "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3", "pprof":
+	case "extender", "extender_udp443", "extender_udp4053", "extender_udp53", "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3", "pprof", "proxy_udp_ipv6":
 		return false
 	}
 	return true
@@ -604,6 +605,7 @@ func formatSets(p Provider, want string) error {
 		{"h3", "h3"},
 		{"h3-datagram", "h3_datagram"},
 		{"h3-datagram-send", "h3_datagram_send"},
+		{"proxy-udp-ipv6", "proxy_udp_ipv6"},
 		{"baseline", "baseline"},
 		{"proxy-audit", "proxy_audit"},
 		{"pprof", "pprof"},

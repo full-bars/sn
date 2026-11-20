@@ -4,6 +4,10 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
+### Added
+
+- **UDP to IPv6 destinations through proxies that passed the IPv6 checks.** A proxy relays an IPv6 datagram only when its IPv6 TCP probe says yes, its IPv4 UDP check is ok, and a STUN request over IPv6 through its relay reports the same address as its IPv6 TCP exit. Other proxies keep refusing at once. The `proxy_udp_ipv6` setting (`urnet-tools set proxy-udp-ipv6 on|off`) is on by default.
+
 ## [v2026.11.20-1103642930-sn] - 2026-11-20
 
 Changes after `v2026.11.15-1099306820-sn`. Notes: `releases/v2026.11.20-1103642930-sn.md`.

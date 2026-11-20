@@ -379,6 +379,7 @@ var controlLiveEffectKeys = map[string]bool{
 	"oom_cap":                     true,
 	"baseline":                    true,
 	"smart_dialer":                true,
+	"proxy_udp_ipv6":              true,
 }
 
 // controlRestartEffectKeys are accepted and persisted, have no live consumer,
@@ -525,6 +526,9 @@ func applyControlLiveDefault(key string) error {
 	switch key {
 	case "extender_udp443", "extender_udp4053", "extender_udp53":
 		return nil
+	case "proxy_udp_ipv6":
+		// read on every IPv6 flow (proxy_ipv6_udp.go), nothing to apply
+		return nil
 	case "proxy_url_max", "proxy_url_refresh", "proxy_dead_cleanup_scope", "proxy_dead_cleanup_interval", "proxy_self_heal":
 		globalProxyControlState.clear(key)
 		return nil
@@ -607,7 +611,7 @@ func validateControlValue(key, value string) error {
 		default:
 			return fmt.Errorf("ip-version: must be dual, ipv4, ipv6 or legacy (got %q)", value)
 		}
-	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "h1_plus":
+	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "h1_plus", "proxy_udp_ipv6":
 		switch valLower {
 		case "on", "off":
 		default:

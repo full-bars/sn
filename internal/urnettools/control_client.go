@@ -190,6 +190,8 @@ var controlKeyCanonical = map[string]string{
 	"h3-datagram":                 "h3_datagram",
 	"h3_datagram":                 "h3_datagram",
 	"h3-datagram-send":            "h3_datagram_send",
+	"proxy-udp-ipv6":              "proxy_udp_ipv6",
+	"proxy_udp_ipv6":              "proxy_udp_ipv6",
 	"h3_datagram_send":            "h3_datagram_send",
 	"h3":                          "h3",
 	"proxy-url-max":               "proxy_url_max",
@@ -268,7 +270,7 @@ func validateControlValue(canonicalKey, value string) error {
 		if !validPprofControlValue(value) {
 			return fmt.Errorf("pprof: must be on, off or a loopback ip:port such as 127.0.0.1:6060 (got %q)", value)
 		}
-	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "extender_udp443", "extender_udp4053", "extender_udp53":
+	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "proxy_udp_ipv6", "extender_udp443", "extender_udp4053", "extender_udp53":
 		switch strings.ToLower(value) {
 		case "on", "off":
 		default:

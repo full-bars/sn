@@ -38,9 +38,10 @@ import (
 //     socket would put the identity's udp at the box's own address instead of
 //     the proxy's exit. A dial error makes the nat answer the client with an
 //     unreachable, so apps move on quickly
-//   - ipv6 destinations are refused: the check only proves the relay over
-//     ipv4, and most relays have no ipv6 exit, so a v6 datagram would vanish
-//     instead of failing fast
+//   - an ipv6 destination is relayed only through a proxy that passed the ipv6
+//     checks (proxiedUdpIPv6Allowed, proxy_ipv6_udp.go) and is refused at once
+//     through every other proxy, because a v6 datagram sent through a relay
+//     without an ipv6 exit would vanish instead of failing fast
 //   - the association lives exactly as long as the flow: closing the conn
 //     closes the relay socket and the association's control connection. Each
 //     flow holds a tcp connection on the proxy, so proxied identities close
@@ -141,10 +142,17 @@ func proxiedUdpDialContext(otherDialContext connect.DialContextFunction, proxySe
 func dialProxiedUdp(ctx context.Context, proxySettings *connect.ProxySettings, checkStore *proxyUDPCheckStore, network string, addr string) (net.Conn, error) {
 	destination, err := proxiedUdpDestination(network, addr)
 	if err != nil {
-		if errors.Is(err, errProxiedUdpIpv6Refused) {
-			proxiedUdpRefusals.note(proxySettings, proxiedUdpRefusalIpv6)
-		}
 		return nil, err
+	}
+	// an ipv6 destination goes through this proxy only after its ipv6 checks.
+	// Nothing is probed inline: a refused flow of a proxy that is proven for
+	// ipv6 TCP starts the check, and the next flows see its answer
+	if destination.IP.To4() == nil && !proxiedUdpIPv6Allowed(proxySettings, checkStore, time.Now()) {
+		if proxiedUdpIPv6Candidate(proxySettings, checkStore) {
+			proxyUDP6.kick(proxySettings, time.Now())
+		}
+		proxiedUdpRefusals.note(proxySettings, proxiedUdpRefusalIpv6)
+		return nil, errProxiedUdpIpv6Refused
 	}
 
 	// the check runs detached so a result is remembered for the identity even
@@ -166,6 +174,13 @@ func dialProxiedUdp(ctx context.Context, proxySettings *connect.ProxySettings, c
 	case proxyUDPExitMismatch:
 		proxiedUdpRefusals.note(proxySettings, proxiedUdpRefusalExitMismatch)
 		return nil, errProxiedUdpExitMismatch
+	}
+	// the wait above can outlast the first decision: the setting, the verdict or
+	// the checks may have changed, so an ipv6 destination is decided again
+	// before the association opens
+	if destination.IP.To4() == nil && !proxiedUdpIPv6Allowed(proxySettings, checkStore, time.Now()) {
+		proxiedUdpRefusals.note(proxySettings, proxiedUdpRefusalIpv6)
+		return nil, errProxiedUdpIpv6Refused
 	}
 
 	relayed, err := func() (net.PacketConn, error) {
@@ -206,7 +221,11 @@ func proxiedUdpDestination(network string, addr string) (*net.UDPAddr, error) {
 	}
 	ip4 := ip.To4()
 	switch network {
-	case "udp", "udp4":
+	case "udp":
+	case "udp4":
+		if ip4 == nil {
+			return nil, errProxiedUdpFamilyRefused
+		}
 	case "udp6":
 		if ip4 != nil {
 			return nil, errProxiedUdpFamilyRefused
@@ -215,7 +234,8 @@ func proxiedUdpDestination(network string, addr string) (*net.UDPAddr, error) {
 		return nil, errProxiedUdpBadNetwork
 	}
 	if ip4 == nil {
-		return nil, errProxiedUdpIpv6Refused
+		// an ipv6 destination: dialProxiedUdp decides from the proxy's checks
+		return &net.UDPAddr{IP: ip.To16(), Port: port}, nil
 	}
 	return &net.UDPAddr{IP: ip4, Port: port}, nil
 }

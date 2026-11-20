@@ -103,6 +103,7 @@ var controlKeys = map[string]bool{
 	"extender_udp443":             true,
 	"extender_udp4053":            true,
 	"extender_udp53":              true,
+	"proxy_udp_ipv6":              true,
 }
 
 // globalControlState is the single provider-wide instance, set by
