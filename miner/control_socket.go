@@ -353,6 +353,9 @@ func formerValue(old string, had bool) string {
 // restart-required there.
 var controlLiveEffectKeys = map[string]bool{
 	"extender":                    true,
+	"extender_udp443":             true,
+	"extender_udp4053":            true,
+	"extender_udp53":              true,
 	"gomemlimit":                  true,
 	"gogc":                        true,
 	"h1_plus":                     true,
@@ -462,7 +465,10 @@ func controlNeedsRestart(key string) bool {
 // restore the same off that a state with no opinion resolves to, so it is
 // declared here rather than in a second table with the same value.
 var controlLiveDefaults = map[string]string{
-	"extender": "on",
+	"extender":         "on",
+	"extender_udp443":  "on",
+	"extender_udp4053": "on",
+	"extender_udp53":   "on",
 	// Zero is a zero-byte limit to the Go runtime, not "unlimited": the apply
 	// path maps any non-positive value to math.MaxInt64.
 	"gomemlimit": "0",
@@ -497,12 +503,23 @@ var controlLiveDefaults = map[string]string{
 	"oom_cap": "shadow",
 }
 
+func isExtenderCarrierKey(key string) bool {
+	switch key {
+	case "extender_udp443", "extender_udp4053", "extender_udp53":
+		return true
+	default:
+		return false
+	}
+}
+
 // applyControlLiveDefault reapplies the runtime default for a live-applied
 // key when it is cleared. Manager-owned proxy keys drop the in-process
 // override so the P1 resolvers fall through to the legacy override file and
 // then the startup default, exactly as v33 does.
 func applyControlLiveDefault(key string) error {
 	switch key {
+	case "extender_udp443", "extender_udp4053", "extender_udp53":
+		return nil
 	case "proxy_url_max", "proxy_url_refresh", "proxy_dead_cleanup_scope", "proxy_dead_cleanup_interval", "proxy_self_heal":
 		globalProxyControlState.clear(key)
 		return nil
@@ -718,7 +735,7 @@ func resolveHotRestartEnabled() bool {
 	return os.Getenv("URNETWORK_HOT_RESTART") != "0"
 }
 
-func handleControlRequest(state *controlState, req controlRequest) controlResponse {
+func handleControlRequest(state *controlState, req controlRequest) (response controlResponse) {
 	IncrControlCmd(req.Cmd)
 
 	// these commands change what a snapshot reports, so the cached one must not
@@ -792,13 +809,38 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		// fails - keeping memory and disk from disagreeing about what is
 		// "set". txMu makes the whole get-old/set/persist/rollback unit atomic.
 		state.txMu.Lock()
-		defer state.txMu.Unlock()
+		restartCarrier := false
+		persistFailed := false
+		defer func() {
+			state.txMu.Unlock()
+			if restartCarrier {
+				var err error
+				if persistFailed {
+					err = globalExtenderToggle.restartCarriersIfChanged()
+				} else {
+					err = globalExtenderToggle.RestartCarriers()
+				}
+				if err != nil {
+					tlog("⚠️ [control] carrier live apply failed: %s\n", err)
+					if !persistFailed {
+						response = controlResponse{OK: false, Error: "persisted, but failed to apply carrier settings live: " + err.Error()}
+					} else {
+						response.Error += "; failed to restore carrier settings live: " + err.Error()
+					}
+				}
+			}
+		}()
 		oldValue, oldMeta, hadOld := state.getWithMeta(req.Key)
 		if err := state.set(req.Key, req.Value); err != nil {
 			tlog("❌ [control] set %s=%s rejected: %s\n", req.Key, req.Value, err)
 			return controlResponse{OK: false, Error: err.Error()}
 		}
+		if isExtenderCarrierKey(req.Key) {
+			oldOn := !hadOld || !strings.EqualFold(oldValue, "off")
+			restartCarrier = oldOn != !strings.EqualFold(req.Value, "off")
+		}
 		if err := state.persist(); err != nil {
+			persistFailed = true
 			state.mu.Lock()
 			if hadOld {
 				state.values[req.Key] = oldValue
@@ -834,13 +876,37 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			return controlResponse{OK: false, Error: fmt.Sprintf("unknown control key %q", req.Key)}
 		}
 		state.txMu.Lock()
-		defer state.txMu.Unlock()
+		restartCarrier := false
+		persistFailed := false
+		defer func() {
+			state.txMu.Unlock()
+			if restartCarrier {
+				var err error
+				if persistFailed {
+					err = globalExtenderToggle.restartCarriersIfChanged()
+				} else {
+					err = globalExtenderToggle.RestartCarriers()
+				}
+				if err != nil {
+					tlog("⚠️ [control] carrier live apply failed: %s\n", err)
+					if !persistFailed {
+						response = controlResponse{OK: false, Error: "persisted, but failed to apply carrier settings live: " + err.Error()}
+					} else {
+						response.Error += "; failed to restore carrier settings live: " + err.Error()
+					}
+				}
+			}
+		}()
 		oldValue, oldMeta, hadOld := state.getWithMeta(req.Key)
 		if err := state.clear(req.Key); err != nil {
 			tlog("❌ [control] clear %s rejected: %s\n", req.Key, err)
 			return controlResponse{OK: false, Error: err.Error()}
 		}
+		if isExtenderCarrierKey(req.Key) && hadOld && strings.EqualFold(oldValue, "off") {
+			restartCarrier = true
+		}
 		if err := state.persist(); err != nil {
+			persistFailed = true
 			if hadOld {
 				state.mu.Lock()
 				state.values[req.Key] = oldValue
@@ -1171,6 +1237,8 @@ func applyControlLiveSideEffect(key, value string) error {
 		}
 	case "extender":
 		globalExtenderToggle.reconcile(strings.EqualFold(value, "on"))
+	case "extender_udp443", "extender_udp4053", "extender_udp53":
+		return nil
 	case "baseline":
 		// Sampling is a goroutine that checks the flag each tick, so turning it
 		// off takes effect on the next tick and needs no restart and no signal.

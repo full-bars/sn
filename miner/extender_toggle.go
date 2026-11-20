@@ -11,14 +11,17 @@ import (
 // Only the direct device registers. A stopped budget check cannot release a
 // newer operator hold because both paths take the same lock.
 type extenderToggle struct {
-	mu           sync.Mutex
-	device       extenderToggleDevice
-	allow        func() bool
-	cancel       context.CancelFunc
-	generation   uint64
-	settingKnown bool
-	enabled      bool
-	budgetHeld   bool
+	mu              sync.Mutex
+	device          extenderToggleDevice
+	allow           func() bool
+	cancel          context.CancelFunc
+	generation      uint64
+	settingKnown    bool
+	enabled         bool
+	budgetHeld      bool
+	appliedCarriers extenderCarrierConfig
+	carrierKnown    bool
+	restartRole     func() error
 }
 type extenderToggleDevice interface {
 	HoldProvideExtenderSession(bool)
@@ -35,6 +38,8 @@ func (m *extenderToggle) attach(device extenderToggleDevice, gate *extenderActiv
 	m.mu.Lock()
 	m.device, m.allow = device, gate.allowLaunch
 	m.settingKnown = false
+	m.carrierKnown = true
+	m.appliedCarriers = extenderCarrierConfigFromState(globalControlState)
 	m.reconcileLocked(extenderSettingEnabled(globalControlState))
 	m.mu.Unlock()
 	return func() {
@@ -44,6 +49,7 @@ func (m *extenderToggle) attach(device extenderToggleDevice, gate *extenderActiv
 			m.stopCheckLocked()
 			m.device = nil
 			m.allow = nil
+			m.restartRole = nil
 		}
 	}
 }
@@ -84,6 +90,8 @@ func (m *extenderToggle) reconcileLocked(enabled bool) {
 	m.device.SetProvideExtender(true)
 	publishExtenderHeadStartRole(allowed)
 	if allowed {
+		m.appliedCarriers = extenderCarrierConfigFromState(globalControlState)
+		m.carrierKnown = true
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -107,6 +115,8 @@ func (m *extenderToggle) reconcileLocked(enabled bool) {
 				m.device.HoldProvideExtenderSession(false)
 				m.budgetHeld = false
 				m.cancel = nil
+				m.appliedCarriers = extenderCarrierConfigFromState(globalControlState)
+				m.carrierKnown = true
 				m.mu.Unlock()
 				return
 			}
@@ -119,4 +129,68 @@ func (m *extenderToggle) budgetWithheld() bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.device != nil && m.enabled && m.budgetHeld
+}
+
+type extenderCarrierConfig struct {
+	udp443  bool
+	udp4053 bool
+	udp53   bool
+}
+
+func extenderCarrierConfigFromState(state *controlState) extenderCarrierConfig {
+	cfg := extenderCarrierConfig{
+		udp443:  true,
+		udp4053: true,
+		udp53:   true,
+	}
+	if state == nil {
+		return cfg
+	}
+	if v, ok := state.get("extender_udp443"); ok && strings.EqualFold(v, "off") {
+		cfg.udp443 = false
+	}
+	if v, ok := state.get("extender_udp4053"); ok && strings.EqualFold(v, "off") {
+		cfg.udp4053 = false
+	}
+	if v, ok := state.get("extender_udp53"); ok && strings.EqualFold(v, "off") {
+		cfg.udp53 = false
+	}
+	return cfg
+}
+
+func (m *extenderToggle) RestartCarriers() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.restartCarriersLocked(false)
+}
+
+func (m *extenderToggle) restartCarriersIfChanged() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.restartCarriersLocked(true)
+}
+
+func (m *extenderToggle) restartCarriersLocked(onlyIfChanged bool) error {
+	current := extenderCarrierConfigFromState(globalControlState)
+	if m.device == nil || !m.enabled || m.budgetHeld {
+		m.appliedCarriers = current
+		m.carrierKnown = true
+		return nil
+	}
+	if onlyIfChanged && m.carrierKnown && m.appliedCarriers == current {
+		return nil
+	}
+	var err error
+	if m.restartRole != nil {
+		err = m.restartRole()
+	} else {
+		m.device.SetProvideExtender(false)
+		m.device.SetProvideExtender(true)
+	}
+	if err != nil {
+		return err
+	}
+	m.appliedCarriers = current
+	m.carrierKnown = true
+	return nil
 }
