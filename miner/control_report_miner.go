@@ -378,10 +378,7 @@ func buildMinerTrimPreview(count int) (string, error) {
 	return trimPreviewText(state, urlState, running, runningProxyEarnings(), count), nil
 }
 
-// buildMinerAuditStatus reports the proxy audit engine, which the miner does
-// not implement. An explicit error beats a fabricated "observing only"
-// status: the client falls back to the status command, whose audit field is
-// nil in the same way an older provider's is.
+// buildMinerAuditStatus reports the audit engine's last completed tick.
 func buildMinerAuditStatus() (*proxyAuditStatus, error) {
-	return nil, fmt.Errorf("the miner does not implement the v3.23 proxy audit engine (no tick to report)")
+	return proxyAuditStatusSnapshot(), nil
 }

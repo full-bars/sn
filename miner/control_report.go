@@ -218,9 +218,7 @@ var minerControlTrimPreview = func(count int) (string, error) {
 }
 
 // proxyAuditStatus and its parked-proxy element are defined in
-// proxy_manager_audit_status.go (the P1(c) port). The control socket replies
-// with that snapshot; the miner has no audit engine, so the builder below
-// reports the gap explicitly.
+// proxy_manager_audit_status.go. The control socket replies with that snapshot.
 
 // minerControlAuditStatus returns the proxy audit engine's last tick, or
 // (nil, nil) when the miner has no audit engine. A non-nil error is reported

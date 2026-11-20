@@ -70,10 +70,20 @@ func TestProxySecretCatchAllFlow(t *testing.T) {
 	report.NewlyDead = []proxyEvent{{Index: 77, Address: proxyKeyDisplay(address)}}
 	writeProxyHealthEvents(dir, report, now)
 	h := newGovHarness("a:1")
+	previousAuditor := currentProxyAuditor.Load()
+	currentProxyAuditor.Store(h.g)
+	t.Cleanup(func() { currentProxyAuditor.Store(previousAuditor) })
 	h.g.st.parks[address] = &proxyAuditParkRecord{until: now.Add(time.Minute)}
 	h.g.publish(now, true, proxyAuditResult{})
 	for _, command := range []string{"status", "snapshot", "audit"} {
-		data, err := json.Marshal(handleControlRequest(newControlState(), controlRequest{Cmd: command}))
+		response := handleControlRequest(newControlState(), controlRequest{Cmd: command})
+		if !response.OK {
+			t.Fatalf("%s control request failed", command)
+		}
+		if (command == "status" || command == "audit") && (response.Audit == nil || len(response.Audit.Parked) != 1) {
+			t.Fatalf("%s did not return the parked proxy", command)
+		}
+		data, err := json.Marshal(response)
 		if err != nil {
 			t.Fatal(err)
 		}
