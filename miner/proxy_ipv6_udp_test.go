@@ -333,13 +333,18 @@ func TestProxiedIdentityUdpRechecksIpv6AfterTheCheckWait(t *testing.T) {
 	globalControlState = state
 	defer func() { globalControlState = previous }()
 
+	var probes atomic.Int32
 	check := newProxyUDPCheckStore(func(context.Context, *connect.ProxySettings) proxyUDPResult {
 		// while the flow waits for this check, an operator turns the feature off
+		probes.Add(1)
 		state.set("proxy_udp_ipv6", "off")
 		return proxyUDPResult{Status: proxyUDPOK}
 	})
 	// a cached ok result lets the first decision pass, a stale one forces the wait
-	check.Check(context.Background(), proxySettings, time.Now().Add(-time.Hour))
+	check.Check(context.Background(), proxySettings, time.Now().Add(-2*proxyUDPResultTTL))
+	// priming turned the feature off, so turn it on again for the dial
+	state.set("proxy_udp_ipv6", "on")
+	primed := probes.Load()
 	natSettings := proxiedIdentityNatSettings(proxySettings, check)
 	conn, err := natSettings.UdpBufferSettings.DialContext(context.Background(), "udp", "[2001:db8::1]:443")
 	if conn != nil {
@@ -347,6 +352,9 @@ func TestProxiedIdentityUdpRechecksIpv6AfterTheCheckWait(t *testing.T) {
 	}
 	if !errors.Is(err, errProxiedUdpIpv6Refused) {
 		t.Fatalf("err = %v, want the ipv6 refusal after the recheck", err)
+	}
+	if probes.Load() == primed {
+		t.Fatal("the dial did not wait for a new check, so the recheck after the wait was not exercised")
 	}
 	if got := server.accepts.Load(); got != 0 {
 		t.Fatalf("the flow reached the proxy %d times", got)
@@ -397,5 +405,31 @@ func TestProxiedIdentityUdpRelaysIpv6ThroughAProxyThatPassedTheChecks(t *testing
 	}
 	if got := string(buf[:n]); got != "echo:ping" {
 		t.Fatalf("reply = %q", got)
+	}
+}
+
+// An expired IPv4 result is not trusted as a negative answer: the flow starts a
+// new check and is refused for now.
+func TestProxiedUdpIPv6CandidateRefreshesAnExpiredIPv4Result(t *testing.T) {
+	settings := udp6Settings()
+	var probes atomic.Int32
+	check := newProxyUDPCheckStore(func(context.Context, *connect.ProxySettings) proxyUDPResult {
+		probes.Add(1)
+		return proxyUDPResult{Status: proxyUDPOK}
+	})
+	storeWithStaleResult := func() {
+		check.mu.Lock()
+		check.entries[settings.Key()] = &proxyUDPCheckEntry{result: proxyUDPResult{Status: proxyUDPNoRelay}, at: time.Now().Add(-2 * proxyUDPResultTTL)}
+		check.mu.Unlock()
+	}
+	storeWithStaleResult()
+	withIPv6Gate(t, v6Yes, newProxyUDP6Store(nil))
+	if proxiedUdpIPv6Candidate(settings, check) {
+		t.Fatal("an expired result was read as a current one")
+	}
+	waitFor(t, 5*time.Second, "the expired ipv4 result to be checked again", func() bool { return probes.Load() == 1 })
+	waitFor(t, 5*time.Second, "the new ipv4 result to be stored", func() bool { return check.fresh(settings.Key(), time.Now()) })
+	if !proxiedUdpIPv6Candidate(settings, check) {
+		t.Fatal("the refreshed ok result did not make the proxy a candidate")
 	}
 }

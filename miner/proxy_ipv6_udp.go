@@ -274,12 +274,13 @@ func proxiedUdpIPv6Candidate(settings *connect.ProxySettings, checkStore *proxyU
 	if !proxyUDPIPv6Enabled() || proxyIPv6TCPVerdict(settings.Key()) != v6Yes {
 		return false
 	}
+	now := time.Now()
 	result, ok := checkStore.cached(settings.Key())
-	if !ok {
-		// no IPv4 result yet: start the check without waiting, so the next flow
-		// can tell. Flows of a proxy that only ever carries IPv6 would otherwise
-		// never have one
-		checkStore.checkDetached(settings, time.Now())
+	if !ok || !checkStore.fresh(settings.Key(), now) {
+		// no IPv4 result, or an expired one: start the check without waiting, so
+		// the next flow can tell. Flows of a proxy that only ever carries IPv6
+		// would otherwise keep reading the stale answer
+		checkStore.checkDetached(settings, now)
 		return false
 	}
 	return result.Status == proxyUDPOK
