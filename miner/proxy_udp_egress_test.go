@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/urfoundation/sn/miner/bandwidth"
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/connect/protocol"
 )
@@ -28,15 +29,21 @@ func stubUdpCheckStore(status proxyUDPStatus) *proxyUDPCheckStore {
 	})
 }
 
-// proxiedIdentityNatSettings builds local user nat settings whose udp dials
-// go through a proxy's udp relay, for the relay tests below. The proxied
-// slot's idle bound is not set here: production applies it through
-// providerSlotDialSettings (see TestProviderSlotDialSettingsProxiedUdpIdle).
-func proxiedIdentityNatSettings(proxySettings *connect.ProxySettings, checkStore *proxyUDPCheckStore) *connect.LocalUserNatSettings {
-	clientStrategySettings := connect.DefaultClientStrategySettings()
-	clientStrategySettings.ProxySettings = proxySettings
+// proxiedIdentityNatSettings builds the local user nat settings of a proxied
+// provider's exit the way the sdk does (applyProviderExitEgress): the space's
+// proxy and the slot's dial settings on both the tcp and the udp side. The udp
+// check store is the slot's.
+func proxiedIdentityNatSettings(t *testing.T, proxySettings *connect.ProxySettings, checkStore *proxyUDPCheckStore) *connect.LocalUserNatSettings {
+	t.Helper()
+	previous := globalProxyUDPCheck
+	globalProxyUDPCheck = checkStore
+	t.Cleanup(func() { globalProxyUDPCheck = previous })
+	dialContextSettings := providerSlotDialSettings(nil, proxySettings, &bandwidth.ProxyBandwidth{}, proxySettings.Address)
 	localUserNatSettings := connect.DefaultLocalUserNatSettings()
-	applyIdentityNatConnectSettings(localUserNatSettings, clientStrategySettings.ConnectSettings, proxySettings, checkStore)
+	localUserNatSettings.TcpBufferSettings.ProxySettings = proxySettings
+	localUserNatSettings.TcpBufferSettings.DialContextSettings = dialContextSettings
+	localUserNatSettings.UdpBufferSettings.ProxySettings = proxySettings
+	localUserNatSettings.UdpBufferSettings.DialContextSettings = dialContextSettings
 	return localUserNatSettings
 }
 
@@ -51,16 +58,11 @@ func waitForAssociations(t *testing.T, server *fakeSocks5, want int64) {
 	}
 }
 
-// The root cause: the nat dialed a proxied identity's client udp through the
-// engine's SOCKS5 dialer, which only does CONNECT, so every dial failed with
-// "network not implemented" before reaching the proxy. Through the nat's udp
-// settings a dial must now open an association on the proxy and round trip
-// through its relay.
 func TestProxiedIdentityClientUdpGoesThroughTheProxyRelay(t *testing.T) {
 	server := startFakeSocks5(t, "", "", false)
 	echo, seen := startEchoUdp(t)
 	proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-	natSettings := proxiedIdentityNatSettings(proxySettings, stubUdpCheckStore(proxyUDPOK))
+	natSettings := proxiedIdentityNatSettings(t, proxySettings, stubUdpCheckStore(proxyUDPOK))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -100,10 +102,7 @@ func TestProxiedIdentityTcpKeepsTheConnectPath(t *testing.T) {
 	server := startFakeSocks5(t, "", "", false)
 	server.tcpExitBody = "198.51.100.7"
 	proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-	natSettings := proxiedIdentityNatSettings(proxySettings, stubUdpCheckStore(proxyUDPOK))
-	if natSettings.TcpBufferSettings.DialContextSettings != nil {
-		t.Fatalf("the tcp settings got the udp dialer")
-	}
+	natSettings := proxiedIdentityNatSettings(t, proxySettings, stubUdpCheckStore(proxyUDPOK))
 
 	for name, dial := range map[string]func(context.Context, string, string) (net.Conn, error){
 		"tcp settings": natSettings.TcpBufferSettings.DialContext,
@@ -128,12 +127,11 @@ func TestProxiedIdentityTcpKeepsTheConnectPath(t *testing.T) {
 	}
 }
 
-// The direct identity keeps the engine's own udp socket.
+// The direct identity keeps the engine's own udp socket: no proxy, no dial
+// settings from the slot.
 func TestDirectIdentityUdpSettingsAreUntouched(t *testing.T) {
-	localUserNatSettings := connect.DefaultLocalUserNatSettings()
-	applyIdentityNatConnectSettings(localUserNatSettings, *connect.DefaultConnectSettings(), nil, stubUdpCheckStore(proxyUDPOK))
-	if localUserNatSettings.UdpBufferSettings.DialContextSettings != nil {
-		t.Fatalf("the direct identity got a proxy udp dialer")
+	if settings := providerSlotDialSettings(nil, nil, nil, ""); settings != nil && settings.PacketDial != nil {
+		t.Fatalf("the direct identity got a proxy udp dial")
 	}
 }
 
@@ -153,7 +151,7 @@ func TestProxiedIdentityUdpRefusals(t *testing.T) {
 			server := startFakeSocks5(t, "", "", false)
 			echo, seen := startEchoUdp(t)
 			proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-			natSettings := proxiedIdentityNatSettings(proxySettings, stubUdpCheckStore(test.status))
+			natSettings := proxiedIdentityNatSettings(t, proxySettings, stubUdpCheckStore(test.status))
 			refusedBefore := proxiedUdpRefusals.count(proxySettings, test.reason)
 
 			start := time.Now()
@@ -189,7 +187,7 @@ func TestProxiedIdentityUdpAssociationRefusedIsNotAHostSocket(t *testing.T) {
 	server := startFakeSocks5(t, "", "", true)
 	echo, seen := startEchoUdp(t)
 	proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-	natSettings := proxiedIdentityNatSettings(proxySettings, stubUdpCheckStore(proxyUDPUnknown))
+	natSettings := proxiedIdentityNatSettings(t, proxySettings, stubUdpCheckStore(proxyUDPUnknown))
 	refusedBefore := proxiedUdpRefusals.count(proxySettings, proxiedUdpRefusalAssociation)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -218,7 +216,7 @@ func TestProxiedIdentityUdpCloseEndsTheAssociation(t *testing.T) {
 	server := startFakeSocks5(t, "", "", false)
 	echo, _ := startEchoUdp(t)
 	proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-	natSettings := proxiedIdentityNatSettings(proxySettings, stubUdpCheckStore(proxyUDPOK))
+	natSettings := proxiedIdentityNatSettings(t, proxySettings, stubUdpCheckStore(proxyUDPOK))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -252,7 +250,7 @@ func TestProxiedIdentityUdpCanceledDialJoins(t *testing.T) {
 		})
 		server := startFakeSocks5(t, "", "", false)
 		proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-		natSettings := proxiedIdentityNatSettings(proxySettings, checkStore)
+		natSettings := proxiedIdentityNatSettings(t, proxySettings, checkStore)
 
 		ctx, cancel := context.WithCancel(context.Background())
 		result := make(chan error, 1)
@@ -303,7 +301,7 @@ func TestProxiedIdentityUdpCanceledDialJoins(t *testing.T) {
 			close(controlClosed)
 		}()
 		proxySettings := &connect.ProxySettings{Network: "tcp", Address: listener.Addr().String()}
-		natSettings := proxiedIdentityNatSettings(proxySettings, stubUdpCheckStore(proxyUDPOK))
+		natSettings := proxiedIdentityNatSettings(t, proxySettings, stubUdpCheckStore(proxyUDPOK))
 
 		ctx, cancel := context.WithCancel(context.Background())
 		result := make(chan error, 1)
@@ -347,7 +345,7 @@ func TestProxiedIdentityUdpReadsOnlyTheDestination(t *testing.T) {
 	}
 	defer other.Close()
 	proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-	natSettings := proxiedIdentityNatSettings(proxySettings, stubUdpCheckStore(proxyUDPOK))
+	natSettings := proxiedIdentityNatSettings(t, proxySettings, stubUdpCheckStore(proxyUDPOK))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -433,7 +431,7 @@ func TestProxiedIdentityLocalUserNatCarriesUdp(t *testing.T) {
 	server := startFakeSocks5(t, "", "", false)
 	echo, seen := startEchoUdp(t)
 	proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-	natSettings := proxiedIdentityNatSettings(proxySettings, stubUdpCheckStore(proxyUDPOK))
+	natSettings := proxiedIdentityNatSettings(t, proxySettings, stubUdpCheckStore(proxyUDPOK))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -487,7 +485,7 @@ func TestProxiedIdentityLocalUserNatCarriesUdp(t *testing.T) {
 func TestProxiedIdentityUdpRefusesIpv6Fast(t *testing.T) {
 	server := startFakeSocks5(t, "", "", false)
 	proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-	natSettings := proxiedIdentityNatSettings(proxySettings, stubUdpCheckStore(proxyUDPOK))
+	natSettings := proxiedIdentityNatSettings(t, proxySettings, stubUdpCheckStore(proxyUDPOK))
 	conn, err := natSettings.UdpBufferSettings.DialContext(context.Background(), "udp", "[2001:db8::1]:443")
 	if conn != nil {
 		conn.Close()
@@ -518,7 +516,7 @@ func TestProxiedIdentityUdpCheckOutlivesTheFlow(t *testing.T) {
 	})
 	server := startFakeSocks5(t, "", "", false)
 	proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-	natSettings := proxiedIdentityNatSettings(proxySettings, checkStore)
+	natSettings := proxiedIdentityNatSettings(t, proxySettings, checkStore)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
@@ -553,7 +551,7 @@ func TestProxiedIdentityUdpBurstSharesOneCheck(t *testing.T) {
 	})
 	server := startFakeSocks5(t, "", "", false)
 	proxySettings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
-	natSettings := proxiedIdentityNatSettings(proxySettings, checkStore)
+	natSettings := proxiedIdentityNatSettings(t, proxySettings, checkStore)
 
 	const flowCount = 50
 	results := make(chan error, flowCount)

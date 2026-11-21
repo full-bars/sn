@@ -21,11 +21,12 @@ import (
 // before the proxy was contacted, so a proxied identity dropped all tunneled
 // udp (dns, stun, quic, games) while tcp worked.
 //
-// installProxiedUdpEgress gives the nat's udp settings a dialer that carries a
-// flow through the proxy's udp relay instead (socks5_udp.go): one udp
-// association per flow, returned as a net.Conn bound to the flow's destination.
-// Tcp is not touched; the nat's tcp settings are a separate copy and keep the
-// CONNECT path.
+// providerSlotDialSettings gives a proxied slot's exit nat a datagram dial
+// (DialContextSettings.PacketDial) that carries a flow through the proxy's udp
+// relay instead (socks5_udp.go): one udp association per flow, returned as a
+// net.Conn bound to the flow's destination. connect reads that dial for every
+// datagram dial of a space whose egress is a proxy. Tcp keeps the CONNECT path
+// through the injected dialer.
 //
 // Rules:
 //   - the relay is gated on the per-proxy udp check (proxy_udp_check.go), the
@@ -52,8 +53,8 @@ import (
 // The returned conn is opaque (not a syscall.Conn). Two consequences, both
 // intended: egress ttl realism counts these flows as socket-unavailable (a ttl
 // on the hop to the proxy would mean nothing), and the nat's shared socket
-// lifecycle cannot register them. That lifecycle is off for every identity
-// today; enabling it for proxied identities would dial each flow twice.
+// lifecycle cannot register them. connect keeps the flows of a space whose
+// egress is a proxy off that lifecycle, so each flow is dialed once.
 
 const (
 	// how long a flow waits for the identity's udp check before it is dialed
@@ -79,47 +80,6 @@ var (
 	errProxiedUdpIpv6Refused   = errors.New("proxy udp: ipv6 destinations are not relayed")
 	errProxiedUdpFamilyRefused = errors.New("proxy udp: destination family does not match the requested network")
 )
-
-// applyIdentityNatConnectSettings gives an identity's local user nat the
-// identity's connect settings, so client tcp and udp egress the way the
-// identity does. For a proxied identity tcp keeps the proxy's CONNECT path and
-// udp goes through the proxy's udp relay.
-func applyIdentityNatConnectSettings(localUserNatSettings *connect.LocalUserNatSettings, connectSettings connect.ConnectSettings, proxySettings *connect.ProxySettings, checkStore *proxyUDPCheckStore) {
-	localUserNatSettings.TcpBufferSettings.ConnectSettings = connectSettings
-	localUserNatSettings.UdpBufferSettings.ConnectSettings = connectSettings
-	if proxySettings == nil {
-		return
-	}
-	installProxiedUdpEgress(&localUserNatSettings.UdpBufferSettings.ConnectSettings, proxySettings, checkStore)
-}
-
-// installProxiedUdpEgress points the udp dials of connectSettings at the udp
-// relay of proxySettings, gated by checkStore. Non-udp dials keep the dialer
-// connectSettings had. A nil proxySettings (the direct identity) leaves the
-// settings untouched.
-func installProxiedUdpEgress(connectSettings *connect.ConnectSettings, proxySettings *connect.ProxySettings, checkStore *proxyUDPCheckStore) {
-	if proxySettings == nil {
-		return
-	}
-	// the dialer a non-udp dial would have used, resolved now so the closure
-	// does not read the settings it is installed on
-	var otherDialContext connect.DialContextFunction
-	if previous := connectSettings.DialContextSettings; previous != nil && previous.DialContext != nil {
-		otherDialContext = previous.DialContext
-	} else {
-		base := *connectSettings
-		base.DialContextSettings = nil
-		otherDialContext = func(ctx context.Context, network string, addr string) (net.Conn, error) {
-			if base.ProxySettings == nil {
-				return base.NetDialer().DialContext(ctx, network, addr)
-			}
-			return base.ProxySettings.NewDialContext(ctx, base.NetDialer())(ctx, network, addr)
-		}
-	}
-	connectSettings.DialContextSettings = &connect.DialContextSettings{
-		DialContext: proxiedUdpDialContext(otherDialContext, proxySettings, checkStore),
-	}
-}
 
 // proxiedUdpDialContext sends udp dials through the proxy's udp relay and every
 // other network to otherDialContext. The miner installs it on the slot's

@@ -121,9 +121,20 @@ func newH3PacketConnFactory(proxySettings *connect.ProxySettings, bw *bandwidth.
 // a test-egress run keeps its bound source address on the H3 carriers too.
 func providerSlotDialSettings(base *connect.DialContextSettings, proxySettings *connect.ProxySettings, bw *bandwidth.ProxyBandwidth, proxyAddr string) *connect.DialContextSettings {
 	if factory := newH3PacketConnFactory(proxySettings, bw, proxyAddr); factory != nil {
+		checkStore := globalProxyUDPCheck
 		next := &connect.DialContextSettings{
 			PacketConnFactory: factory,
-			UdpIdleTimeout:    proxiedUdpFlowIdleTimeout,
+			// A client udp flow of a proxied provider's exit nat reaches
+			// connect's DialContext, which sends a datagram dial of a proxied
+			// space to the owner's packet dial, or to the packet endpoint when
+			// there is none, and never to the injected dialer below. The
+			// packet dial is dialProxiedUdp: the destination and the proxy's udp
+			// check are gated before the proxy is contacted, the relay dial is
+			// bounded, and every refusal is counted.
+			PacketDial: func(ctx context.Context, network string, addr string) (net.Conn, error) {
+				return dialProxiedUdp(ctx, proxySettings, checkStore, network, addr)
+			},
+			UdpIdleTimeout: proxiedUdpFlowIdleTimeout,
 		}
 		// SOCKS5 is the sole stream route for a proxied slot. A failed proxy
 		// dial must fail closed; falling back to the base/direct dial is the
@@ -133,7 +144,7 @@ func providerSlotDialSettings(base *connect.DialContextSettings, proxySettings *
 		// one association per flow, gated on the proxy's udp check
 		// (proxy_udp_egress.go). The nat's udp sockets dial through this same
 		// settings object, and the CONNECT dialer cannot carry udp.
-		next.DialContext = proxiedUdpDialContext(proxySettings.NewDialContext(context.Background(), forward), proxySettings, globalProxyUDPCheck)
+		next.DialContext = proxiedUdpDialContext(proxySettings.NewDialContext(context.Background(), forward), proxySettings, checkStore)
 		base = next
 	}
 	return bandwidth.WrapDialContextSettings(base, bw, proxyAddr)

@@ -2,6 +2,7 @@ package bandwidth
 
 import (
 	"context"
+	"errors"
 	"net"
 	"strings"
 	"testing"
@@ -117,6 +118,31 @@ func TestWrapDialContextSettingsCarriesTheUdpIdleTimeout(t *testing.T) {
 	wrapped := WrapDialContextSettings(ds, &ProxyBandwidth{}, "proxy-4")
 	if wrapped.UdpIdleTimeout != 120*time.Second {
 		t.Fatalf("UdpIdleTimeout = %s after the wrap, want 120s", wrapped.UdpIdleTimeout)
+	}
+}
+
+// A proxied provider's exit nat reads the owner's datagram dial from these
+// settings (connect's DialContext uses it in place of the packet endpoint). A
+// wrap that rebuilt the struct without it would send every client udp flow past
+// the udp refusals.
+func TestWrapDialContextSettingsCarriesThePacketDial(t *testing.T) {
+	refusal := errors.New("refused")
+	var asked []string
+	ds := &connect.DialContextSettings{
+		PacketDial: func(ctx context.Context, network string, addr string) (net.Conn, error) {
+			asked = append(asked, network+" "+addr)
+			return nil, refusal
+		},
+	}
+	wrapped := WrapDialContextSettings(ds, &ProxyBandwidth{}, "proxy-4")
+	if wrapped.PacketDial == nil {
+		t.Fatal("PacketDial was dropped by the wrap")
+	}
+	if _, err := wrapped.PacketDial(context.Background(), "udp", "192.0.2.1:53"); !errors.Is(err, refusal) {
+		t.Fatalf("the wrapped dial returned %v, want the original dial's refusal", err)
+	}
+	if len(asked) != 1 || asked[0] != "udp 192.0.2.1:53" {
+		t.Fatalf("the original dial was asked %v", asked)
 	}
 }
 
