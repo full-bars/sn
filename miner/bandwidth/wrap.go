@@ -42,6 +42,22 @@ func WrapDialContextSettings(ds *connect.DialContextSettings, bw *ProxyBandwidth
 		return NewConn(conn, bw, proxyAddr), nil
 	}
 
+	// A proxied provider's client udp flows are dialed through the owner's
+	// PacketDial, which connect reads in place of the injected dialer above, so
+	// they are counted here as the stream connections are: every byte into the
+	// total counters (billable stays with the remote relay's accounting).
+	packetDial := ds.PacketDial
+	if packetDial != nil {
+		origPacketDial := packetDial
+		packetDial = func(ctx context.Context, network string, addr string) (net.Conn, error) {
+			conn, err := origPacketDial(ctx, network, addr)
+			if err != nil {
+				return nil, err
+			}
+			return NewConn(conn, bw, proxyAddr), nil
+		}
+	}
+
 	// NOTE: UDP/QUIC wrapping of the platform tunnel is NOT done here: a
 	// PlatformTransportSettings.H3PacketConnFactory wired at the provider
 	// level (see provide.go) is the mechanism. What this wrapper must do is
@@ -54,6 +70,11 @@ func WrapDialContextSettings(ds *connect.DialContextSettings, bw *ProxyBandwidth
 	return &connect.DialContextSettings{
 		DialContext:       wrappedDial,
 		PacketConnFactory: ds.PacketConnFactory,
+		// the owner's datagram dial rides on this struct too: a proxied
+		// provider's exit nat reads it from these settings, so dropping it here
+		// would send every client udp flow through the packet endpoint and past
+		// the refusals of dialProxiedUdp
+		PacketDial: packetDial,
 		// the NAT idle override rides on this struct; the rebuild must not
 		// reset a proxied slot's shortened idle back to the SDK default.
 		UdpIdleTimeout: ds.UdpIdleTimeout,
