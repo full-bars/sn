@@ -3,6 +3,7 @@ package bandwidth
 import (
 	"context"
 	"errors"
+	"io"
 	"net"
 	"strings"
 	"testing"
@@ -143,6 +144,35 @@ func TestWrapDialContextSettingsCarriesThePacketDial(t *testing.T) {
 	}
 	if len(asked) != 1 || asked[0] != "udp 192.0.2.1:53" {
 		t.Fatalf("the original dial was asked %v", asked)
+	}
+}
+
+// The client udp flows of a proxied provider come through PacketDial, so the
+// wrap counts their bytes into the total counters as it does for stream dials.
+func TestWrapDialContextSettingsCountsPacketDialBytes(t *testing.T) {
+	bw := &ProxyBandwidth{}
+	client, server := net.Pipe()
+	defer server.Close()
+	go io.Copy(io.Discard, server)
+	ds := &connect.DialContextSettings{
+		PacketDial: func(ctx context.Context, network string, addr string) (net.Conn, error) {
+			return client, nil
+		},
+	}
+	conn, err := WrapDialContextSettings(ds, bw, "proxy-4").PacketDial(context.Background(), "udp", "192.0.2.1:53")
+	if err != nil {
+		t.Fatalf("PacketDial: %v", err)
+	}
+	defer conn.Close()
+	data := []byte("udp payload")
+	if _, err := conn.Write(data); err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+	if bw.TotalTx.Load() != uint64(len(data)) {
+		t.Fatalf("TotalTx = %d after a packet dial write, want %d", bw.TotalTx.Load(), len(data))
+	}
+	if bw.BillableTx.Load() != 0 {
+		t.Fatalf("the packet dial wrapper counted billable bytes: %d", bw.BillableTx.Load())
 	}
 }
 
