@@ -16,7 +16,8 @@ func TestOpenBSDBareCleanupRemovesCron(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			dir := t.TempDir()
 			cron := filepath.Join(dir, "crontab")
-			script := "#!/bin/sh\nif [ \"$1\" = -l ]; then\n  printf '%s\\n' '0 1 * * * update # urnet-tools auto-update urnetwork' '0 2 * * * other'\nelse\n  /bin/cat > \"$CRON_OUTPUT\"\nfi\n"
+			// echo, not printf: the OpenBSD sh has no printf builtin and PATH below holds only this directory.
+			script := "#!/bin/sh\nif [ \"$1\" = -l ]; then\n  echo '0 1 * * * update # urnet-tools auto-update urnetwork'\n  echo '0 2 * * * other'\nelse\n  /bin/cat > \"$CRON_OUTPUT\"\nfi\n"
 			if fail {
 				script = "#!/bin/sh\nexit 1\n"
 			}
