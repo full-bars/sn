@@ -13,9 +13,11 @@ package miner
 //     device, and the pin is added later, if ever;
 //   - a fresh persisted verdict skips the probe (yes for 6 h, no for 15 min),
 //     so a restart does not re-learn the pool;
-//   - the pin exists only while the ledger holds a live yes and this host has
-//     an IPv6 path (a v6-pinned transport on a host without one never dials:
-//     connect holds it asleep, transport_family.go refreshFamilyHold);
+//   - the pin exists only while the ledger holds a live yes. The host needs no
+//     IPv6 of its own: the pin dials through the slot's proxy, which supplies
+//     the exit, and the sdk marks it (DialsThroughProxy) so connect does not
+//     hold it for lack of a local IPv6 path (transport_family.go
+//     refreshFamilyHold);
 //   - an unknown round changes nothing and is retried from 5 minutes, growing.
 //
 // Lock order: a slot's applyMu, then the controller's mu. Nothing calls into
@@ -43,8 +45,6 @@ const (
 	// has time to be retried before a working pin is retired for lack of
 	// fresh evidence
 	v6YesRefreshLead = 30 * time.Minute
-	// a host without an IPv6 path is re-checked this often
-	v6HostRecheck = 15 * time.Minute
 	// in-service failures closer together than this count once: one transport
 	// dial can make several dialer attempts, and three of them in one second
 	// are one event, not three
@@ -93,10 +93,8 @@ type v6PinController struct {
 	ledger    *v6Ledger
 	persister *v6LedgerPersister
 	now       func() time.Time
-	// seams: production probes through the proxy and asks connect whether
-	// this host has an IPv6 path
+	// seam: production probes through the proxy
 	runProbe func(ctx context.Context, settings v6ProbeSettings) v6ProbeRound
-	hostV6   func() bool
 	log      func(format string, args ...any)
 
 	mu      sync.Mutex
@@ -113,7 +111,6 @@ func newV6PinController(ledger *v6Ledger, persister *v6LedgerPersister) *v6PinCo
 		persister: persister,
 		now:       time.Now,
 		runProbe:  runV6ProbeRound,
-		hostV6:    func() bool { return connect.FamilySupported(6) },
 		log:       importantLogf,
 		slots:     map[*v6PinSlot]struct{}{},
 		wake:      make(chan struct{}, 1),
@@ -239,7 +236,7 @@ func (self *v6PinController) scheduleFromLedgerWithLock(slot *v6PinSlot) {
 
 // wantedWithLock is whether the slot should run the pin now.
 func (self *v6PinController) wantedWithLock(slot *v6PinSlot) bool {
-	return !slot.removed && self.ledger.Verdict(slot.key) == v6Yes && self.hostV6()
+	return !slot.removed && self.ledger.Verdict(slot.key) == v6Yes
 }
 
 // apply brings the device in line with the wanted state. Serialized per slot,
@@ -359,25 +356,20 @@ func (self *v6PinController) run(ctx context.Context) {
 			self.mu.Lock()
 			defer self.mu.Unlock()
 			now := self.now()
-			hostV6 := self.hostV6()
 			for slot := range self.slots {
 				if slot.probing {
 					continue
 				}
 				if !slot.nextProbe.After(now) {
-					if !hostV6 {
-						// a pin could not dial from here anyway; spend nothing
-						slot.nextProbe = now.Add(v6HostRecheck)
-					} else if self.running < v6ProbeConcurrency {
+					if self.running < v6ProbeConcurrency {
 						slot.probing = true
 						self.running++
 						self.workers.Add(1)
 						go self.probeOne(slot)
 						continue
-					} else {
-						// a worker's finish signals the next pass
-						continue
 					}
+					// a worker's finish signals the next pass
+					continue
 				}
 				if next.IsZero() || slot.nextProbe.Before(next) {
 					next = slot.nextProbe
