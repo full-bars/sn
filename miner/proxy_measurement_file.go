@@ -46,6 +46,12 @@ func measurementKey(key string) string {
 	return hex.EncodeToString(sum[:])
 }
 
+// validMeasurementIP reports whether an exit address is an address. An empty
+// string means the check did not learn one.
+func validMeasurementIP(address string) bool {
+	return address == "" || net.ParseIP(address) != nil
+}
+
 func validateMeasurementEntries(entries []measurementFileEntry) error {
 	if len(entries) > measurementFileMaxEntries {
 		return errors.New("too many measurements")
@@ -60,11 +66,10 @@ func validateMeasurementEntries(entries []measurementFileEntry) error {
 			return errors.New("duplicate measurement")
 		}
 		seen[e.Key] = struct{}{}
-		validIP := func(s string) bool { return s == "" || net.ParseIP(s) != nil }
-		if !validIP(e.TCPExit) || !validIP(e.UDPExit) {
+		if !validMeasurementIP(e.TCPExit) || !validMeasurementIP(e.UDPExit) {
 			return errors.New("invalid exit address")
 		}
-		if e.IPv6 != nil && (e.IPv6.At.IsZero() || !validIP(e.IPv6.TCPExit) || !validIP(e.IPv6.UDPExit)) {
+		if e.IPv6 != nil && (e.IPv6.At.IsZero() || !validMeasurementIP(e.IPv6.TCPExit) || !validMeasurementIP(e.IPv6.UDPExit)) {
 			return errors.New("invalid IPv6 measurement")
 		}
 	}
@@ -97,11 +102,54 @@ func loadMeasurementFile(path string) ([]measurementFileEntry, error) {
 	return state.Entries, nil
 }
 
+// readMeasurementEntries reads the usable entries on disk, nil when there is no
+// file or it cannot be trusted. A write folds these in, because two processes
+// hold the same snapshot across a handoff: the draining one and its successor.
+func readMeasurementEntries(path string) []measurementFileEntry {
+	b, err := os.ReadFile(path)
+	if err != nil || len(b) > measurementFileMaxBytes {
+		return nil
+	}
+	var state measurementFile
+	if err := json.Unmarshal(b, &state); err != nil || state.Version != 1 {
+		return nil
+	}
+	if err := validateMeasurementEntries(state.Entries); err != nil {
+		return nil
+	}
+	return state.Entries
+}
+
+// foldMeasurementEntries returns ours plus the disk entries it does not have,
+// the newer stamp winning per key, bounded to the newest entries. The file is
+// a shared snapshot, so a writer never erases evidence it did not produce.
+func foldMeasurementEntries(ours, onDisk []measurementFileEntry) []measurementFileEntry {
+	byKey := make(map[string]measurementFileEntry, len(ours)+len(onDisk))
+	for _, entry := range onDisk {
+		byKey[entry.Key] = entry
+	}
+	for _, entry := range ours {
+		if saved, ok := byKey[entry.Key]; ok && saved.At.After(entry.At) {
+			continue
+		}
+		byKey[entry.Key] = entry
+	}
+	folded := make([]measurementFileEntry, 0, len(byKey))
+	for _, entry := range byKey {
+		folded = append(folded, entry)
+	}
+	if len(folded) > measurementFileMaxEntries {
+		sort.Slice(folded, func(i, j int) bool { return folded[i].At.After(folded[j].At) })
+		folded = folded[:measurementFileMaxEntries]
+	}
+	return folded
+}
+
 func saveMeasurementFile(path string, entries []measurementFileEntry) error {
 	if err := validateMeasurementEntries(entries); err != nil {
 		return err
 	}
-	entries = append([]measurementFileEntry{}, entries...)
+	entries = foldMeasurementEntries(append([]measurementFileEntry{}, entries...), readMeasurementEntries(path))
 	sort.Slice(entries, func(i, j int) bool { return entries[i].Key < entries[j].Key })
 	b, err := json.Marshal(measurementFile{Version: 1, Entries: entries})
 	if err != nil {

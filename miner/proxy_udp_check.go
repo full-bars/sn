@@ -389,6 +389,17 @@ type proxyUDPCheckStore struct {
 	// detachedRuns holds the one detached check in flight per identity
 	// (checkDetached)
 	detachedRuns map[string]*proxyUDPCheckRun
+	// the durable snapshot of published results, and the dispatches that
+	// have not published yet (proxy_measurement_store.go)
+	measurementPath    string
+	measurements       map[string]measurementFileEntry
+	measurementDirty   bool
+	measurementPending time.Time
+	measurementWriting bool
+	measurementKick    chan struct{}
+	measurementDone    chan struct{}
+	measurementFailed  bool
+	attempts           map[string]time.Time
 }
 
 // proxyUDPCheckRun is one check whose result is ready once done is closed.
@@ -419,6 +430,8 @@ func (self *proxyUDPCheckStore) prune(now time.Time) {
 			delete(self.entries, key)
 		}
 	}
+	self.pruneAttemptsLocked(now)
+	self.pruneMeasurementsLocked(now)
 }
 
 var globalProxyUDPCheck = newProxyUDPCheckStore(checkProxyUDP)
@@ -438,7 +451,7 @@ func proxyUDPTTL(status proxyUDPStatus) time.Duration {
 func (self *proxyUDPCheckStore) cached(key string) (proxyUDPResult, bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	entry := self.entries[key]
+	entry := self.restoredEntryLocked(key)
 	if entry == nil || entry.done != nil {
 		return proxyUDPResult{}, false
 	}
@@ -457,7 +470,7 @@ func (self *proxyUDPCheckStore) Check(ctx context.Context, settings *connect.Pro
 	key := settings.Key()
 	for {
 		self.mu.Lock()
-		entry := self.entries[key]
+		entry := self.restoredEntryLocked(key)
 		if entry != nil && entry.done != nil {
 			done := entry.done
 			self.mu.Unlock()
@@ -481,6 +494,10 @@ func (self *proxyUDPCheckStore) Check(ctx context.Context, settings *connect.Pro
 		self.prune(now)
 		running := &proxyUDPCheckEntry{done: make(chan struct{})}
 		self.entries[key] = running
+		// the dispatch is recorded before the slow step, so a check that is
+		// cancelled or loses its socket still moves this identity behind the
+		// ones the sweep has not tried
+		self.noteAttemptLocked(key, now)
 		self.mu.Unlock()
 
 		var result proxyUDPResult
@@ -507,6 +524,8 @@ func (self *proxyUDPCheckStore) Check(ctx context.Context, settings *connect.Pro
 		noteProxyUDPVerdict(settings, previous, result)
 		running.result = result
 		running.at = now
+		self.persistMeasurementLocked(key, result, now)
+		self.clearAttemptLocked(key)
 		close(running.done)
 		running.done = nil
 		self.mu.Unlock()
@@ -532,7 +551,7 @@ func proxyUDPAdmitsH3(key string) bool {
 func (self *proxyUDPCheckStore) fresh(key string, now time.Time) bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	entry := self.entries[key]
+	entry := self.restoredEntryLocked(key)
 	return entry != nil && entry.done == nil && now.Sub(entry.at) < proxyUDPTTL(entry.result.Status)
 }
 
