@@ -430,6 +430,25 @@ func (self *proxyUDPCheckStore) prune(now time.Time) {
 			delete(self.entries, key)
 		}
 	}
+	// the pool can churn faster than a lifetime expires, so the table also has
+	// a count bound. A check in flight is never evicted: its result is what the
+	// identity that is waiting on it will publish.
+	for len(self.entries) > measurementStoreMaxEntries {
+		oldestKey := ""
+		var oldest time.Time
+		for key, entry := range self.entries {
+			if entry.done != nil {
+				continue
+			}
+			if oldestKey == "" || entry.at.Before(oldest) {
+				oldestKey, oldest = key, entry.at
+			}
+		}
+		if oldestKey == "" {
+			break
+		}
+		delete(self.entries, oldestKey)
+	}
 	self.pruneAttemptsLocked(now)
 	self.pruneMeasurementsLocked(now)
 }

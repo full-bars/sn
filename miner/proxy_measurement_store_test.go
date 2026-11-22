@@ -240,6 +240,42 @@ func TestMeasurementStoreDoesNotEraseNewerEvidence(t *testing.T) {
 	}
 }
 
+func TestMeasurementStoreBoundsTheEntryTable(t *testing.T) {
+	saved := measurementStoreMaxEntries
+	measurementStoreMaxEntries = 2
+	defer func() { measurementStoreMaxEntries = saved }()
+
+	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
+	store := newProxyUDPCheckStore(func(context.Context, *connect.ProxySettings) proxyUDPResult {
+		return proxyUDPResult{Status: proxyUDPOK}
+	})
+	running := &proxyUDPCheckEntry{done: make(chan struct{})}
+	store.mu.Lock()
+	store.entries["oldest"] = &proxyUDPCheckEntry{at: now.Add(-3 * time.Minute)}
+	store.entries["older"] = &proxyUDPCheckEntry{at: now.Add(-2 * time.Minute)}
+	store.entries["newest"] = &proxyUDPCheckEntry{at: now.Add(-time.Minute)}
+	store.entries["running"] = running
+	store.prune(now)
+	_, keptOldest := store.entries["oldest"]
+	_, keptNewest := store.entries["newest"]
+	_, keptRunning := store.entries["running"]
+	count := len(store.entries)
+	store.mu.Unlock()
+	if count != measurementStoreMaxEntries {
+		t.Fatalf("table holds %d entries, want %d", count, measurementStoreMaxEntries)
+	}
+	if keptOldest {
+		t.Fatal("the oldest entry survived the count bound")
+	}
+	if !keptNewest {
+		t.Fatal("the newest entry was evicted")
+	}
+	if !keptRunning {
+		t.Fatal("a check in flight was evicted")
+	}
+	close(running.done)
+}
+
 func TestMeasurementStoreRetriesAFailedWrite(t *testing.T) {
 	dir := t.TempDir()
 	// a directory in the file's place makes the rename fail
