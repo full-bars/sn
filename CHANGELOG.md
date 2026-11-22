@@ -4,6 +4,10 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
+### CI
+
+- **Pull requests run the miner on a real OpenBSD kernel.** The new `openbsd.yml` workflow cross-compiles the miner, `urnet-tools` and two test binaries, then runs them in VMs on OpenBSD 7.9 and 8.0. It installs the generated rc.d script, drives it through `rcctl`, checks process discovery and runs the tests tagged `openbsd` in `internal/urnettools` and the host memory tests in `internal/connectx`. `portable-core.yml` also builds and vets `openbsd/amd64` and `openbsd/arm64` on release tags and by hand. The host memory test can require a readable total, which confirmed that `hw.physmem` reads as a 64-bit value on OpenBSD.
+
 ## [v2026.11.20-1103642930-sn] - 2026-11-20
 
 Changes after `v2026.11.15-1099306820-sn`. Notes: `releases/v2026.11.20-1103642930-sn.md`.
