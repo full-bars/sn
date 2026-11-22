@@ -279,6 +279,13 @@ func (self *v6PinController) serviceDial(slot *v6PinSlot, success bool) {
 		if slot.removed {
 			return false
 		}
+		before, _ := self.ledger.entry(slot.key)
+		defer func() {
+			after, _ := self.ledger.entry(slot.key)
+			if before != after {
+				self.persister.MarkDirty()
+			}
+		}()
 		if success {
 			self.ledger.ServiceSuccess(slot.key)
 			return false
@@ -298,7 +305,6 @@ func (self *v6PinController) serviceDial(slot *v6PinSlot, success bool) {
 	if !flipped {
 		return
 	}
-	self.persister.MarkDirty()
 	self.log("🌐 [ipv6] %s: %d IPv6 dials failed through the proxy while it carried IPv4; recording no\n", slot.label, v6FlipAfter)
 	self.applyAsync(slot)
 	self.signal()
@@ -313,7 +319,12 @@ func (self *v6PinController) recordWithLock(slot *v6PinSlot, round v6ProbeRound)
 		self.persister.MarkDirty()
 		self.scheduleFromLedgerWithLock(slot)
 	default:
+		before, hadBefore := self.ledger.entry(slot.key)
 		self.ledger.Record(slot.key, v6Unknown)
+		after, hasAfter := self.ledger.entry(slot.key)
+		if hadBefore != hasAfter || before != after {
+			self.persister.MarkDirty()
+		}
 		if slot.unknownRetry == 0 {
 			slot.unknownRetry = v6UnknownRetryMin
 		} else {

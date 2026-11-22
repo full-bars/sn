@@ -389,3 +389,45 @@ func TestV6PinExpiryDuringUnknownBackoff(t *testing.T) {
 		t.Fatal("pin enabled at expiry 06:00")
 	}
 }
+
+func TestV6PinFailurePersistsWithoutShutdown(t *testing.T) {
+	path := testV6Path(t)
+	clock := &testClock{now: time.Date(2026, 11, 21, 0, 0, 0, 0, time.UTC)}
+	ledger := newV6Ledger(clock.Now)
+	proxy := testProxy("198.51.100.20:1080")
+	ledger.Record(proxy.Key(), v6Yes)
+	persister := newV6LedgerPersister(path, ledger, true)
+	persister.now = clock.Now
+	if err := persister.SaveNow(); err != nil {
+		t.Fatal(err)
+	}
+	controller := newV6PinController(ledger, persister)
+	controller.now = clock.Now
+	slot := &v6PinSlot{controller: controller, key: proxy.Key()}
+	controller.serviceDial(slot, false)
+	clock.Advance(v6LedgerSaveInterval)
+	persister.FlushIfDue()
+	if got := readV6File(t, path).Entries[proxy.Key()].Failures; got != 1 {
+		t.Fatalf("saved failures = %d, want 1", got)
+	}
+	controller.serviceDial(slot, true)
+	clock.Advance(v6LedgerSaveInterval)
+	persister.FlushIfDue()
+	if got := readV6File(t, path).Entries[proxy.Key()].Failures; got != 0 {
+		t.Fatalf("saved failures after success = %d, want 0", got)
+	}
+	before, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	controller.serviceDial(slot, true)
+	clock.Advance(v6LedgerSaveInterval)
+	persister.FlushIfDue()
+	after, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !os.SameFile(before, after) {
+		t.Fatal("unchanged success rewrote ledger")
+	}
+}
