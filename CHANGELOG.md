@@ -4,6 +4,10 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
+### Added
+
+- **UDP relay verdicts survive a restart, and a background sweep keeps them current** (`miner/proxy_measurement_store.go`, `miner/proxy_measurement_sweep_run.go`). The provider now saves each relay verdict in `udp-measurements.json` in the state directory, keyed by a hash of the proxy identity, and loads it at the next start, so a restart no longer begins from zero. One sweep goroutine checks at most four identities a minute, never-checked first and earliest due next, so a slot that no client is using still gets a result. A file from another version, a corrupt file or an oversized one is ignored as a whole with one log line. A write never erases a newer record on disk, which keeps the evidence intact across a hot swap. [redeploy]
+
 ### CI
 
 - **Pull requests run the miner on a real OpenBSD kernel.** The new `openbsd.yml` workflow cross-compiles the miner, `urnet-tools` and two test binaries, then runs them in VMs on OpenBSD 7.9 and 8.0. It installs the generated rc.d script, drives it through `rcctl`, checks process discovery and runs the tests tagged `openbsd` in `internal/urnettools` and the host memory tests in `internal/connectx`. `portable-core.yml` also builds and vets `openbsd/amd64` and `openbsd/arm64` on release tags and by hand. The host memory test can require a readable total, which confirmed that `hw.physmem` reads as a 64-bit value on OpenBSD.

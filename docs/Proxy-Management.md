@@ -15,7 +15,7 @@ This is a financial incentive. A connection that fails the UDP check does not qu
 
 ### What the provider checks
 
-The provider checks the relay the first time an identity tries HTTP/3 or client UDP. It remembers the result and checks again later. The check reports one of four states:
+The provider checks the relay the first time an identity tries HTTP/3 or client UDP. It remembers the result and checks again later. A background sweep also checks a few identities each minute, so a slot that no client is using still gets a result. The results are saved in the state directory and loaded at the next start, so a restart does not begin from zero. The check reports one of four states:
 
 - `ok` means the relay answers and its exit address matches the TCP exit address.
 - `no-relay` means the proxy refuses UDP ASSOCIATE or the relay does not answer.
@@ -30,7 +30,11 @@ Choose a SOCKS5 proxy that relays UDP and uses the same exit address for UDP and
 
 ### Seeing the result
 
-Search the provider logs for `[proxy][udp]`. Each line names the proxy and gives the relay result. A new line appears when the result changes. A proxy that has not tried HTTP/3 or client UDP yet may have no result.
+Search the provider logs for `[proxy][udp]`. Each line names the proxy and gives the relay result. A new line appears when the result changes. The sweep means a proxy gets a result within a few minutes even if nothing used it.
+
+### Saved results
+
+The results live in `udp-measurements.json` next to `v6-ledger.json` in the state directory. The file holds a hash of each proxy identity, the result and its time. It never holds an address, a credential or an error. The provider replaces the file in one step, so a reader never sees half of it. A file from another version, or one that does not parse, is ignored with one log line and the provider starts from an empty view.
 
 ### Testing a proxy by hand
 
