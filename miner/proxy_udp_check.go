@@ -520,12 +520,18 @@ func (self *proxyUDPCheckStore) Check(ctx context.Context, settings *connect.Pro
 		self.mu.Unlock()
 
 		var result proxyUDPResult
-		select {
-		case self.slots <- struct{}{}:
-			result = self.probe(ctx, settings)
-			<-self.slots
-		case <-ctx.Done():
-			result = proxyUDPResult{Status: proxyUDPUnknown, Err: ctx.Err()}
+		if err := ctx.Err(); err != nil {
+			// an already cancelled caller must not spend a probe slot: a select
+			// over a ready send would pick it half the time
+			result = proxyUDPResult{Status: proxyUDPUnknown, Err: err}
+		} else {
+			select {
+			case self.slots <- struct{}{}:
+				result = self.probe(ctx, settings)
+				<-self.slots
+			case <-ctx.Done():
+				result = proxyUDPResult{Status: proxyUDPUnknown, Err: ctx.Err()}
+			}
 		}
 
 		self.mu.Lock()

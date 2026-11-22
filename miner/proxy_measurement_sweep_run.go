@@ -134,6 +134,31 @@ func (self *proxyUDPCheckStore) sweepLoop(
 	}
 }
 
+// startProcessMeasurements loads the durable UDP verdicts and starts the sweep
+// that keeps them current. The store is process-wide, so both are published on
+// the control runtime and stopped by finishControlRun.
+func (s *controlRuntimeState) startProcessMeasurements(now time.Time) {
+	s.stopProcessMeasurements()
+	globalProxyUDPCheck.enableMeasurementPersistence(mustStatePathQuiet("udp-measurements.json"), now)
+	stop := startProxyMeasurementSweep(context.Background())
+	s.measurementsMu.Lock()
+	s.measurementsStop = stop
+	s.measurementsMu.Unlock()
+}
+
+// stopProcessMeasurements stops the sweep and writes the records it still
+// holds. Safe when nothing was started.
+func (s *controlRuntimeState) stopProcessMeasurements() {
+	s.measurementsMu.Lock()
+	stop := s.measurementsStop
+	s.measurementsStop = nil
+	s.measurementsMu.Unlock()
+	if stop != nil {
+		stop()
+	}
+	globalProxyUDPCheck.stopMeasurementPersistence()
+}
+
 // startProxyMeasurementSweep runs the sweep for this process and returns its
 // stop, which waits for the loop to leave.
 func startProxyMeasurementSweep(ctx context.Context) (stop func()) {

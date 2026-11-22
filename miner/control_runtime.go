@@ -72,6 +72,11 @@ type controlRuntimeState struct {
 	// rate is the billable/total byte rate ring behind the snapshot's rate and
 	// traffic history.
 	rate controlRateSampler
+
+	// measurementsMu guards the stop of the UDP measurement sweep, so the stop
+	// in finishControlRun cannot race a start.
+	measurementsMu   sync.Mutex
+	measurementsStop func()
 }
 
 // minerVersionBreadcrumb is the version file written at every run start
@@ -108,6 +113,11 @@ func beginControlRun(now time.Time) {
 	}
 	os.Remove(path)
 
+	// The UDP measurement snapshot and its sweep belong to this run: the
+	// verdicts are loaded before any check can use them, and the sweep keeps
+	// them current while the run lasts. finishControlRun stops both.
+	controlRuntime.startProcessMeasurements(now)
+
 	if proxyStateFile := mustStatePathQuiet("proxy.state"); proxyStateFile != "" {
 		if _, err := os.Stat(proxyStateFile); err == nil {
 			controlRuntime.hadPriorRun = true
@@ -134,6 +144,9 @@ func beginControlRun(now time.Time) {
 // the audit ring. reason is "clean" for a graceful stop; the hot restart path
 // writes "hotswap" itself before it execs.
 func finishControlRun(reason string) {
+	// the sweep writes the verdicts it still holds before the run marker, so a
+	// restart reads what this run learned
+	controlRuntime.stopProcessMeasurements()
 	path, err := providerStatePath(runStateFileName)
 	if err != nil {
 		return
@@ -470,6 +483,8 @@ func resetControlRuntimeForTest() {
 	controlRuntime.hadPriorRun = false
 	controlRuntime.lastStartedVersion = ""
 	controlRuntime.rate = controlRateSampler{}
+	// the sweep holds a goroutine and the previous state directory's snapshot
+	controlRuntime.stopProcessMeasurements()
 	// the cached snapshot describes the run state cleared above; a test that
 	// switches state directories must not read the previous one's snapshot
 	minerSnapshot.reset()
