@@ -75,6 +75,7 @@ type v6PinSlot struct {
 
 	// guarded by the controller's mu
 	removed            bool
+	scheduledWanted    bool
 	probing            bool
 	nextProbe          time.Time
 	unknownRetry       time.Duration
@@ -347,35 +348,53 @@ func (self *v6PinController) probeOne(slot *v6PinSlot) {
 
 // run is the scheduler: it starts the due probes, at most v6ProbeConcurrency
 // at once, flushes the ledger in batches, and sleeps until the next due time.
+func (self *v6PinController) schedule() (next time.Time) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	now := self.now()
+	for slot := range self.slots {
+		// Expiry is independent of the probe schedule, including while a
+		// worker is in flight. Recheck the ledger when applying.
+		wanted := false
+		if entry, ok := self.ledger.entry(slot.key); ok && entry.Verdict == v6Yes {
+			if entry.live(now) {
+				wanted = true
+				expires := entry.CheckedAt.Add(v6YesTTL)
+				if next.IsZero() || expires.Before(next) {
+					next = expires
+				}
+			}
+		}
+		if wanted != slot.scheduledWanted {
+			slot.scheduledWanted = wanted
+			self.applyAsync(slot)
+		}
+		if slot.probing {
+			continue
+		}
+		if !slot.nextProbe.After(now) {
+			if self.running < v6ProbeConcurrency {
+				slot.probing = true
+				self.running++
+				self.workers.Add(1)
+				go self.probeOne(slot)
+				continue
+			}
+			// a worker's finish signals the next pass
+			continue
+		}
+		if next.IsZero() || slot.nextProbe.Before(next) {
+			next = slot.nextProbe
+		}
+	}
+	return next
+}
+
 func (self *v6PinController) run(ctx context.Context) {
 	flush := time.NewTicker(v6LedgerSaveInterval)
 	defer flush.Stop()
 	for {
-		var next time.Time
-		func() {
-			self.mu.Lock()
-			defer self.mu.Unlock()
-			now := self.now()
-			for slot := range self.slots {
-				if slot.probing {
-					continue
-				}
-				if !slot.nextProbe.After(now) {
-					if self.running < v6ProbeConcurrency {
-						slot.probing = true
-						self.running++
-						self.workers.Add(1)
-						go self.probeOne(slot)
-						continue
-					}
-					// a worker's finish signals the next pass
-					continue
-				}
-				if next.IsZero() || slot.nextProbe.Before(next) {
-					next = slot.nextProbe
-				}
-			}
-		}()
+		next := self.schedule()
 		var timer *time.Timer
 		var timerC <-chan time.Time
 		if !next.IsZero() {

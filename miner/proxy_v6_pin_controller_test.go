@@ -341,3 +341,51 @@ func TestRunRegistersV6PinController(t *testing.T) {
 		}
 	}
 }
+
+func TestV6PinExpiryDuringUnknownBackoff(t *testing.T) {
+	clock := &testClock{now: time.Date(2026, 11, 21, 0, 0, 0, 0, time.UTC)}
+	ledger := newV6Ledger(clock.Now)
+	persister := newV6LedgerPersister(testV6Path(t), ledger, true)
+	controller := newV6PinController(ledger, persister)
+	controller.now = clock.Now
+	controller.log = func(string, ...any) {}
+	proxy := testProxy("198.51.100.19:1080")
+	first, second := &fakePinDevice{}, &fakePinDevice{}
+	one := &v6PinSlot{key: proxy.Key(), device: first, probing: true}
+	two := &v6PinSlot{key: proxy.Key(), device: second, probing: true}
+	controller.slots[one] = struct{}{}
+	controller.slots[two] = struct{}{}
+	ledger.Record(proxy.Key(), v6Yes)
+	controller.schedule()
+	controller.workers.Wait()
+	if !first.pinOn() || !second.pinOn() {
+		t.Fatal("live yes did not enable both slots")
+	}
+	for _, d := range []time.Duration{5*time.Hour + 30*time.Minute, 5 * time.Minute, 20 * time.Minute} {
+		clock.Advance(d)
+		controller.mu.Lock()
+		controller.recordWithLock(one, v6ProbeRound{verdict: v6Unknown})
+		controller.mu.Unlock()
+	}
+	if got := one.nextProbe; !got.Equal(clock.Now().Add(20 * time.Minute)) {
+		t.Fatalf("retry = %s, want 06:15", got)
+	}
+	one.probing = false
+	deadline := controller.schedule()
+	controller.workers.Wait()
+	if want := clock.Now().Add(5 * time.Minute); !deadline.Equal(want) {
+		t.Fatalf("wake = %s, want expiry %s", deadline, want)
+	}
+	clock.Advance(4 * time.Minute)
+	controller.schedule()
+	controller.workers.Wait()
+	if !first.pinOn() || !second.pinOn() {
+		t.Fatal("pin disabled before expiry at 05:59")
+	}
+	clock.Advance(time.Minute)
+	controller.schedule()
+	controller.workers.Wait()
+	if first.pinOn() || second.pinOn() {
+		t.Fatal("pin enabled at expiry 06:00")
+	}
+}
