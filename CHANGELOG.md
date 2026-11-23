@@ -10,7 +10,7 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ### Changed
 
-- **Two control keys guard frames on a direct peer-to-peer lane** (`miner/control_socket.go`, `miner/p2p_source_policy.go`, connect pin). `urnet-tools set p2p-forged-source-drop on|off` drops a frame that names the platform id or this client's own id before decode, on by default. `urnet-tools set p2p-source-binding off|count|drop` decides what happens to a frame on a lane bound to one peer that names a different source. `drop` is the default here, because the lane carries only its adjacent peer's frames. `count` delivers those frames and counts them, and `off` stops both the count and the drop. Both keys apply live with no restart, survive a restart, and queue while the provider is stopped. [redeploy]
+- **Two control keys guard frames on a direct peer-to-peer lane** (`miner/control_socket.go`, `miner/p2p_source_policy.go`, connect pin). `urnet-tools set p2p-forged-source-drop on|off` drops a frame that names the platform id or this client's own id before decode, on by default. `urnet-tools set p2p-source-binding off|count|drop` decides what happens to a frame on a lane bound to one peer that names a different source. `drop` is the default here, because the lane carries only its adjacent peer's frames. `count` delivers those frames and counts them, and `off` stops both the count and the drop. Both keys apply live with no restart, survive a restart, and queue while the provider is stopped. [redeploy] It backports upstream connect commits `5a71282c6` and `e90fbf769` through the connect pin, and keeps their behavior by default: `drop` is the default here, as upstream.
 
 ### Added
 
