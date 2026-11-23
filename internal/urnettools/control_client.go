@@ -192,6 +192,10 @@ var controlKeyCanonical = map[string]string{
 	"h3-datagram-send":            "h3_datagram_send",
 	"h3_datagram_send":            "h3_datagram_send",
 	"h3":                          "h3",
+	"p2p-source-binding":          "p2p_source_binding",
+	"p2p_source_binding":          "p2p_source_binding",
+	"p2p-forged-source-drop":      "p2p_forged_source_drop",
+	"p2p_forged_source_drop":      "p2p_forged_source_drop",
 	"proxy-url-max":               "proxy_url_max",
 	"proxy_url_max":               "proxy_url_max",
 	"proxy-url-refresh":           "proxy_url_refresh",
@@ -268,11 +272,17 @@ func validateControlValue(canonicalKey, value string) error {
 		if !validPprofControlValue(value) {
 			return fmt.Errorf("pprof: must be on, off or a loopback ip:port such as 127.0.0.1:6060 (got %q)", value)
 		}
-	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "extender_udp443", "extender_udp4053", "extender_udp53":
+	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "extender_udp443", "extender_udp4053", "extender_udp53", "p2p_forged_source_drop":
 		switch strings.ToLower(value) {
 		case "on", "off":
 		default:
 			return fmt.Errorf("%s: must be on or off (got %q)", canonicalKey, value)
+		}
+	case "p2p_source_binding":
+		switch strings.ToLower(value) {
+		case "off", "count", "drop":
+		default:
+			return fmt.Errorf("p2p-source-binding: must be off, count or drop (got %q)", value)
 		}
 	case "h3":
 		return validateH3ModeValue(value)

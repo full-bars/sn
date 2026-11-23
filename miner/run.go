@@ -1271,6 +1271,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// value has to be replayed here or a restart loses it and the scheduler
 	// (smart_dialer_scheduler.go) starts with no preference to feed.
 	replaySmartDialerAtStartup(controlState)
+	// The p2p source controls are process state in the pinned connect, so a
+	// restart resets them to the library defaults unless the persisted values
+	// are replayed before any provider builds a transport.
+	replayP2PSourcePolicyAtStartup(controlState)
 	defer stopSmartDialerScheduler()
 	unregSmartDialer := RegisterCoordinatorCloser(stopSmartDialerScheduler)
 	defer unregSmartDialer()
