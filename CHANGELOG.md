@@ -14,7 +14,7 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ### Added
 
-- **Peer-to-peer source metrics** (`miner/p2p_source_policy.go`, connect pin). `/metrics` carries `urnet_p2p_forged_source_drops_total{kind}` for frames dropped on a direct peer-to-peer lane that named the platform (`platform`) or this client (`self`), and `urnet_p2p_source_mismatch_total{mode,outcome}` for frames on a lane bound to one peer that named a different source, by the mode in force and what happened to the frame. `decoded` means the frame was accepted, `rejected` that it could not be used, and `dropped` that a policy discarded it. Both are in-process counters and are not persisted across restarts. See `docs/Monitoring.md`. [redeploy]
+- **Peer-to-peer source metrics** (`miner/p2p_source_policy.go`, connect pin). `/metrics` carries `urnet_p2p_forged_source_drops_total{kind}` for frames dropped on a direct peer-to-peer lane that named the platform (`platform`) or this client (`self`), and `urnet_p2p_source_mismatch_total{mode,outcome}` for frames on a lane bound to one peer that named a different source, by the mode in force and what happened to the frame. `decoded` means the frame was accepted, `rejected` that it could not be used, `dropped` that a policy discarded it, and `forwarded` that a forward callback took it for another destination. Both are in-process counters and are not persisted across restarts. See `docs/Monitoring.md`. [redeploy]
 
 ## [v2026.11.20-1103642930-sn] - 2026-11-20
 

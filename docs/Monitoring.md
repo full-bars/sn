@@ -320,17 +320,19 @@ The outcome values have one meaning each:
 | `decoded` | The frame was accepted: it parsed, and the receive path did not discard it |
 | `rejected` | The frame could not be used. It failed to parse or decrypt, the receive buffer discarded it (such as an older sequence), or this client requires encryption for that source and threw the plaintext frame away |
 | `dropped` | A policy discarded the frame: `p2p-source-binding drop`, or a receive guard that could not place it |
+| `forwarded` | The frame was addressed to another destination and a forward callback took it |
 
-Only `mode="count"` produces `decoded` and `rejected`. `drop` resolves every mismatch before decode, so it reports `dropped` alone. There is no `forwarded` outcome: a node that forwards a frame to another destination does not decode it, so it records nothing.
+Only `mode="count"` produces `decoded`, `rejected` and `forwarded`. `drop` resolves every mismatch before decode, so it reports `dropped` alone.
 
 ### Reading the counters
 
-`count` mode measures frames destined for this client only. It does not count frames this node forwards to another destination, because a transit hop hands those bytes to the forward callback without decoding them and records no mismatch outcome. Zero `mode="count",outcome="decoded"` therefore does not rule out forwarded multihop traffic on a node that relays. Keep `drop` when you know from how the node is deployed that it does not relay multihop streams on a P2P leg. Switch to `count` when the node relays multihop streams on a P2P leg, or when you want to measure mismatched frames destined for this client without dropping them.
+`count` mode measures both frames destined for this client (`decoded`, `rejected`) and frames forwarded to another destination (`forwarded`). Zero `decoded` and zero `forwarded` for a week on a busy node is evidence, not proof, that no multihop traffic rides a P2P leg here. Keep `count` whenever either counter is above zero, and use `drop` when you want strict enforcement and see neither.
 
 | Signal | Reading | Action |
 |---|---|---|
 | `urnet_p2p_forged_source_drops_total` rises | A peer is naming the platform or this client on a direct lane, which no legitimate peer does | Inspect the peers on the P2P lanes. `urnet-tools set p2p-forged-source-drop off` turns the drop off while you look, at the cost of accepting the frames. With `p2p-source-binding drop` set, the binding rule still drops them |
-| `mode="count",outcome="decoded"` stays at zero on a busy node | This client accepted no mismatched frames destined for itself. It does not rule out forwarded multihop traffic, because forwarded frames record no outcome | Do not switch back to `drop` on this signal alone. Use `drop` only when you also know from how the node is deployed that it relays no multihop streams on a P2P leg |
+| `mode="count",outcome="decoded"` and `mode="count",outcome="forwarded"` stay at zero for a week on a busy node | This node neither accepted nor forwarded mismatched frames on a P2P leg. This is evidence, not proof, that no multihop traffic rides a P2P leg here | You may switch to `drop` if you want strict enforcement, and switch back to `count` if multihop traffic appears |
+| `mode="count",outcome="forwarded"` above zero | Multihop traffic rides a P2P leg here | Keep `count`, because `drop` discards relayed frames before forwarding |
 | `mode="count",outcome="decoded"` above zero | The node delivered frames that named a source other than the lane's peer. Some can be multihop traffic and some can be spoofing, and the count does not tell which | Find which peers send them, or keep `drop` if this node should not carry them at all |
 | `mode="count",outcome="rejected"` rises | Frames that cannot be used: a peer sending plaintext where encryption is required, a corrupt frame, a pack the receive buffer discarded, or a spoofed source | Nothing to do unless it climbs. Read it as a spoofing signal when the node carries no multihop traffic |
 | `mode="count",outcome="dropped"` above zero | A receive guard discarded a frame this node could not place | Look for stream churn on the P2P lanes |
