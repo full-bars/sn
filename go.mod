@@ -244,3 +244,7 @@ replace github.com/centrifuge/go-substrate-rpc-client/v4 => ./third_party/go-sub
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
 replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261128051809-e39d263216b1
+
+// Replaces in a dependency are ignored, so pin the SCTP fork that connect builds
+// and tests with, at the same commit as the connect pin.
+replace github.com/pion/sctp => github.com/full-bars/connect/sctp v0.0.0-20261128051809-e39d263216b1

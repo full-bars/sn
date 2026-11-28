@@ -138,9 +138,9 @@ type goModule struct {
 // Known API provenance closes both the SDK and adjacent transport/fork mismatch.
 func validateReleaseModule(module goModule) error {
 	pins := map[string][4]string{
-		"github.com/urnetwork/sdk":     {"github.com/urnetwork/sdk", "v0.0.0-20261001021058-5d37be3876e5", "h1:PYuzGCWhMRuCnZS9qoSeMvwSZk9NQzX861Ir5xFFpHA=", "h1:IuPYnLZ5j1SP+gm3O4a4SxbOT4U/CPKEqONI1iLO5yk="},
-		"github.com/urnetwork/connect": {"github.com/full-bars/connect", "v0.0.0-20261031120941-ca8b9020201a", "h1:AdQWptvEl3WT67GgKKM4H97CZP3bwQcKRCPuRigV/fQ=", "h1:a/FXsgqF1lnCBs5Jg04URGus+4tiPSMRQ2dUoFu3WLM="},
-		"github.com/pion/sctp":         {"github.com/urnetwork/connect/sctp", "v0.0.0-20261001021459-e1b5d77b5029", "h1:GfovpOIWKd6TjkYsWLkMNE/zKEoGNC/5NfrPRCI+50A=", "h1:7KFmTwLcoYgJs/Z+99nJvsWL0qDpuyloSI0RbAqlrz0="},
+		"github.com/urnetwork/sdk":     {"github.com/full-bars/sdk", "v0.0.0-20261128052133-89cb3ea3defa", "h1:jkBwQWIyPXZw6RBeLwAUinP6nCc3EQevlm90+a+KuDw=", "h1:hKRztykS3Dbsz0FeNDYDxhCy7mqk0ar0cg5JTeZ0uRA="},
+		"github.com/urnetwork/connect": {"github.com/full-bars/connect", "v0.0.0-20261128051809-e39d263216b1", "h1:YvQEwxdIoYbcUQpbjMwh6lfjyCmxfGnwE+Bzo819zAc=", "h1:C9vy/UqJa107cwGtHZghEKQnX6b/h3/TsjW+rBF7L+4="},
+		"github.com/pion/sctp":         {"github.com/full-bars/connect/sctp", "v0.0.0-20261128051809-e39d263216b1", "h1:muNWiM/8rYFLG8D2Yt0wnidmJqSt67VfaotILfZ6H2s=", "h1:kTsjjdtydsO6o507jR+h9/unEpfoQjXvNHVxAcu2EHw="},
 	}
 	if expected, ok := pins[module.Path]; ok {
 		if module.Replace == nil || module.Replace.Path != expected[0] || module.Replace.Version != expected[1] || module.Replace.Sum != expected[2] || module.Replace.GoModSum != expected[3] {
