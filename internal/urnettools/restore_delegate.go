@@ -262,6 +262,8 @@ var setKeyHelps = []string{
 	"  h3-datagram         on|off        offer QUIC DATAGRAM on the H3 connection and receive small frames as datagrams (default: off; re-dials H3 to apply). The miner has no toggle: DATAGRAM stays on at the pinned connect default and neither a set nor a restart changes it",
 	"  h3-datagram-send    on|off        also SEND small frames as datagrams where the server accepted the offer (default: off; applies per message). The miner has no toggle: the send lane stays on at the pinned connect default",
 	"  h3                  off|direct|N|all  which identities run H3: none, the direct identity only, the N best proxies, or all. N must be a positive integer (on == direct, 0 == off, auto == all). N caps the PROXY set only; the direct identity is always additionally eligible and does not consume one of the N, so h3=N runs N proxies plus the direct identity (default: all)",
+	"  p2p-source-binding  off|count|drop  what to do with a frame that arrives on a peer-to-peer lane bound to one peer while naming a different source. count delivers the frame and counts it, because a multihop stream reaches a transit hop with the origin still in the frame. drop discards it before decode and breaks any multihop stream that rides a P2P leg. off counts nothing and never drops by this rule. Live and persisted (default: drop in this build, the pinned connect's own default)",
+	"  p2p-forged-source-drop on|off       drop a frame on a direct peer-to-peer lane that names the platform id or this client's own id, before decode. On by default; off is the kill switch and does not change p2p-source-binding. Live and persisted",
 	"  gomemlimit          <bytes>       Go runtime memory limit (e.g. 256MiB, 1GiB)",
 	"  gogc      <int>|off|disabled     GC target percentage (default: 100). off clears; disabled turns GC off entirely (unbounded heap)",
 	"  profile             <profile>     tuning profile (auto, eco, lowmem, turbo-v4, turbo-v8)",
@@ -283,11 +285,13 @@ var setKeyHelps = []string{
 // proxy_self_heal and metrics would otherwise revert to a default that is not
 // off, oom_cap would revert to the "shadow" default, which decides and logs but
 // enforces nothing, so the documented kill switch would never turn the feature
-// off, and h3's default is "all", so the clear path would turn H3 back on for
-// every identity instead of disabling it.
+// off, h3's default is "all", so the clear path would turn H3 back on for
+// every identity instead of disabling it, and the p2p source controls default
+// to drop and on, so a clear would restore the guard the operator just turned
+// off.
 func treatsOffAsClear(canonicalKey string) bool {
 	switch canonicalKey {
-	case "extender", "extender_udp443", "extender_udp4053", "extender_udp53", "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3", "pprof":
+	case "extender", "extender_udp443", "extender_udp4053", "extender_udp53", "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3", "pprof", "p2p_source_binding", "p2p_forged_source_drop":
 		return false
 	}
 	return true
@@ -602,6 +606,8 @@ func formatSets(p Provider, want string) error {
 		{"oom-cap", "oom_cap"},
 		{"smart-dialer", "smart_dialer"},
 		{"h3", "h3"},
+		{"p2p-source-binding", "p2p_source_binding"},
+		{"p2p-forged-source-drop", "p2p_forged_source_drop"},
 		{"h3-datagram", "h3_datagram"},
 		{"h3-datagram-send", "h3_datagram_send"},
 		{"baseline", "baseline"},

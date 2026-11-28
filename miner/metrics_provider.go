@@ -77,6 +77,11 @@ func minerExtraMetrics() string {
 	// --- Startup diagnostics (crash/restart/upgrade) ---
 	writeStartupMetrics(&b, version)
 
+	// --- Peer-to-peer source policy ---
+	// The two rules that guard frames on a direct peer-to-peer lane, from the
+	// pinned connect's process counters.
+	writeP2PSourceMetrics(&b)
+
 	// --- Control socket commands ---
 	fmt.Fprintf(&b, "# HELP urnet_control_commands_total Lifetime control socket commands acked.\n")
 	fmt.Fprintf(&b, "# TYPE urnet_control_commands_total counter\n")

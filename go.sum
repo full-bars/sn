@@ -125,6 +125,14 @@ github.com/full-bars/connect v0.0.0-20261121001515-860110071521 h1:/TBaDJ0ozEKv6
 github.com/full-bars/connect v0.0.0-20261121001515-860110071521/go.mod h1:C9vy/UqJa107cwGtHZghEKQnX6b/h3/TsjW+rBF7L+4=
 github.com/full-bars/connect v0.0.0-20261121005511-c5af6c58a9f1 h1:yQTg8k+ktpC/3jiw08M080EzgRB69y+eBJQMQHYcoP4=
 github.com/full-bars/connect v0.0.0-20261121005511-c5af6c58a9f1/go.mod h1:C9vy/UqJa107cwGtHZghEKQnX6b/h3/TsjW+rBF7L+4=
+github.com/full-bars/connect v0.0.0-20261123224202-1a366d54f664 h1:HxNUYCeBl7toyc46nnPnd87RyrfimAi9Votf/B/82EQ=
+github.com/full-bars/connect v0.0.0-20261123224202-1a366d54f664/go.mod h1:C9vy/UqJa107cwGtHZghEKQnX6b/h3/TsjW+rBF7L+4=
+github.com/full-bars/connect v0.0.0-20261124005537-bf105dfbef59 h1:XafaeWYewR2kgfJgx01liTJ/rJmkB9Z08kcxvq04lqQ=
+github.com/full-bars/connect v0.0.0-20261124005537-bf105dfbef59/go.mod h1:C9vy/UqJa107cwGtHZghEKQnX6b/h3/TsjW+rBF7L+4=
+github.com/full-bars/connect v0.0.0-20261126071349-169a7dbc716d h1:+LGARxz5pQ7jEiCn7ZtGSOEc8FmrSLT0ctZV/I5bDR0=
+github.com/full-bars/connect v0.0.0-20261126071349-169a7dbc716d/go.mod h1:C9vy/UqJa107cwGtHZghEKQnX6b/h3/TsjW+rBF7L+4=
+github.com/full-bars/connect v0.0.0-20261126134214-b11ea13a78c2 h1:fPh94Y+BW0RGU4WW7SUaFKrm37Gpb55WMYYxXsJpMkc=
+github.com/full-bars/connect v0.0.0-20261126134214-b11ea13a78c2/go.mod h1:C9vy/UqJa107cwGtHZghEKQnX6b/h3/TsjW+rBF7L+4=
 github.com/full-bars/sdk v0.0.0-20261106092019-5c905e84008d h1:nmys1YHmpFISmA7j/epyIcbTHPKc/6HLHJjwFqP0cOU=
 github.com/full-bars/sdk v0.0.0-20261106092019-5c905e84008d/go.mod h1:VSZhcgYUhiNGbMeQ3JgmtGw6/j/Qa32+wghIVWwrArY=
 github.com/full-bars/sdk v0.0.0-20261121002716-db024dcbd2ae h1:Q0tgA+y3HGRwMuIqffZKYJdb9gPGvAqkmuQE263sEgY=

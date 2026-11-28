@@ -242,6 +242,32 @@ Clearing them restores the same always-on default.
 Which identities carry the datagram-capable H3 connections follows the `h3`
 set above.
 
+### Peer-to-peer source checks
+
+Two rules guard frames that arrive on a direct peer-to-peer lane, which is a
+lane opened to one peer by the stream signaling. Both are runtime keys and
+apply live with no restart. Neither has an environment variable.
+
+| Key | Values | Effect |
+| :--- | :--- | :--- |
+| `p2p-forged-source-drop` | `on`, `off` | Whether a frame on a direct peer-to-peer lane that names the platform id or this client's own id is dropped before decode. A relayed frame can never legitimately name either. On by default, and `off` is the kill switch. Drops are counted per kind in `urnet_p2p_forged_source_drops_total`. |
+| `p2p-source-binding` | `off`, `count`, `drop` | What to do with a frame on a lane bound to one peer that names a different source. `drop` is the default in this build, because a bound lane carries only its adjacent peer's frames and discards mismatches before decode. Switch to `count` if the node relays multihop streams on a P2P leg or if you want to measure mismatched frames without dropping them. Transit traffic is not measured by these counters, and there is no `forwarded` outcome. Under `count`, zero `decoded` over an observation period means only that no mismatched frame ending at this node was counted as decoded in that time. It does not prove that no multihop stream ended here, because such a frame can also count as `rejected`. `off` counts nothing and never drops by this rule. |
+
+The kill switch is separate from the binding rule. With `drop` set, a frame
+that is not the bound peer is still dropped, so the way to restore delivery on
+a bound lane is `p2p-source-binding count` or `off`, not the forged drop key.
+
+```sh
+urnet-tools set p2p-source-binding count   # measure, deliver, and count
+urnet-tools set p2p-source-binding drop    # enforce: discard before decode
+urnet-tools set p2p-forged-source-drop off # kill switch for the platform/self drop
+```
+
+Both keys are persisted, so they survive a restart. A change made while the
+provider is stopped is queued in `pending_overrides.json` and applied on the
+next start, before any provider builds a transport. The counters are in
+[Monitoring](Monitoring#metrics-for-peer-to-peer-source-checks).
+
 ## 🎛️ Profile Selection
 
 | Profile | Docker Value | Best For | RAM |

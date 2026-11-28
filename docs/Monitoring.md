@@ -298,3 +298,42 @@ touched per packet.
 
 - `urnet_tls_handshakes_total`: full handshakes are the expensive ones (certificate verification happens on each). A large `full` share from one `path` with few `failed` means that path is not taking its resumed-session cache; a rising `failed` share is the real connection problem. Resumed share per path is `sum(rate(urnet_tls_handshakes_total{result="resumed"}[5m])) by (path) / sum(rate(urnet_tls_handshakes_total[5m])) by (path)`.
 - `urnet_dial_backoff_long_tier_*`: `active` above zero is normal after trouble (an identity whose own path keeps failing is backed off at the long tier instead of burning the shared attempt budget). An `entered` rate that stays high while `active` is flat is ordinary churn; `active` growing across hours is a node whose paths keep failing.
+
+## Metrics for peer-to-peer source checks
+
+Two rules guard frames that arrive on a direct peer-to-peer lane, which is a lane opened to one peer by the stream signaling.
+
+- A frame that names the platform id or this client's own id is forged. Only the platform may name the platform, and only this client names itself. The frame is dropped before decode when `p2p-forged-source-drop` is on, which is the default. The drop is counted per kind.
+- A frame on a lane bound to one peer that names a different source follows `p2p-source-binding`. This build defaults to `drop`, because a bound lane carries only its adjacent peer's frames. `count` delivers those frames and counts the outcome, which is how a node measures before it enforces. `off` counts nothing and never drops by this rule.
+
+Both keys apply live through `urnet-tools set` with no restart and survive one. There is no environment variable.
+
+| Metric | Type | Labels | Meaning |
+|---|---|---|---|
+| `urnet_p2p_forged_source_drops_total` | counter | `kind` | Frames dropped because they named the platform (`kind="platform"`) or this client (`kind="self"`). Cumulative since the process started, not persisted across restarts |
+| `urnet_p2p_source_mismatch_total` | counter | `mode`, `outcome` | Frames on a lane bound to one peer that named a different source, by the mode in force when the frame arrived and what happened to it. Cumulative since the process started, not persisted across restarts |
+
+The outcome values have one meaning each:
+
+| Outcome | Meaning |
+|---|---|
+| `decoded` | The frame was accepted: it parsed, and the receive path did not discard it |
+| `rejected` | The frame could not be used. It failed to parse or decrypt, the receive buffer discarded it (such as an older sequence), or this client requires encryption for that source and threw the plaintext frame away |
+| `dropped` | A policy discarded the frame: `p2p-source-binding drop`, or a receive guard that could not place it |
+
+Only `mode="count"` produces `decoded` and `rejected`. `drop` resolves every mismatch before decode, so it reports `dropped` alone. There is no `forwarded` outcome: transit traffic is not measured by these counters.
+
+### Reading the counters
+
+In `count` mode, `decoded` and `rejected` measure mismatched frames destined for this client. They do not measure transit traffic. Compare counter changes over the observation period; the counters reset on restart.
+
+| Signal | Reading | Action |
+|---|---|---|
+| `urnet_p2p_forged_source_drops_total` rises | A peer is naming the platform or this client on a direct lane, which no legitimate peer does | Inspect the peers on the P2P lanes. `urnet-tools set p2p-forged-source-drop off` turns the drop off while you look, at the cost of accepting the frames. With `p2p-source-binding drop` set, the binding rule still drops them |
+| `mode="count",outcome="decoded"` does not increase for a week on a busy node in count mode throughout the observation period | No mismatched frame ending at this client was counted as decoded during that week. This does not measure transit traffic | You may switch to `drop` for strict enforcement, and switch back to `count` if streams ending here fail. A zero count-mode increase while in `drop` gives no such evidence |
+| `mode="count",outcome="decoded"` above zero | The node delivered frames that named a source other than the lane's peer. Some can be multihop traffic and some can be spoofing, and the count does not tell which | Find which peers send them, or keep `drop` if this node should not carry them at all |
+| `mode="count",outcome="rejected"` rises | Frames that cannot be used, including an older sequence discarded by the receive buffer, a corrupt frame, or plaintext where encryption is required | Investigate a sustained rise. It does not by itself establish spoofing, even without multihop traffic |
+| `mode="count",outcome="dropped"` above zero | A receive guard discarded a frame this node could not place | Look for stream churn on the P2P lanes |
+| `mode="drop"` only | The enforced setting. Every mismatch reaching this check is discarded before decode | Switch to `count` if multihop streams must end at this node over a P2P leg |
+
+Zero on both families is the expected state on a node with no P2P traffic. It is evidence of silence, not proof that the guard would have dropped nothing.

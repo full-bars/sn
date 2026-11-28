@@ -8,6 +8,14 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 - **Pull requests run the miner on a real OpenBSD kernel.** The new `openbsd.yml` workflow cross-compiles the miner, `urnet-tools` and two test binaries, then runs them in VMs on OpenBSD 7.9 and 8.0. It installs the generated rc.d script, drives it through `rcctl`, checks process discovery and runs the tests tagged `openbsd` in `internal/urnettools` and the host memory tests in `internal/connectx`. `portable-core.yml` also builds and vets `openbsd/amd64` and `openbsd/arm64` on release tags and by hand. The host memory test can require a readable total, which confirmed that `hw.physmem` reads as a 64-bit value on OpenBSD.
 
+### Changed
+
+- **Two control keys guard frames on a direct peer-to-peer lane** (`miner/control_socket.go`, `miner/p2p_source_policy.go`, connect pin). `urnet-tools set p2p-forged-source-drop on|off` drops a frame that names the platform id or this client's own id before decode, on by default. `urnet-tools set p2p-source-binding off|count|drop` decides what happens to a frame on a lane bound to one peer that names a different source. `drop` is the default here, because the lane carries only its adjacent peer's frames. `count` delivers those frames and counts them, and `off` stops both the count and the drop. Both keys apply live with no restart, survive a restart, and queue while the provider is stopped. [redeploy] The connect pin ports the forged-source drop rule from upstream commit `5a71282c6` and adjacent-peer lane binding from `e90fbf769`. It does not port the key-pin bypass fixes, constant-time extender HMAC comparison, or undecryptable-wrap session limit.
+
+### Added
+
+- **Peer-to-peer source metrics** (`miner/p2p_source_policy.go`, connect pin). `/metrics` carries `urnet_p2p_forged_source_drops_total{kind}` for frames dropped on a direct peer-to-peer lane that named the platform (`platform`) or this client (`self`), and `urnet_p2p_source_mismatch_total{mode,outcome}` for frames on a lane bound to one peer that named a different source, by the mode in force and what happened to the frame. `decoded` means the frame was accepted, `rejected` that it could not be used, and `dropped` that a policy discarded it. Forwarded frames have no outcome in these counters. Both are in-process counters and are not persisted across restarts. See `docs/Monitoring.md`. [redeploy]
+
 ## [v2026.11.20-1103642930-sn] - 2026-11-20
 
 Changes after `v2026.11.15-1099306820-sn`. Notes: `releases/v2026.11.20-1103642930-sn.md`.

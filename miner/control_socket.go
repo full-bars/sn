@@ -379,6 +379,8 @@ var controlLiveEffectKeys = map[string]bool{
 	"oom_cap":                     true,
 	"baseline":                    true,
 	"smart_dialer":                true,
+	"p2p_source_binding":          true,
+	"p2p_forged_source_drop":      true,
 }
 
 // controlRestartEffectKeys are accepted and persisted, have no live consumer,
@@ -497,6 +499,15 @@ var controlLiveDefaults = map[string]string{
 	// replaySmartDialerAtStartup uses for a state with no opinion, which is why
 	// the default is declared here once and not in the key registries.
 	"smart_dialer": "off",
+	// Clearing the binding key restores the library's own default rather than
+	// a value written here, so the miner cannot drift from the pinned connect.
+	// In this pin that default is drop: a bound peer-to-peer lane carries only
+	// its adjacent peer's frames.
+	"p2p_source_binding": connect.P2PSourceBindingDefault(),
+	// Clearing the forged drop key re-enables the drop. A frame on a direct
+	// peer-to-peer lane that names the platform or this client is forged in
+	// every binding mode, so off is the kill switch, never the resting state.
+	"p2p_forged_source_drop": "on",
 	// Clearing h1_plus restores the default: H1+ upgrades allowed.
 	"h1_plus": "on",
 	// Clearing audit reapplies the runtime default (off = observe mode),
@@ -607,11 +618,17 @@ func validateControlValue(key, value string) error {
 		default:
 			return fmt.Errorf("ip-version: must be dual, ipv4, ipv6 or legacy (got %q)", value)
 		}
-	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "h1_plus":
+	case "extender", "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send", "h1_plus", "p2p_forged_source_drop":
 		switch valLower {
 		case "on", "off":
 		default:
 			return fmt.Errorf("%s: must be on or off (got %q)", key, value)
+		}
+	case "p2p_source_binding":
+		switch valLower {
+		case "off", "count", "drop":
+		default:
+			return fmt.Errorf("%s: must be off, count or drop (got %q)", key, value)
 		}
 	case "h3":
 		if !validH3ControlValue(value) {
@@ -1209,6 +1226,21 @@ var diagRunner = handleDiagRequest
 // the restart path.
 func applyControlLiveSideEffect(key, value string) error {
 	switch key {
+	case "p2p_source_binding":
+		// Read by connect on the next frame, so the mode is live with no
+		// relaunch: count delivers a mismatched frame and counts it, drop
+		// discards it before decode, off does neither.
+		previous := connect.P2PSourceBinding()
+		if err := connect.SetP2PSourceBinding(value); err != nil {
+			return err
+		}
+		tlog("⚙️ [control] applied p2p_source_binding=%s (was %s)\n", connect.P2PSourceBinding(), previous)
+	case "p2p_forged_source_drop":
+		// The other half of the source policy, and independent of the binding
+		// mode: off only stops the platform/self drops.
+		previous := connect.P2PForgedSourceDropEnabled()
+		connect.SetP2PForgedSourceDrop(strings.EqualFold(value, "on"))
+		tlog("⚙️ [control] applied p2p_forged_source_drop=%s (was %s)\n", onOffLabel(connect.P2PForgedSourceDropEnabled()), onOffLabel(previous))
 	case "gomemlimit":
 		limit, err := connect.ParseByteCount(value)
 		if err != nil {
