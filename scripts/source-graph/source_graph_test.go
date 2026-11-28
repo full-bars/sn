@@ -70,19 +70,19 @@ func requireSiblingOrPin(t *testing.T, label, modulePath, sibling, pinPath, pinV
 // The registration and refresh API used by SN: the SDK sibling in a local
 // build, or the reviewed SDK pin in a pinned build.
 func TestClientauthSourceGraphSelectsSdkSiblingOrPin(t *testing.T) {
-	requireSiblingOrPin(t, "clientauth SDK", "github.com/urnetwork/sdk", "sdk", "github.com/full-bars/sdk", "v0.0.0-20261106092019-5c905e84008d")
+	requireSiblingOrPin(t, "clientauth SDK", "github.com/urnetwork/sdk", "sdk", "github.com/full-bars/sdk", "v0.0.0-20261128052133-89cb3ea3defa")
 }
 
 // Redirect ownership and exhaustion causes require the matching Connect
 // source: the Connect sibling, or the reviewed Connect pin.
 func TestClientauthSourceGraphSelectsConnectSiblingOrPin(t *testing.T) {
-	requireSiblingOrPin(t, "clientauth Connect", "github.com/urnetwork/connect", "connect", "github.com/full-bars/connect", "v0.0.0-20261107131647-8e078bbcad4a")
+	requireSiblingOrPin(t, "clientauth Connect", "github.com/urnetwork/connect", "connect", "github.com/full-bars/connect", "v0.0.0-20261128051809-e39d263216b1")
 }
 
 // A dependency's fork replacement is not inherited. The SCTP source is the fork
 // in the Connect sibling, or the fork at the reviewed Connect commit.
 func TestClientauthSourceGraphSelectsSctpForkSiblingOrPin(t *testing.T) {
-	requireSiblingOrPin(t, "clientauth SCTP", "github.com/pion/sctp", "connect/sctp", "github.com/urnetwork/connect/sctp", "v0.0.0-20261001021459-e1b5d77b5029")
+	requireSiblingOrPin(t, "clientauth SCTP", "github.com/pion/sctp", "connect/sctp", "github.com/full-bars/connect/sctp", "v0.0.0-20261128051809-e39d263216b1")
 }
 
 // SN and the server share one gVisor fork: the gvisor sibling, or the

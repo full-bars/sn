@@ -53,16 +53,11 @@ SPLITS = {
 # with the reason. Every entry needs an operator decision.
 QUARANTINE = {
     "scripts/source-graph": {
-        name: "go.mod and the release builder pins in "
-              "scripts/mainnet-release-build/sources.go disagree: the sdk and "
-              "connect pins moved, and pion/sctp and gvisor have no fork "
-              "replacement; which pins are right is an operator decision"
-        for name in (
-            "TestClientauthSourceGraphSelectsSdkSiblingOrPin",
-            "TestClientauthSourceGraphSelectsConnectSiblingOrPin",
-            "TestClientauthSourceGraphSelectsSctpForkSiblingOrPin",
-            "TestSourceGraphSelectsGvisorForkSiblingOrPin",
-        )
+        "TestSourceGraphSelectsGvisorForkSiblingOrPin": (
+            "SN builds with stock gvisor.dev/gvisor at the version connect "
+            "pins; the urnetwork gVisor fork has the same files at that "
+            "version, so SN carries no gVisor replace"
+        ),
     },
 }
 SHARDS = 3

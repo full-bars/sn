@@ -13,9 +13,9 @@ import (
 // These public module identities are the independently promoted release inputs.
 func buildFixturePromotedApiModules() []goModule {
 	return []goModule{
-		{Path: "github.com/urnetwork/sdk", Replace: &goModule{Path: "github.com/urnetwork/sdk", Version: "v0.0.0-20261001021058-5d37be3876e5", Sum: "h1:PYuzGCWhMRuCnZS9qoSeMvwSZk9NQzX861Ir5xFFpHA=", GoModSum: "h1:IuPYnLZ5j1SP+gm3O4a4SxbOT4U/CPKEqONI1iLO5yk="}},
-		{Path: "github.com/urnetwork/connect", Replace: &goModule{Path: "github.com/full-bars/connect", Version: "v0.0.0-20261031120941-ca8b9020201a", Sum: "h1:AdQWptvEl3WT67GgKKM4H97CZP3bwQcKRCPuRigV/fQ=", GoModSum: "h1:a/FXsgqF1lnCBs5Jg04URGus+4tiPSMRQ2dUoFu3WLM="}},
-		{Path: "github.com/pion/sctp", Replace: &goModule{Path: "github.com/urnetwork/connect/sctp", Version: "v0.0.0-20261001021459-e1b5d77b5029", Sum: "h1:GfovpOIWKd6TjkYsWLkMNE/zKEoGNC/5NfrPRCI+50A=", GoModSum: "h1:7KFmTwLcoYgJs/Z+99nJvsWL0qDpuyloSI0RbAqlrz0="}},
+		{Path: "github.com/urnetwork/sdk", Replace: &goModule{Path: "github.com/full-bars/sdk", Version: "v0.0.0-20261128052133-89cb3ea3defa", Sum: "h1:jkBwQWIyPXZw6RBeLwAUinP6nCc3EQevlm90+a+KuDw=", GoModSum: "h1:hKRztykS3Dbsz0FeNDYDxhCy7mqk0ar0cg5JTeZ0uRA="}},
+		{Path: "github.com/urnetwork/connect", Replace: &goModule{Path: "github.com/full-bars/connect", Version: "v0.0.0-20261128051809-e39d263216b1", Sum: "h1:YvQEwxdIoYbcUQpbjMwh6lfjyCmxfGnwE+Bzo819zAc=", GoModSum: "h1:C9vy/UqJa107cwGtHZghEKQnX6b/h3/TsjW+rBF7L+4="}},
+		{Path: "github.com/pion/sctp", Replace: &goModule{Path: "github.com/full-bars/connect/sctp", Version: "v0.0.0-20261128051809-e39d263216b1", Sum: "h1:muNWiM/8rYFLG8D2Yt0wnidmJqSt67VfaotILfZ6H2s=", GoModSum: "h1:kTsjjdtydsO6o507jR+h9/unEpfoQjXvNHVxAcu2EHw="}},
 	}
 }
 
