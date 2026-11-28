@@ -9,6 +9,7 @@ package tcellui
 
 import (
 	"os"
+	"runtime"
 	"sync"
 	"sync/atomic"
 
@@ -120,7 +121,11 @@ type screen struct {
 	s      tcell.Screen
 	events chan Event
 	done   chan struct{}
-	once   sync.Once
+	// finiDone closes when tcell's Fini has returned. Until then the pump keeps
+	// polling, because Fini waits for tcell's input parser and the parser waits
+	// for PollEvent to take the events it still holds.
+	finiDone chan struct{}
+	once     sync.Once
 	// mu serializes Draw, SetMouse and Close. tcell's screen state is not
 	// goroutine-safe: a Close (Fini) racing an in-flight Draw (Show/resize)
 	// is a data race (caught on TestTopLoopEndsWhenTheScreenGoesAway), so the
@@ -161,7 +166,7 @@ func Wrap(s tcell.Screen) (Screen, error) {
 		return nil, err
 	}
 	s.EnableMouse()
-	self := &screen{s: s, events: make(chan Event, 16), done: make(chan struct{})}
+	self := &screen{s: s, events: make(chan Event, 16), done: make(chan struct{}), finiDone: make(chan struct{})}
 	go self.pump()
 	return self, nil
 }
@@ -192,6 +197,7 @@ func (self *screen) Close() {
 		defer self.mu.Unlock()
 		close(self.done)
 		self.s.Fini()
+		close(self.finiDone)
 	})
 }
 
@@ -229,6 +235,10 @@ func (self *screen) pump() {
 	for {
 		ev := self.s.PollEvent()
 		if ev == nil {
+			if self.finalizing() {
+				runtime.Gosched()
+				continue
+			}
 			self.send(Event{Kind: EventQuit})
 			return
 		}
@@ -236,9 +246,24 @@ func (self *screen) pump() {
 		if !ok {
 			continue
 		}
-		if !self.send(out) {
-			return
-		}
+		// After Close the reader is gone: drop the event but keep polling so
+		// tcell's parser can finish and Fini can restore the terminal.
+		self.send(out)
+	}
+}
+
+// finalizing reports whether Close has started and Fini has not returned yet.
+func (self *screen) finalizing() bool {
+	select {
+	case <-self.done:
+	default:
+		return false
+	}
+	select {
+	case <-self.finiDone:
+		return false
+	default:
+		return true
 	}
 }
 
