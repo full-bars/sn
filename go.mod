@@ -28,6 +28,7 @@ require (
 	golang.org/x/net v0.62.0
 	golang.org/x/sys v0.49.0
 	golang.org/x/term v0.47.0
+	golang.org/x/text v0.43.0
 	golang.org/x/time v0.15.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
@@ -197,7 +198,6 @@ require (
 	golang.org/x/image v0.44.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
-	golang.org/x/text v0.43.0 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20241231184526-a9ab2273dd10 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
@@ -225,7 +225,7 @@ replace github.com/urnetwork/proxy => github.com/urnetwork/proxy v0.0.0-20260923
 
 replace github.com/urnetwork/userwireguard => github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f
 
-replace github.com/urnetwork/sdk => github.com/full-bars/sdk v0.0.0-20261121002716-db024dcbd2ae
+replace github.com/urnetwork/sdk => github.com/full-bars/sdk v0.0.0-20261128052133-89cb3ea3defa
 
 replace github.com/urnetwork/glog => github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9
 
@@ -243,4 +243,4 @@ replace github.com/centrifuge/go-substrate-rpc-client/v4 => ./third_party/go-sub
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261126134214-b11ea13a78c2
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261128051809-e39d263216b1
